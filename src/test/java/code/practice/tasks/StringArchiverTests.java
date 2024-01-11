@@ -17,42 +17,38 @@ public class StringArchiverTests {
     @Test
     public void archiveStringWhenStringIsEmpty() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder str = new StringBuilder("");
-        assertEquals("String is empty.", stringArchiver.archiveString(str).toString());
+        String emptyString = "";
+        assertEquals(emptyString, stringArchiver.archiveString(emptyString));
     }
 
     @Test
     public void archiveStringWhenStringContainsOnlyOneSymbol() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder originalString = new StringBuilder("a");
-        assertEquals(originalString.toString(), stringArchiver.archiveString(originalString).toString());
+        String originalString = "a";
+        assertEquals(originalString, stringArchiver.archiveString(originalString));
     }
 
     @Test
     public void archiveStringWhenAllStringSymbolsAreMetMoreThanOneTime() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder str = new StringBuilder("aabbbccccddddd");
-        assertEquals("a2b3c4d5", stringArchiver.archiveString(str).toString());
+        assertEquals("a2b3c4d5", stringArchiver.archiveString("aabbbccccddddd"));
     }
 
     @Test
     public void archiveStringWhenAllStringSymbolsAreMetMoreThanOneTimeExceptOneLastSymbol() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder str = new StringBuilder("aabbbccccd");
-        assertEquals("a2b3c4d", stringArchiver.archiveString(str).toString());
+        assertEquals("a2b3c4d", stringArchiver.archiveString("aabbbccccd"));
     }
 
     @Test
     public void archiveStringWhenOneDistinctSymbolIsLocatedInTheMiddleOfTheString() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder str = new StringBuilder("aabbbcdddddee");
-        assertEquals("a2b3cd5e2", stringArchiver.archiveString(str).toString());
+        assertEquals("a2b3cd5e2", stringArchiver.archiveString("aabbbcdddddee"));
     }
 
     @Test
     public void archiveStringWhenFirstSymbolIsMetOneTime() {
         StringArchiver stringArchiver = new StringArchiver();
-        StringBuilder str = new StringBuilder("abbcccdddd");
-        assertEquals("ab2c3d4", stringArchiver.archiveString(str).toString());
+        assertEquals("ab2c3d4", stringArchiver.archiveString("abbcccdddd"));
     }
 }

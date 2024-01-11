@@ -11,7 +11,7 @@ package code.practice.tasks;
  */
 public class StringArchiver {
 
-    public StringBuilder archiveString(StringBuilder str) {
+    public String archiveString(String str) {
         StringBuilder resultString = new StringBuilder();
 
         if (str == null) {
@@ -19,35 +19,34 @@ public class StringArchiver {
         }
 
         if (str.isEmpty()) {
-            resultString.append("String is empty.");
-            return resultString;
+            return str;
         }
 
         if (str.length() == 1) {
             return str;
         }
 
-        int word_count = 1;
-        char[] charArray = str.toString().toCharArray();
+        int wordCount = 1;
+        char[] charArray = str.toCharArray();
         char lastHandledChar = charArray[0];
         for (int i = 1; i < charArray.length; i++) {
             if (lastHandledChar == charArray[i]) {
-                word_count++;
+                wordCount++;
             } else {
                 resultString.append(lastHandledChar);
                 lastHandledChar = charArray[i];
-                if (word_count > 1) {
-                    resultString.append(word_count);
+                if (wordCount > 1) {
+                    resultString.append(wordCount);
 
                 }
-                word_count = 1;
+                wordCount = 1;
             }
         }
         resultString.append(lastHandledChar);
-        if (word_count > 1) {
-            resultString.append(word_count);
+        if (wordCount > 1) {
+            resultString.append(wordCount);
         }
-        return resultString;
+        return resultString.toString();
     }
 }
 
