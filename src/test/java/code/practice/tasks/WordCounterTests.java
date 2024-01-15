@@ -16,6 +16,7 @@ public class WordCounterTests {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             wordCounter.countWords(null);
         });
+        assertEquals("String cannot be null or empty.", exception.getMessage());
     }
 
     @Test
@@ -24,6 +25,7 @@ public class WordCounterTests {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             wordCounter.countWords("");
         });
+        assertEquals("String cannot be null or empty.", exception.getMessage());
     }
 
     @Test

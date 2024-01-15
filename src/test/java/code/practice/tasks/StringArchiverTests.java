@@ -12,6 +12,7 @@ public class StringArchiverTests {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             stringArchiver.archiveString(null);
         });
+        assertEquals("String is null.", exception.getMessage());
     }
 
     @Test

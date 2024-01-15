@@ -2,29 +2,26 @@ package code.practice.tasks;
 
 /**
  * String archiver
- *   * There is a public String archiveString(String s) method, the task of the method is to return a string in the
- *   form that if it has the following consecutively repeated characters, then it is necessary to return a character
- *   and a number, except for those that are not repeated
- *   * examples:
+ * There is a public String archiveString(String s) method, the task of the method is to return a string in the
+ * form that if it has the following consecutively repeated characters, then it is necessary to return a character
+ * and a number, except for those that are not repeated
+ * examples:
  * abcd -> abcd
  * aabbbccccd -> a2b3c4d
  */
 public class StringArchiver {
 
     public String archiveString(String str) {
-        StringBuilder resultString = new StringBuilder();
 
         if (str == null) {
             throw new IllegalArgumentException("String is null.");
         }
 
-        if (str.isEmpty()) {
+        if ((str.isEmpty()) || (str.length() == 1)){
             return str;
         }
 
-        if (str.length() == 1) {
-            return str;
-        }
+        StringBuilder resultString = new StringBuilder();
 
         int wordCount = 1;
         char[] charArray = str.toCharArray();

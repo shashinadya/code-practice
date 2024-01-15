@@ -14,8 +14,6 @@ import java.util.Map;
  */
 public class WordCounter {
     public Map<String, Integer> countWords(String str) {
-
-
         if ((str == null) || (str.isEmpty())) {
             throw new IllegalArgumentException("String cannot be null or empty.");
         }
