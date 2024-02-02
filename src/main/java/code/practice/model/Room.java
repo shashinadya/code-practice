@@ -1,4 +1,4 @@
-package code.practice.tasks;
+package code.practice.model;
 
 import java.util.Objects;
 

@@ -1,5 +1,7 @@
 package code.practice.tasks;
 
+import code.practice.model.Room;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -8,16 +10,16 @@ import java.util.LinkedHashSet;
 public class RoomService {
 
     //Declare a Collection to store Room Inventory
-    private Collection<Room> inventory;
+    private final Collection<Room> inventory;
 
     //Initialize Collection and assign it to the RoomInventory
     public RoomService() {
-        this.inventory = new LinkedHashSet<>();
+        inventory = new LinkedHashSet<>();
     }
 
     //Return the Room Inventory
     public Collection<Room> getInventory() {
-        return new HashSet<>(this.inventory);
+        return inventory;
     }
 
     //Add a new Room to the Room Inventory using the provided parameters
@@ -53,17 +55,17 @@ public class RoomService {
     }
 
     public void createRooms(Room[] rooms) {
-        this.inventory.addAll(Arrays.asList(rooms));
+        inventory.addAll(Arrays.asList(rooms));
     }
 
     //Returns a boolean that indicates if the Room Inventory contains a Room
     public boolean hasRoom(Room room) {
-        return this.inventory.contains(room);
+        return inventory.contains(room);
     }
 
     //Returns all Rooms as an Array of Rooms in the **order** they were Added
     public Room[] asArray() {
-        return this.inventory.toArray(new Room[0]);
+        return inventory.toArray(new Room[0]);
     }
 
     public Collection<Room> getByType(String type) {
