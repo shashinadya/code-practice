@@ -13,21 +13,21 @@ import org.junit.jupiter.api.Test;
 class RoomServiceTestChapter2 {
     private RoomService service;
 
-    Room cambridge = new Room("Cambridge", "Premiere Room", 4, 175.00);
-    Room manchester = new Room("Manchester", "Suite", 5, 250.00);
-    Room piccadilly = new Room("Piccadilly", "Guest Room", 3, 125.00);
-    Room oxford = new Room("Oxford", "Suite", 5, 225.0);
-    Room victoria = new Room("Victoria", "Suite", 5, 225.00);
-    Room westminster = new Room("Westminster", "Premiere Room", 4, 200.00);
+    private Room cambridge = new Room("Cambridge", "Premiere Room", 4, 175.00);
+    private Room manchester = new Room("Manchester", "Suite", 5, 250.00);
+    private Room piccadilly = new Room("Piccadilly", "Guest Room", 3, 125.00);
+    private Room oxford = new Room("Oxford", "Suite", 5, 225.0);
+    private Room victoria = new Room("Victoria", "Suite", 5, 225.00);
+    private Room westminster = new Room("Westminster", "Premiere Room", 4, 200.00);
 
     @BeforeEach
     void setUp() {
-        this.service = new RoomService();
+        service = new RoomService();
 
-        this.service.createRoom("Piccadilly", "Guest Room", 3, 125.00);
-        this.service.createRoom("Cambridge", "Premiere Room", 4, 175.00);
-        this.service.createRoom("Victoria", "Suite", 5, 225.00);
-        this.service.createRoom("Westminster", "Premiere Room", 4, 200.00);
+        service.createRoom("Piccadilly", "Guest Room", 3, 125.00);
+        service.createRoom("Cambridge", "Premiere Room", 4, 175.00);
+        service.createRoom("Victoria", "Suite", 5, 225.00);
+        service.createRoom("Westminster", "Premiere Room", 4, 200.00);
     }
 
     @Test
