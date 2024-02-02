@@ -32,28 +32,28 @@ class RoomServiceTestChapter2 {
 
     @Test
     void testHasRoom() {
-        assertFalse(this.service.hasRoom(this.manchester));
-        assertTrue(this.service.hasRoom(this.cambridge));
+        assertFalse(service.hasRoom(this.manchester));
+        assertTrue(service.hasRoom(this.cambridge));
     }
 
     @Test
     void testAsArray() {
-        Room[] rooms = this.service.asArray();
+        Room[] rooms = service.asArray();
 
         assertEquals(4, rooms.length);
-        assertEquals(this.piccadilly, rooms[0]);
-        assertEquals(this.cambridge, rooms[1]);
-        assertEquals(this.victoria, rooms[2]);
-        assertEquals(this.westminster, rooms[3]);
+        assertEquals(piccadilly, rooms[0]);
+        assertEquals(cambridge, rooms[1]);
+        assertEquals(victoria, rooms[2]);
+        assertEquals(westminster, rooms[3]);
     }
 
     @Test
     void testGetByType() {
-        Collection<Room> guestRooms = this.service.getByType("Premiere Room");
+        Collection<Room> guestRooms = service.getByType("Premiere Room");
 
         assertEquals(2, guestRooms.size());
         assertTrue(guestRooms.stream()
                 .allMatch(r -> r.getType().equals("Premiere Room")));
-        assertEquals(4, this.service.getInventory().size());
+        assertEquals(4, service.getInventory().size());
     }
 }
