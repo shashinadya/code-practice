@@ -42,7 +42,7 @@ public class RoomServiceTestChapter3 {
 
     @Test
     void testGetRoomsByCapacity() {
-        Collection<Room> roomsWithCapacity = this.service.getRoomsByCapacity(4);
+        Collection<Room> roomsWithCapacity = service.getRoomsByCapacity(4);
 
         assertTrue(roomsWithCapacity.containsAll(Arrays.asList(rooms[0], rooms[1], rooms[3], rooms[4], rooms[5])));
         assertFalse(roomsWithCapacity.containsAll(Arrays.asList(rooms[2])));
