@@ -3,7 +3,6 @@ package code.practice.model;
 import java.util.Objects;
 
 public class Room {
-
     private String name;
     private String type;
     private int capacity;
