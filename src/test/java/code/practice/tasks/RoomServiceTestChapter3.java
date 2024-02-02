@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 public class RoomServiceTestChapter3 {
     private RoomService service;
-    Room[] rooms;
+    private Room[] rooms;
 
     @BeforeEach
     void setUp() {
