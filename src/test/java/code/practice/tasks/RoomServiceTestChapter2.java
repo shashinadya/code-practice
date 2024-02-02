@@ -32,8 +32,8 @@ class RoomServiceTestChapter2 {
 
     @Test
     void testHasRoom() {
-        assertFalse(service.hasRoom(this.manchester));
-        assertTrue(service.hasRoom(this.cambridge));
+        assertFalse(service.hasRoom(manchester));
+        assertTrue(service.hasRoom(cambridge));
     }
 
     @Test
