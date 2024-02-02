@@ -23,7 +23,7 @@ public class RoomService {
 
     //Add a new Room to the Room Inventory using the provided parameters
     public void createRoom(String name, String type, int capacity, double rate) {
-        this.inventory.add(new Room(name, type, capacity, rate));
+        inventory.add(new Room(name, type, capacity, rate));
     }
 
     //Reduces the rate of each room by the provided discount
