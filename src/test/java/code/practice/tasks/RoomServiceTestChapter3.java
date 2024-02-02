@@ -24,9 +24,9 @@ public class RoomServiceTestChapter3 {
         Room victoria = new Room("Victoria", "Suite", 5, 225.00);
         Room westminster = new Room("Westminster", "Premiere Room", 4, 200.00);
 
-        this.rooms = new Room[]{cambridge, manchester, piccadilly, oxford, victoria, westminster};
-        this.service = new RoomService();
-        this.service.createRooms(rooms);
+        rooms = new Room[]{cambridge, manchester, piccadilly, oxford, victoria, westminster};
+        service = new RoomService();
+        service.createRooms(rooms);
     }
 
     @Test
