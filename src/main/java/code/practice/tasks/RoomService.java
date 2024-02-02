@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 public class RoomService {
-
     //Declare a Collection to store Room Inventory
     private final Collection<Room> inventory;
 

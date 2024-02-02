@@ -5,11 +5,8 @@ import java.util.Objects;
 public class Room {
 
     private String name;
-
     private String type;
-
     private int capacity;
-
     private double rate;
 
     public Room(String name, String type, int capacity, double rate) {
