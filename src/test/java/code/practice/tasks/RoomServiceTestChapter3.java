@@ -31,7 +31,7 @@ public class RoomServiceTestChapter3 {
 
     @Test
     void testApplyDiscount() {
-        this.service.applyDiscount(.10);
+        service.applyDiscount(.10);
         assertEquals(199.9, rooms[0].getRate());
         assertEquals(249.9, rooms[1].getRate());
         assertEquals(124.9, rooms[2].getRate());
@@ -50,7 +50,7 @@ public class RoomServiceTestChapter3 {
 
     @Test
     void testGetRoomByRateAndType() {
-        Collection<Room> roomsWithRateAndType = this.service.getRoomByRateAndType(200.00, "Premiere Room");
+        Collection<Room> roomsWithRateAndType = service.getRoomByRateAndType(200.00, "Premiere Room");
         assertTrue(roomsWithRateAndType.contains(rooms[0]));
         assertFalse(roomsWithRateAndType.contains(rooms[1]));
         assertFalse(roomsWithRateAndType.contains(rooms[2]));
