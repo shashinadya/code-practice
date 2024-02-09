@@ -1,9 +1,5 @@
 package code.practice.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.List;
 
 import code.practice.model.Guest;
@@ -11,21 +7,23 @@ import code.practice.model.Room;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class GuestServiceTest {
-    GuestService service;
+    private GuestService service;
 
-    Room piccadilly = new Room("Piccadilly", "Guest Room", 3, 125.00);
-    Room cambridge = new Room("Cambridge", "Premiere Room", 4, 175.00);
-    Room westminister = new Room("Westminister", "Premiere Room", 4, 175.00);
-    Room oxford = new Room("Oxford", "Suite", 5, 225.0);
-    Room victoria = new Room("Victoria", "Suite", 5, 225.0);
-    Room manchester = new Room("Manchester", "Suite", 5, 225.0);
+    private final Room piccadilly = new Room("Piccadilly", "Guest Room", 3, 125.00);
+    private final Room cambridge = new Room("Cambridge", "Premiere Room", 4, 175.00);
+    private final Room westminster = new Room("Westminster", "Premiere Room", 4, 175.00);
+    private final Room oxford = new Room("Oxford", "Suite", 5, 225.0);
+    private final Room victoria = new Room("Victoria", "Suite", 5, 225.0);
+    private final Room manchester = new Room("Manchester", "Suite", 5, 225.0);
 
-    Guest john, maria, sonia, siri, bob;
+    private Guest john, maria, sonia, siri, bob;
 
     @BeforeEach
     void setUp() throws Exception {
-        this.service = new GuestService();
+        service = new GuestService();
 
         john = new Guest("John", "Doe", false);
         john.getPreferredRooms().addAll(List.of(oxford, victoria, manchester));
@@ -34,7 +32,7 @@ class GuestServiceTest {
         maria.getPreferredRooms().addAll(List.of(cambridge, oxford));
 
         sonia = new Guest("Sonia", "Doe", true);
-        sonia.getPreferredRooms().addAll(List.of(cambridge));
+        sonia.getPreferredRooms().add(cambridge);
 
         siri = new Guest("Siri", "Doe", true);
 
@@ -45,23 +43,23 @@ class GuestServiceTest {
     void testFilterByFavoriteRoom() {
         assertTrue(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), cambridge).containsAll(List.of(maria, sonia)));
         assertFalse(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), cambridge).containsAll(List.of(john, siri, sonia)));
-        assertTrue(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), oxford).containsAll(List.of(john)));
+        assertTrue(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), oxford).contains(john));
         assertFalse(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), oxford).containsAll(List.of(maria, sonia, siri, bob)));
         assertTrue(GuestService.filterByFavoriteRoom(List.of(john, maria, sonia, siri, bob), victoria).isEmpty());
     }
 
     @Test
     void testSwapPosition() {
-        this.service.checkIn(bob);
-        this.service.checkIn(maria);
-        this.service.checkIn(sonia);
-        this.service.checkIn(john);
-        this.service.checkIn(siri);
+        service.checkIn(bob);
+        service.checkIn(maria);
+        service.checkIn(sonia);
+        service.checkIn(john);
+        service.checkIn(siri);
 
-        this.service.swapPosition(maria, john);
-        this.service.swapPosition(siri, bob);
+        service.swapPosition(maria, john);
+        service.swapPosition(siri, bob);
 
-        List<Guest> guests = this.service.getCheckInList();
+        List<Guest> guests = service.getCheckInList();
         assertEquals(4, guests.indexOf(maria));
         assertEquals(1, guests.indexOf(sonia));
         assertEquals(3, guests.indexOf(siri));
@@ -70,18 +68,42 @@ class GuestServiceTest {
     }
 
     @Test
-    void testCheckIn() {
-        this.service.checkIn(bob);
-        this.service.checkIn(maria);
-        this.service.checkIn(sonia);
-        this.service.checkIn(john);
-        this.service.checkIn(siri);
+    void testSwapPositionWhenGuestIsNotFound() {
+        service.checkIn(bob);
+        service.checkIn(maria);
+        service.checkIn(sonia);
 
-        List<Guest> guests = this.service.getCheckInList();
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            service.swapPosition(bob, siri);
+        });
+        assertEquals("Guest is not found.", exception.getMessage());
+    }
+
+    @Test
+    void testCheckIn() {
+        service.checkIn(bob);
+        service.checkIn(maria);
+        service.checkIn(sonia);
+        service.checkIn(john);
+        service.checkIn(siri);
+
+        List<Guest> guests = service.getCheckInList();
         assertEquals(0, guests.indexOf(maria));
         assertEquals(1, guests.indexOf(sonia));
         assertEquals(2, guests.indexOf(siri));
         assertEquals(3, guests.indexOf(bob));
         assertEquals(4, guests.indexOf(john));
+    }
+
+    @Test
+    void testCheckInWhenAllGuestsHaveLoyaltyProgramMembership() {
+        service.checkIn(maria);
+        service.checkIn(sonia);
+        service.checkIn(siri);
+
+        List<Guest> guests = service.getCheckInList();
+        assertEquals(0, guests.indexOf(maria));
+        assertEquals(1, guests.indexOf(sonia));
+        assertEquals(2, guests.indexOf(siri));
     }
 }

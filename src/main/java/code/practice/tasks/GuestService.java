@@ -31,7 +31,7 @@ public class GuestService {
          *  order they were inserted.
          */
         int insertIndex = 0;
-        if (!guest.isLoyaltyProgramMember()) {
+        if (!guest.isLoyaltyProgramMember() || checkinList.isEmpty()) {
             checkinList.add(guest);
         } else {
             for (var i = 0; i < checkinList.size(); i++) {
@@ -40,10 +40,14 @@ public class GuestService {
                     break;
                 }
             }
-            for (int i = checkinList.size() - 1; i >= insertIndex; i--) {
-                checkinList.add(i + 1, checkinList.get(i));
+            if (insertIndex == 0 && checkinList.get(insertIndex).isLoyaltyProgramMember()) {
+                checkinList.add(guest);
+            } else {
+                for (int i = checkinList.size() - 1; i >= insertIndex; i--) {
+                    checkinList.add(i + 1, checkinList.get(i));
+                }
+                checkinList.set(insertIndex, guest);
             }
-            checkinList.set(insertIndex, guest);
         }
     }
 
@@ -62,6 +66,6 @@ public class GuestService {
     }
 
     public List<Guest> getCheckInList() {
-        return List.copyOf(this.checkinList);
+        return List.copyOf(checkinList);
     }
 }
