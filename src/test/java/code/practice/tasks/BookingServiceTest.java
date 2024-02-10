@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import code.practice.model.Guest;
 import code.practice.model.Room;
+
 public class BookingServiceTest {
     private BookingService bookingService;
     private Room piccadilly, cambridge, westminister, oxford, victoria, manchester;
@@ -15,7 +16,7 @@ public class BookingServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        this.bookingService = new BookingService();
+        bookingService = new BookingService();
 
         piccadilly = new Room("Piccadilly", "Guest Room", 3, 125.00);
         cambridge = new Room("Cambridge", "Premiere Room", 4, 175.00);

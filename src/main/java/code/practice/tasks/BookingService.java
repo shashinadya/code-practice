@@ -29,7 +29,6 @@ public class BookingService {
         double totalRateOfRoomsInTheBookingsMap = 0;
         for (Map.Entry<Room, Guest> entry : bookings.entrySet()) {
             Room key = entry.getKey();
-            Guest value = entry.getValue();
             totalRateOfRoomsInTheBookingsMap = totalRateOfRoomsInTheBookingsMap + key.getRate();
         }
         return totalRateOfRoomsInTheBookingsMap;
