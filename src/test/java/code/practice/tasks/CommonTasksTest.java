@@ -19,12 +19,12 @@ public class CommonTasksTest {
         studentsAgeByNickname.put("Maria", 22);
         studentsAgeByNickname.put("Nadya", 34);
 
-        Map<Integer, String> invertedMap = new HashMap<>();
-        invertedMap.put(20, "John");
-        invertedMap.put(22, "Maria");
-        invertedMap.put(34, "Nadya");
+        Map<Integer, List<String>> reversedMap = new HashMap<>();
+        reversedMap.put(20, List.of("John"));
+        reversedMap.put(22, List.of("Maria"));
+        reversedMap.put(34, List.of("Nadya"));
 
-        assertEquals(invertedMap, commonTasks.reverseMap(studentsAgeByNickname));
+        assertEquals(reversedMap, commonTasks.reverseMap(studentsAgeByNickname));
     }
 
     @Test
@@ -34,11 +34,11 @@ public class CommonTasksTest {
         studentsAgeByNickname.put("Maria", 22);
         studentsAgeByNickname.put("Nadya", 22);
 
-        Map<Integer, List<String>> invertedMap = new HashMap<>();
-        invertedMap.put(20, List.of("John"));
-        invertedMap.put(22, List.of("Nadya", "Maria"));
+        Map<Integer, List<String>> reversedMap = new HashMap<>();
+        reversedMap.put(20, List.of("John"));
+        reversedMap.put(22, List.of("Nadya", "Maria"));
 
-        assertEquals(invertedMap, commonTasks.reverseMap(studentsAgeByNickname));
+        assertEquals(reversedMap, commonTasks.reverseMap(studentsAgeByNickname));
     }
 
     @Test
