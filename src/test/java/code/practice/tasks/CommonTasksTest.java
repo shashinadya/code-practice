@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class CommonTasksTest {
 
     @Test
     void getDuplicatesTest() {
-        List<Integer> numbers = new ArrayList<>(List.of(3, 5, 1, 5, 6, 5, 4, 4, 5));
-        assertEquals(commonTasks.getDuplicates(numbers), List.of(5, 5, 4, 5));
+        List<Integer> numbers = List.of(3, 5, 1, 5, 6, 5, 4, 4, 5);
+        assertEquals(List.of(5, 5, 4, 5), commonTasks.getDuplicates(numbers));
     }
 }

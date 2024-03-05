@@ -3,7 +3,9 @@ package code.practice.tasks;
 import code.practice.model.Transaction;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class TransactionProcessing {
     private NavigableSet<Transaction> transactions = new TreeSet<>();
