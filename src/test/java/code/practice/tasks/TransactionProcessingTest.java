@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.Set;
 
 public class TransactionProcessingTest {
     private TransactionProcessing transactionProcessing;
@@ -18,14 +20,8 @@ public class TransactionProcessingTest {
     private Transaction transaction3 = new Transaction("Transaction 3", LocalDateTime.now().minusSeconds(15));
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         transactionProcessing = new TransactionProcessing();
-    }
-
-    @Test
-    void getDuplicatesTest() {
-        List<Integer> numbers = new ArrayList<>(List.of(3, 5, 1, 5, 6, 5, 4, 4, 5));
-        assertEquals(transactionProcessing.getDuplicates(numbers), List.of(5, 5, 4, 5));
     }
 
     @Test
@@ -39,7 +35,9 @@ public class TransactionProcessingTest {
         transactionProcessing.addTransaction(transaction1);
         transactionProcessing.addTransaction(transaction2);
         transactionProcessing.addTransaction(transaction3);
-        List<Transaction> result = transactionProcessing.getNewestTransactions(10);
+        Set<Transaction> result = transactionProcessing.getNewestTransactions(10);
         assertEquals(2, result.size());
+        assertTrue(result.contains(transaction1));
+        assertTrue(result.contains(transaction2));
     }
 }

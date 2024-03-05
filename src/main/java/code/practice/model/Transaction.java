@@ -3,7 +3,7 @@ package code.practice.model;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Transaction {
+public class Transaction implements Comparable<Transaction> {
     private String description;
     private LocalDateTime timestamp;
 
@@ -47,5 +47,10 @@ public class Transaction {
                 "description='" + description + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Transaction anotherT) {
+        return this.timestamp.compareTo(anotherT.getTimestamp());
     }
 }
