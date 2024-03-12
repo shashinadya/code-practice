@@ -50,10 +50,6 @@ public class CalculatorServiceTest {
         assertEquals("Divider is zero", e.getMessage());
     }
 
-    /*
-    Why does this test wails with NullPointerException, if it should be UnexpectedMajorException in any case?
-    * */
-
     @Test
     void exceptionHappenedDuringCalculationTest() {
         UnexpectedMajorException e = assertThrows(UnexpectedMajorException.class, () -> {

@@ -4,6 +4,7 @@ package code.practice.tasks;
  * */
 
 public class StackOverflowTask {
+
     public void stackOverflowMethod(int i) {
         try {
             stackOverflowMethod(i);
