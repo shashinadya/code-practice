@@ -16,12 +16,11 @@ public class CalculatorServiceTest {
         UnsupportedParameterTypeException e = assertThrows(UnsupportedParameterTypeException.class, () -> {
             calculatorService.multiply("4a", "2g");
         });
-        assertEquals("Caught UnsupportedParameterTypeException", e.getMessage());
+        assertEquals("Caught UnsupportedParameterTypeException: For input string: \"4a\"", e.getMessage());
     }
 
     @Test
-    void multiplyMethodParametersContainValidSymbolsTest() throws UnexpectedMajorException,
-            UnsupportedParameterTypeException {
+    void multiplyMethodParametersContainValidSymbolsTest() throws UnexpectedMajorException {
         assertEquals(8, calculatorService.multiply("4.0", "2"));
         assertEquals(0, calculatorService.multiply("8", "0"));
         assertEquals(-8, calculatorService.multiply("-4", "2.0"));
@@ -33,12 +32,11 @@ public class CalculatorServiceTest {
         UnsupportedParameterTypeException e = assertThrows(UnsupportedParameterTypeException.class, () -> {
             calculatorService.divide("4a", "2g");
         });
-        assertEquals("Caught UnsupportedParameterTypeException", e.getMessage());
+        assertEquals("Caught UnsupportedParameterTypeException: For input string: \"4a\"", e.getMessage());
     }
 
     @Test
-    void divideMethodParametersContainValidSymbolsTest() throws UnexpectedMajorException,
-            UnsupportedParameterTypeException, DivisionByZeroOperationException {
+    void divideMethodParametersContainValidSymbolsTest() throws UnexpectedMajorException {
         assertEquals(2, calculatorService.divide("4.0", "2"));
         assertEquals(-2, calculatorService.divide("-4", "2.0"));
         assertEquals(-2, calculatorService.divide("4", "-2"));
@@ -56,11 +54,12 @@ public class CalculatorServiceTest {
     Why does this test wails with NullPointerException, if it should be UnexpectedMajorException in any case?
     * */
 
-    /*@Test
+    @Test
     void exceptionHappenedDuringCalculationTest() {
         UnexpectedMajorException e = assertThrows(UnexpectedMajorException.class, () -> {
             calculatorService.multiply("4", null);
         });
-        assertEquals("Caught UnexpectedMajorException", e.getMessage());
-    }*/
+        assertEquals("Caught UnexpectedMajorException: Cannot invoke \"String.trim()\" because \"in\" is null",
+                e.getMessage());
+    }
 }

@@ -22,27 +22,24 @@ public class CalculatorService {
     double parsedFirstParameter;
     double parsedSecondParameter;
 
-    public double multiply(String a, String b) throws UnsupportedParameterTypeException, UnexpectedMajorException {
+    public double multiply(String a, String b) throws UnexpectedMajorException {
         try {
             parsedFirstParameter = Double.parseDouble(a);
             parsedSecondParameter = Double.parseDouble(b);
-        } catch (NumberFormatException e) {
-            throw new UnsupportedParameterTypeException("Caught UnsupportedParameterTypeException");
-        }
-        try {
             return parsedFirstParameter * parsedSecondParameter;
+        } catch (NumberFormatException e) {
+            throw new UnsupportedParameterTypeException("Caught UnsupportedParameterTypeException: " + e.getMessage());
         } catch (Exception e) {
-            throw new UnexpectedMajorException("Caught UnexpectedMajorException");
+            throw new UnexpectedMajorException("Caught UnexpectedMajorException: " + e.getMessage());
         }
     }
 
-    public double divide(String a, String b) throws DivisionByZeroOperationException, UnexpectedMajorException,
-            UnsupportedParameterTypeException {
+    public double divide(String a, String b) throws UnexpectedMajorException {
         try {
             parsedFirstParameter = Double.parseDouble(a);
             parsedSecondParameter = Double.parseDouble(b);
         } catch (NumberFormatException e) {
-            throw new UnsupportedParameterTypeException("Caught UnsupportedParameterTypeException");
+            throw new UnsupportedParameterTypeException("Caught UnsupportedParameterTypeException: " + e.getMessage());
         }
         if (parsedSecondParameter == 0) {
             throw new DivisionByZeroOperationException("Divider is zero");
@@ -50,7 +47,7 @@ public class CalculatorService {
         try {
             return parsedFirstParameter / parsedSecondParameter;
         } catch (Exception e) {
-            throw new UnexpectedMajorException("Caught UnexpectedMajorException");
+            throw new UnexpectedMajorException("Caught UnexpectedMajorException: " + e.getMessage());
         }
     }
 }
