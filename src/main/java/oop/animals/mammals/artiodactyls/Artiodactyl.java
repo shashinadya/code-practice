@@ -2,8 +2,7 @@ package oop.animals.mammals.artiodactyls;
 
 import oop.animals.mammals.Mammal;
 
-public abstract class Artiodactyls extends Mammal {
-
+public abstract class Artiodactyl extends Mammal {
     private boolean hasHorns;
 
     public boolean isHasHorns() {

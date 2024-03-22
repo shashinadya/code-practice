@@ -1,7 +1,6 @@
 package oop.animals;
 
 public abstract class Animal {
-
     private int age;
     private int weight;
 
