@@ -17,7 +17,7 @@ public abstract class MixedPredator extends Predator {
         WATER("Water"),
         LAND("Land");
 
-        private String value;
+        private final String value;
 
         PreferredHuntingEnvironment(String value) {
             this.value = value;

@@ -1,5 +1,6 @@
 package oop.animals.mammals.predators.ground;
 
+import code.practice.exceptions.IncorrectGroundMobilityRangeException;
 import oop.animals.mammals.predators.Predator;
 
 public abstract class GroundPredator extends Predator {
@@ -9,11 +10,11 @@ public abstract class GroundPredator extends Predator {
         return groundMobility;
     }
 
-    public void setGroundMobility(int groundMobility) throws Exception {
+    public void setGroundMobility(int groundMobility) {
         if (groundMobility > 0 && groundMobility <= 10) {
             this.groundMobility = groundMobility;
         } else {
-            throw new Exception("groundMobility should be in range of 1-10");
+            throw new IncorrectGroundMobilityRangeException("groundMobility should be in range of 1-10");
         }
     }
 }

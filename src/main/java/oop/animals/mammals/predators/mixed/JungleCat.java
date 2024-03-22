@@ -1,4 +1,4 @@
 package oop.animals.mammals.predators.mixed;
 
-public class JungleCat extends MixedPredator{
+public class JungleCat extends MixedPredator {
 }
