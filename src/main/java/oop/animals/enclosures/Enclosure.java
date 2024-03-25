@@ -20,7 +20,13 @@ public class Enclosure<T extends Animal> {
         return animals;
     }
 
-    public void deleteAnimal(T animal) {
+    public void removeAnimal(T animal) {
         animals.remove(animal);
+    }
+
+    public boolean containsOf(T animal) {
+        if (animals.contains(animal)) {
+            return true;
+        } else return false;
     }
 }
