@@ -1,6 +1,6 @@
 package oop.animals.enclosures;
 
-import oop.animals.Animal;
+import oop.animals.model.Animal;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,6 @@
-package oop.animals.mammals.artiodactyls;
+package oop.animals.model.mammals.artiodactyls;
 
-import oop.animals.mammals.Mammal;
+import oop.animals.model.mammals.Mammal;
 
 public abstract class Artiodactyl extends Mammal {
     private boolean hasHorns;

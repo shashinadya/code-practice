@@ -1,4 +1,4 @@
-package oop.animals;
+package oop.animals.model;
 
 public abstract class Animal {
     private int age;

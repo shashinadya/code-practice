@@ -1,13 +1,13 @@
 package oop.animals.enclosures;
 
-import oop.animals.mammals.Mammal;
-import oop.animals.mammals.predators.Predator;
-import oop.animals.mammals.predators.aquatic.Cachalot;
-import oop.animals.mammals.predators.aquatic.KillerWhale;
-import oop.animals.mammals.predators.ground.Coyote;
-import oop.animals.mammals.predators.ground.Lion;
-import oop.animals.mammals.predators.mixed.JungleCat;
-import oop.animals.mammals.predators.mixed.WhiteBear;
+import oop.animals.model.mammals.Mammal;
+import oop.animals.model.mammals.predators.Predator;
+import oop.animals.model.mammals.predators.aquatic.Cachalot;
+import oop.animals.model.mammals.predators.aquatic.KillerWhale;
+import oop.animals.model.mammals.predators.ground.Coyote;
+import oop.animals.model.mammals.predators.ground.Lion;
+import oop.animals.model.mammals.predators.mixed.JungleCat;
+import oop.animals.model.mammals.predators.mixed.WhiteBear;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

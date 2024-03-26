@@ -1,6 +1,6 @@
-package oop.animals.mammals.predators.mixed;
+package oop.animals.model.mammals.predators.mixed;
 
-import oop.animals.mammals.predators.Predator;
+import oop.animals.model.mammals.predators.Predator;
 
 public abstract class MixedPredator extends Predator {
     private PreferredHuntingEnvironment preferredHuntingEnvironment;

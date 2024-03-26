@@ -1,4 +1,4 @@
-package oop.animals.mammals.predators.aquatic;
+package oop.animals.model.mammals.predators.aquatic;
 
 public class KillerWhale extends AquaticPredator {
 }

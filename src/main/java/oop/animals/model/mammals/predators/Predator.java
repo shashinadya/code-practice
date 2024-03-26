@@ -1,6 +1,6 @@
-package oop.animals.mammals.predators;
+package oop.animals.model.mammals.predators;
 
-import oop.animals.mammals.Mammal;
+import oop.animals.model.mammals.Mammal;
 
 public abstract class Predator extends Mammal {
     private WeaponType weaponType;

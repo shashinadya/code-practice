@@ -1,7 +1,7 @@
-package oop.animals.mammals.predators.ground;
+package oop.animals.model.mammals.predators.ground;
 
 import code.practice.exceptions.IncorrectGroundMobilityRangeException;
-import oop.animals.mammals.predators.Predator;
+import oop.animals.model.mammals.predators.Predator;
 
 public abstract class GroundPredator extends Predator {
     private int groundMobility;

@@ -1,6 +1,7 @@
-package oop.animals.enclosures;
+package oop.animals.service;
 
-import oop.animals.Animal;
+import oop.animals.model.Animal;
+import oop.animals.enclosures.Enclosure;
 
 import java.util.List;
 
