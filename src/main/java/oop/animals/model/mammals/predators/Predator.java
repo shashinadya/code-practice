@@ -10,7 +10,10 @@ public abstract class Predator extends Mammal {
     }
 
     public Predator(int age, int weight, WeaponType weaponType) {
-        super();
+        super(age, weight);
+        this.setAge(age);
+        this.setWeight(weight);
+        this.weaponType = weaponType;
     }
 
     public Predator() {

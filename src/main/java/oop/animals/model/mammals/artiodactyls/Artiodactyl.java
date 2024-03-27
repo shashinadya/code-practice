@@ -6,7 +6,9 @@ public abstract class Artiodactyl extends Mammal {
     private boolean hasHorns;
 
     public Artiodactyl(int age, int weight) {
-        super();
+        super(age, weight);
+        this.setAge(age);
+        this.setWeight(weight);
     }
 
     public Artiodactyl() {

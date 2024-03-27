@@ -6,6 +6,7 @@ public class JungleCat extends MixedPredator {
         super(age, weight, weaponType);
         this.setAge(age);
         this.setWeight(weight);
+        this.setWeaponType(weaponType);
     }
 
     public JungleCat() {

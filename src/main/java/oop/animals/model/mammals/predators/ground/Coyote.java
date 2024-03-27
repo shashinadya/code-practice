@@ -6,6 +6,7 @@ public class Coyote extends GroundPredator {
         super(age, weight, weaponType);
         this.setAge(age);
         this.setWeight(weight);
+        this.setWeaponType(weaponType);
     }
 
     public Coyote() {

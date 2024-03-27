@@ -6,7 +6,10 @@ public abstract class AquaticPredator extends Predator {
     private int minWaterTemperature;
 
     public AquaticPredator(int age, int weight, WeaponType weaponType) {
-        super();
+        super(age, weight, weaponType);
+        this.setAge(age);
+        this.setWeight(weight);
+        this.setWeaponType(weaponType);
     }
 
     public AquaticPredator() {

@@ -10,7 +10,10 @@ public abstract class MixedPredator extends Predator {
     }
 
     public MixedPredator(int age, int weight, WeaponType weaponType) {
-        super();
+        super(age, weight, weaponType);
+        this.setAge(age);
+        this.setWeight(weight);
+        this.setWeaponType(weaponType);
     }
 
     public MixedPredator() {
