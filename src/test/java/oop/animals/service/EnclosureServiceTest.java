@@ -19,10 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureServiceTest {
-    private final Lion lion = new Lion(10, 35, Predator.WeaponType.TEETH);
-    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS);
-    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH);
-    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH);
+    private final Lion lion = new Lion(10, 35, Predator.WeaponType.TEETH, 10);
+    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS, 15);
+    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH, 1);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH, 5);
     private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS);
     private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS);
     private EnclosureService<Mammal> enclosureService;

@@ -1,5 +1,7 @@
 package oop.animals.model;
 
+import java.util.Objects;
+
 public abstract class Animal {
     private int age;
     private int weight;
@@ -26,5 +28,18 @@ public abstract class Animal {
     }
 
     public Animal() {
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Animal animal = (Animal) o;
+        return age == animal.age && weight == animal.weight;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(age, weight);
     }
 }

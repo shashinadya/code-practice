@@ -5,11 +5,9 @@ import oop.animals.model.mammals.predators.Predator;
 public abstract class AquaticPredator extends Predator {
     private int minWaterTemperature;
 
-    public AquaticPredator(int age, int weight, WeaponType weaponType) {
+    public AquaticPredator(int age, int weight, WeaponType weaponType, int minWaterTemperature) {
         super(age, weight, weaponType);
-        this.setAge(age);
-        this.setWeight(weight);
-        this.setWeaponType(weaponType);
+        this.minWaterTemperature = minWaterTemperature;
     }
 
     public AquaticPredator() {

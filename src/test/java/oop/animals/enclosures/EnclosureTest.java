@@ -19,11 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureTest {
-    private final Lion lion1 = new Lion(10, 35, Predator.WeaponType.TEETH);
-    private final Lion lion2 = new Lion(5, 20, Predator.WeaponType.TEETH);
-    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS);
-    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH);
-    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH);
+    private final Lion lion1 = new Lion(10, 35, Predator.WeaponType.TEETH, 10);
+    private final Lion lion2 = new Lion(5, 20, Predator.WeaponType.TEETH, 5);
+    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS, 15);
+    private final Cachalot cachalot = new Cachalot(15, 500,
+            Predator.WeaponType.TEETH, 1);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90,
+            Predator.WeaponType.TEETH, 5);
     private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS);
     private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS);
     private Enclosure<Mammal> enclosure;

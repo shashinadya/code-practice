@@ -5,10 +5,9 @@ import oop.animals.model.mammals.Mammal;
 public abstract class Artiodactyl extends Mammal {
     private boolean hasHorns;
 
-    public Artiodactyl(int age, int weight) {
+    public Artiodactyl(int age, int weight, boolean hasHorns) {
         super(age, weight);
-        this.setAge(age);
-        this.setWeight(weight);
+        this.hasHorns = hasHorns;
     }
 
     public Artiodactyl() {

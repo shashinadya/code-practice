@@ -6,11 +6,9 @@ import oop.animals.model.mammals.predators.Predator;
 public abstract class GroundPredator extends Predator {
     private int groundMobility;
 
-    public GroundPredator(int age, int weight, WeaponType weaponType) {
+    public GroundPredator(int age, int weight, WeaponType weaponType, int groundMobility) {
         super(age, weight, weaponType);
-        this.setAge(age);
-        this.setWeight(weight);
-        this.setWeaponType(weaponType);
+        this.groundMobility = groundMobility;
     }
 
     public GroundPredator() {
