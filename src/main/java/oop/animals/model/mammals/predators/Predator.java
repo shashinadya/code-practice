@@ -9,6 +9,13 @@ public abstract class Predator extends Mammal {
         return weaponType;
     }
 
+    public Predator(int age, int weight, WeaponType weaponType) {
+        super();
+    }
+
+    public Predator() {
+    }
+
     public void setWeaponType(WeaponType weaponType) {
         this.weaponType = weaponType;
     }

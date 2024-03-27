@@ -19,10 +19,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureServiceTest {
+    private final Lion lion = new Lion(10, 35, Predator.WeaponType.TEETH);
+    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS);
+    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH);
+    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS);
+    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS);
     private EnclosureService<Mammal> enclosureService;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         enclosureService = new EnclosureService<>();
     }
 
@@ -34,11 +40,6 @@ public class EnclosureServiceTest {
 
     @Test
     public void createEnclosureAndAddAnimalTest() {
-        Lion lion = new Lion();
-        lion.setAge(10);
-        lion.setWeight(35);
-        lion.setWeaponType(Predator.WeaponType.TEETH);
-
         enclosureService.createEnclosureAndAddAnimal(lion);
         final Enclosure<Mammal> specificEnclosure = enclosureService.getEnclosures().get(0);
 
@@ -49,36 +50,6 @@ public class EnclosureServiceTest {
 
     @Test
     public void addAnimalToAnySuitableEnclosure() {
-        Lion lion = new Lion();
-        lion.setAge(10);
-        lion.setWeight(35);
-        lion.setWeaponType(Predator.WeaponType.TEETH);
-
-        Coyote coyote = new Coyote();
-        coyote.setAge(3);
-        coyote.setWeight(10);
-        coyote.setWeaponType(Predator.WeaponType.CLAWS);
-
-        Cachalot cachalot = new Cachalot();
-        cachalot.setAge(15);
-        cachalot.setWeight(500);
-        cachalot.setWeaponType(Predator.WeaponType.TEETH);
-
-        KillerWhale killerWhale = new KillerWhale();
-        killerWhale.setAge(9);
-        killerWhale.setWeight(90);
-        killerWhale.setWeaponType(Predator.WeaponType.TEETH);
-
-        JungleCat jungleCat = new JungleCat();
-        jungleCat.setAge(5);
-        jungleCat.setWeight(48);
-        jungleCat.setWeaponType(Predator.WeaponType.CLAWS);
-
-        WhiteBear whiteBear = new WhiteBear();
-        whiteBear.setAge(20);
-        whiteBear.setWeight(160);
-        whiteBear.setWeaponType(Predator.WeaponType.CLAWS);
-
         List<Mammal> animalsOne = new ArrayList<>();
         animalsOne.add(cachalot);
         animalsOne.add(killerWhale);
@@ -105,11 +76,6 @@ public class EnclosureServiceTest {
 
     @Test
     public void addAnimalToSpecificEnclosureTest() {
-        Lion lion = new Lion();
-        lion.setAge(10);
-        lion.setWeight(35);
-        lion.setWeaponType(Predator.WeaponType.TEETH);
-
         enclosureService.createEnclosure();
         final Enclosure<Mammal> specificEnclosure = enclosureService.getEnclosures().get(0);
 
@@ -128,26 +94,6 @@ public class EnclosureServiceTest {
 
     @Test
     public void createEnclosureAndAddAnimalsTest() {
-        Lion lion = new Lion();
-        lion.setAge(10);
-        lion.setWeight(35);
-        lion.setWeaponType(Predator.WeaponType.TEETH);
-
-        Coyote coyote = new Coyote();
-        coyote.setAge(3);
-        coyote.setWeight(10);
-        coyote.setWeaponType(Predator.WeaponType.CLAWS);
-
-        Cachalot cachalot = new Cachalot();
-        cachalot.setAge(15);
-        cachalot.setWeight(500);
-        cachalot.setWeaponType(Predator.WeaponType.TEETH);
-
-        KillerWhale killerWhale = new KillerWhale();
-        killerWhale.setAge(9);
-        killerWhale.setWeight(90);
-        killerWhale.setWeaponType(Predator.WeaponType.TEETH);
-
         List<Mammal> animals = new ArrayList<>();
         animals.add(lion);
         animals.add(coyote);

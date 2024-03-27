@@ -19,52 +19,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureTest {
-    private Lion lion1, lion2;
-    private Coyote coyote;
-    private Cachalot cachalot;
-    private KillerWhale killerWhale;
-    private JungleCat jungleCat;
-    private WhiteBear whiteBear;
+    private final Lion lion1 = new Lion(10, 35, Predator.WeaponType.TEETH);
+    private final Lion lion2 = new Lion(5, 20, Predator.WeaponType.TEETH);
+    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS);
+    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH);
+    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS);
+    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS);
     private Enclosure<Mammal> enclosure;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         enclosure = new Enclosure<>();
-
-        lion1 = new Lion();
-        lion1.setAge(10);
-        lion1.setWeight(35);
-        lion1.setWeaponType(Predator.WeaponType.TEETH);
-
-        lion2 = new Lion();
-        lion2.setAge(5);
-        lion2.setWeight(20);
-        lion2.setWeaponType(Predator.WeaponType.TEETH);
-
-        coyote = new Coyote();
-        coyote.setAge(3);
-        coyote.setWeight(10);
-        coyote.setWeaponType(Predator.WeaponType.CLAWS);
-
-        cachalot = new Cachalot();
-        cachalot.setAge(15);
-        cachalot.setWeight(500);
-        cachalot.setWeaponType(Predator.WeaponType.TEETH);
-
-        killerWhale = new KillerWhale();
-        killerWhale.setAge(9);
-        killerWhale.setWeight(90);
-        killerWhale.setWeaponType(Predator.WeaponType.TEETH);
-
-        jungleCat = new JungleCat();
-        jungleCat.setAge(5);
-        jungleCat.setWeight(48);
-        jungleCat.setWeaponType(Predator.WeaponType.CLAWS);
-
-        whiteBear = new WhiteBear();
-        whiteBear.setAge(20);
-        whiteBear.setWeight(160);
-        whiteBear.setWeaponType(Predator.WeaponType.CLAWS);
     }
 
     @Test

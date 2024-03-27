@@ -25,8 +25,6 @@ public class Enclosure<T extends Animal> {
     }
 
     public boolean containsOf(T animal) {
-        if (animals.contains(animal)) {
-            return true;
-        } else return false;
+        return animals.contains(animal);
     }
 }

@@ -9,6 +9,13 @@ public abstract class MixedPredator extends Predator {
         return preferredHuntingEnvironment;
     }
 
+    public MixedPredator(int age, int weight, WeaponType weaponType) {
+        super();
+    }
+
+    public MixedPredator() {
+    }
+
     public void setPreferredHuntingEnvironment(PreferredHuntingEnvironment preferredHuntingEnvironment) {
         this.preferredHuntingEnvironment = preferredHuntingEnvironment;
     }

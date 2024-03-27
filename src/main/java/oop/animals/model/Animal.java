@@ -19,4 +19,12 @@ public abstract class Animal {
     public void setWeight(int weight) {
         this.weight = weight;
     }
+
+    public Animal(int age, int weight) {
+        this.age = age;
+        this.weight = weight;
+    }
+
+    public Animal() {
+    }
 }
