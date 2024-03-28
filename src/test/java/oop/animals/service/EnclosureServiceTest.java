@@ -20,14 +20,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureServiceTest {
-    private final Lion lion = new Lion(10, 35, Predator.WeaponType.TEETH, 10);
-    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS, 15);
-    private final Cachalot cachalot = new Cachalot(15, 500, Predator.WeaponType.TEETH, 1);
-    private final KillerWhale killerWhale = new KillerWhale(9, 90, Predator.WeaponType.TEETH, 5);
-    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS,
-            MixedPredator.PreferredHuntingEnvironment.LAND);
-    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS,
-            MixedPredator.PreferredHuntingEnvironment.WATER);
+    private static final Predator.WeaponType WEAPON_TYPE_TEETH = Predator.WeaponType.TEETH;
+    private static final Predator.WeaponType WEAPON_TYPE_CLAWS = Predator.WeaponType.CLAWS;
+    private static final MixedPredator.PreferredHuntingEnvironment PREF_HUNT_ENV_LAND =
+            MixedPredator.PreferredHuntingEnvironment.LAND;
+    private static final MixedPredator.PreferredHuntingEnvironment PREF_HUNT_ENV_WATER =
+            MixedPredator.PreferredHuntingEnvironment.WATER;
+    private final Lion lion = new Lion(10, 35, WEAPON_TYPE_TEETH, 10);
+    private final Coyote coyote = new Coyote(3, 10, WEAPON_TYPE_CLAWS, 15);
+    private final Cachalot cachalot = new Cachalot(15, 500, WEAPON_TYPE_TEETH, 1);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, WEAPON_TYPE_TEETH, 5);
+    private final JungleCat jungleCat = new JungleCat(5, 48, WEAPON_TYPE_CLAWS, PREF_HUNT_ENV_LAND);
+    private final WhiteBear whiteBear = new WhiteBear(20, 160, WEAPON_TYPE_CLAWS, PREF_HUNT_ENV_WATER);
     private EnclosureService<Mammal> enclosureService;
 
     @BeforeEach

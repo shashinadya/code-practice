@@ -2,13 +2,9 @@ package oop.animals.enclosures;
 
 import oop.animals.model.mammals.Mammal;
 import oop.animals.model.mammals.predators.Predator;
-import oop.animals.model.mammals.predators.aquatic.Cachalot;
 import oop.animals.model.mammals.predators.aquatic.KillerWhale;
 import oop.animals.model.mammals.predators.ground.Coyote;
 import oop.animals.model.mammals.predators.ground.Lion;
-import oop.animals.model.mammals.predators.mixed.JungleCat;
-import oop.animals.model.mammals.predators.mixed.MixedPredator;
-import oop.animals.model.mammals.predators.mixed.WhiteBear;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,17 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureTest {
-    private final Lion lion1 = new Lion(10, 35, Predator.WeaponType.TEETH, 10);
-    private final Lion lion2 = new Lion(5, 20, Predator.WeaponType.TEETH, 5);
-    private final Coyote coyote = new Coyote(3, 10, Predator.WeaponType.CLAWS, 15);
-    private final Cachalot cachalot = new Cachalot(15, 500,
-            Predator.WeaponType.TEETH, 1);
-    private final KillerWhale killerWhale = new KillerWhale(9, 90,
-            Predator.WeaponType.TEETH, 5);
-    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS,
-            MixedPredator.PreferredHuntingEnvironment.LAND);
-    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS,
-            MixedPredator.PreferredHuntingEnvironment.WATER);
+    private static final Predator.WeaponType WEAPON_TYPE_TEETH = Predator.WeaponType.TEETH;
+    private static final Predator.WeaponType WEAPON_TYPE_CLAWS = Predator.WeaponType.CLAWS;
+    private final Lion lion1 = new Lion(10, 35, WEAPON_TYPE_TEETH, 10);
+    private final Lion lion2 = new Lion(5, 20, WEAPON_TYPE_TEETH, 5);
+    private final Coyote coyote = new Coyote(3, 10, WEAPON_TYPE_CLAWS, 15);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, WEAPON_TYPE_TEETH, 5);
     private Enclosure<Mammal> enclosure;
 
     @BeforeEach

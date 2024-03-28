@@ -2,6 +2,8 @@ package oop.animals.model.mammals.predators;
 
 import oop.animals.model.mammals.Mammal;
 
+import java.util.Objects;
+
 public abstract class Predator extends Mammal {
     private WeaponType weaponType;
 
@@ -35,5 +37,19 @@ public abstract class Predator extends Mammal {
         public String toString() {
             return value;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Predator predator = (Predator) o;
+        return weaponType == predator.weaponType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), weaponType);
     }
 }

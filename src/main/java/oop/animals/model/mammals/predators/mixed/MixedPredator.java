@@ -2,6 +2,8 @@ package oop.animals.model.mammals.predators.mixed;
 
 import oop.animals.model.mammals.predators.Predator;
 
+import java.util.Objects;
+
 public abstract class MixedPredator extends Predator {
     private PreferredHuntingEnvironment preferredHuntingEnvironment;
 
@@ -36,5 +38,19 @@ public abstract class MixedPredator extends Predator {
         public String toString() {
             return value;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        MixedPredator that = (MixedPredator) o;
+        return preferredHuntingEnvironment == that.preferredHuntingEnvironment;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), preferredHuntingEnvironment);
     }
 }
