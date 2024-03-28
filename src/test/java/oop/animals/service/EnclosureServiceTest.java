@@ -2,13 +2,11 @@ package oop.animals.service;
 
 import oop.animals.enclosures.Enclosure;
 import oop.animals.model.mammals.Mammal;
-import oop.animals.model.mammals.predators.Predator;
 import oop.animals.model.mammals.predators.aquatic.Cachalot;
 import oop.animals.model.mammals.predators.aquatic.KillerWhale;
 import oop.animals.model.mammals.predators.ground.Coyote;
 import oop.animals.model.mammals.predators.ground.Lion;
 import oop.animals.model.mammals.predators.mixed.JungleCat;
-import oop.animals.model.mammals.predators.mixed.MixedPredator;
 import oop.animals.model.mammals.predators.mixed.WhiteBear;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,22 +14,20 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static oop.animals.model.mammals.predators.Predator.WeaponType.CLAWS;
+import static oop.animals.model.mammals.predators.Predator.WeaponType.TEETH;
+import static oop.animals.model.mammals.predators.mixed.MixedPredator.PreferredHuntingEnvironment.LAND;
+import static oop.animals.model.mammals.predators.mixed.MixedPredator.PreferredHuntingEnvironment.WATER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnclosureServiceTest {
-    private static final Predator.WeaponType WEAPON_TYPE_TEETH = Predator.WeaponType.TEETH;
-    private static final Predator.WeaponType WEAPON_TYPE_CLAWS = Predator.WeaponType.CLAWS;
-    private static final MixedPredator.PreferredHuntingEnvironment PREF_HUNT_ENV_LAND =
-            MixedPredator.PreferredHuntingEnvironment.LAND;
-    private static final MixedPredator.PreferredHuntingEnvironment PREF_HUNT_ENV_WATER =
-            MixedPredator.PreferredHuntingEnvironment.WATER;
-    private final Lion lion = new Lion(10, 35, WEAPON_TYPE_TEETH, 10);
-    private final Coyote coyote = new Coyote(3, 10, WEAPON_TYPE_CLAWS, 15);
-    private final Cachalot cachalot = new Cachalot(15, 500, WEAPON_TYPE_TEETH, 1);
-    private final KillerWhale killerWhale = new KillerWhale(9, 90, WEAPON_TYPE_TEETH, 5);
-    private final JungleCat jungleCat = new JungleCat(5, 48, WEAPON_TYPE_CLAWS, PREF_HUNT_ENV_LAND);
-    private final WhiteBear whiteBear = new WhiteBear(20, 160, WEAPON_TYPE_CLAWS, PREF_HUNT_ENV_WATER);
+    private final Lion lion = new Lion(10, 35, TEETH, 10);
+    private final Coyote coyote = new Coyote(3, 10, CLAWS, 15);
+    private final Cachalot cachalot = new Cachalot(15, 500, TEETH, 1);
+    private final KillerWhale killerWhale = new KillerWhale(9, 90, TEETH, 5);
+    private final JungleCat jungleCat = new JungleCat(5, 48, CLAWS, LAND);
+    private final WhiteBear whiteBear = new WhiteBear(20, 160, CLAWS, WATER);
     private EnclosureService<Mammal> enclosureService;
 
     @BeforeEach
