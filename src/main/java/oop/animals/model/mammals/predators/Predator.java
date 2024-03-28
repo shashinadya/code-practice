@@ -7,16 +7,16 @@ import java.util.Objects;
 public abstract class Predator extends Mammal {
     private WeaponType weaponType;
 
-    public WeaponType getWeaponType() {
-        return weaponType;
-    }
-
     public Predator(int age, int weight, WeaponType weaponType) {
         super(age, weight);
         this.weaponType = weaponType;
     }
 
     public Predator() {
+    }
+
+    public WeaponType getWeaponType() {
+        return weaponType;
     }
 
     public void setWeaponType(WeaponType weaponType) {

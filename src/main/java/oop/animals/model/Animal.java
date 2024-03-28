@@ -6,6 +6,14 @@ public abstract class Animal {
     private int age;
     private int weight;
 
+    public Animal(int age, int weight) {
+        this.age = age;
+        this.weight = weight;
+    }
+
+    public Animal() {
+    }
+
     public int getAge() {
         return age;
     }
@@ -20,14 +28,6 @@ public abstract class Animal {
 
     public void setWeight(int weight) {
         this.weight = weight;
-    }
-
-    public Animal(int age, int weight) {
-        this.age = age;
-        this.weight = weight;
-    }
-
-    public Animal() {
     }
 
     @Override

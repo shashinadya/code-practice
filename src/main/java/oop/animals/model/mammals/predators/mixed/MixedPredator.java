@@ -7,10 +7,6 @@ import java.util.Objects;
 public abstract class MixedPredator extends Predator {
     private PreferredHuntingEnvironment preferredHuntingEnvironment;
 
-    public PreferredHuntingEnvironment getPreferredHuntingEnvironment() {
-        return preferredHuntingEnvironment;
-    }
-
     public MixedPredator(int age, int weight, WeaponType weaponType,
                          PreferredHuntingEnvironment preferredHuntingEnvironment) {
         super(age, weight, weaponType);
@@ -18,6 +14,10 @@ public abstract class MixedPredator extends Predator {
     }
 
     public MixedPredator() {
+    }
+
+    public PreferredHuntingEnvironment getPreferredHuntingEnvironment() {
+        return preferredHuntingEnvironment;
     }
 
     public void setPreferredHuntingEnvironment(PreferredHuntingEnvironment preferredHuntingEnvironment) {
