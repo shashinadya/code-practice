@@ -7,6 +7,7 @@ import oop.animals.model.mammals.predators.aquatic.KillerWhale;
 import oop.animals.model.mammals.predators.ground.Coyote;
 import oop.animals.model.mammals.predators.ground.Lion;
 import oop.animals.model.mammals.predators.mixed.JungleCat;
+import oop.animals.model.mammals.predators.mixed.MixedPredator;
 import oop.animals.model.mammals.predators.mixed.WhiteBear;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,10 @@ public class EnclosureTest {
             Predator.WeaponType.TEETH, 1);
     private final KillerWhale killerWhale = new KillerWhale(9, 90,
             Predator.WeaponType.TEETH, 5);
-    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS);
-    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS);
+    private final JungleCat jungleCat = new JungleCat(5, 48, Predator.WeaponType.CLAWS,
+            MixedPredator.PreferredHuntingEnvironment.LAND);
+    private final WhiteBear whiteBear = new WhiteBear(20, 160, Predator.WeaponType.CLAWS,
+            MixedPredator.PreferredHuntingEnvironment.WATER);
     private Enclosure<Mammal> enclosure;
 
     @BeforeEach
