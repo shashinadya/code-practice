@@ -1,7 +1,6 @@
 package oop.animals.model.mammals;
 
 import oop.animals.model.Animal;
-import oop.animals.model.mammals.predators.Predator;
 
 public abstract class Mammal extends Animal {
 
