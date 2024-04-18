@@ -12,14 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StreamTasksTest {
-    private final PrintStream standardOut = System.out;
-    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
-    StreamTasks streamTasks = new StreamTasks();
-
-    @BeforeEach
-    public void setUp() {
-        System.setOut(new PrintStream(outputStreamCaptor));
-    }
+    private final StreamTasks streamTasks = new StreamTasks();
 
     @Test
     void sumOfPositiveIntegersTest() {
@@ -35,9 +28,15 @@ class StreamTasksTest {
 
     @Test
     void justPrintSequenceTest() {
+        final PrintStream standardOut = System.out;
+        final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStreamCaptor));
+
         streamTasks.justPrintSequence(2, 9);
         assertEquals("23456789", outputStreamCaptor.toString()
                 .trim());
+
+        System.setOut(standardOut);
     }
 
     @Test
