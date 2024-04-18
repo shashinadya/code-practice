@@ -30,11 +30,11 @@ public class StreamTasks {
 
     //Return any negative int string from the given list of ints. Throw some exception if not found.
     public String getAnyNegativeIntAsString(List<Integer> listOfInts) {
-            return listOfInts.stream()
-                    .filter(e -> e < 0)
-                    .map(Object::toString)
-                    .findAny()
-                    .orElseThrow();
+        return listOfInts.stream()
+                .filter(e -> e < 0)
+                .map(Object::toString)
+                .findAny()
+                .orElseThrow();
     }
 
     //Return first negative int string from the given list of ints. Return minimum possible int value if not found in the given list.
