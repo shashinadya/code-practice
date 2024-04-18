@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CommonTasks {
     /**
@@ -27,13 +28,9 @@ public class CommonTasks {
      * Return: [5, 5, 4]
      */
     public List<Integer> getDuplicates(List<Integer> numbers) {
-        List<Integer> listOfDuplicateElements = new ArrayList<>();
         Set<Integer> uniqueElementsFromNumbersList = new HashSet<>();
-        for (int number : numbers) {
-            if (!uniqueElementsFromNumbersList.add(number)) {
-                listOfDuplicateElements.add(number);
-            }
-        }
-        return listOfDuplicateElements;
+        return numbers.stream()
+                .filter(n -> !uniqueElementsFromNumbersList.add(n))
+                .collect(Collectors.toList());
     }
 }

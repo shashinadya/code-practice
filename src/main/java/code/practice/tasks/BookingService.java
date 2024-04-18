@@ -26,12 +26,10 @@ public class BookingService {
          * 2. Returns a double that totals the rate of each Room booked
          * in the bookings Map.
          */
-        double totalRateOfRoomsInTheBookingsMap = 0;
-        for (Map.Entry<Room, Guest> entry : bookings.entrySet()) {
-            Room key = entry.getKey();
-            totalRateOfRoomsInTheBookingsMap = totalRateOfRoomsInTheBookingsMap + key.getRate();
-        }
-        return totalRateOfRoomsInTheBookingsMap;
+
+        return bookings.keySet().stream()
+                .mapToDouble(Room::getRate)
+                .sum();
     }
 
     public Map<Room, Guest> getBookings() {
