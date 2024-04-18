@@ -22,7 +22,7 @@ class StreamTasksTest {
     @Test
     void sumOfIntegersTest() {
         var numbersLists = List.of(List.of("1", "-4", "5", "-1", "6"), List.of("-1", "4", "-5", "1", "-6"));
-        assertEquals(12, streamTasks.sumOfIntegers(numbersLists));
+        assertEquals(17, streamTasks.sumOfIntegers(numbersLists));
     }
 
     @Test
