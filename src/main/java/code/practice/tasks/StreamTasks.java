@@ -1,7 +1,5 @@
 package code.practice.tasks;
 
-import code.practice.exceptions.UnexpectedMajorException;
-
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -31,16 +29,12 @@ public class StreamTasks {
     }
 
     //Return any negative int string from the given list of ints. Throw some exception if not found.
-    public String getAnyNegativeIntAsString(List<Integer> listOfInts) throws UnexpectedMajorException {
-        if (listOfInts.stream().noneMatch(e -> e < 0)) {
-            throw new UnexpectedMajorException("No negative integers found");
-        } else {
+    public String getAnyNegativeIntAsString(List<Integer> listOfInts) {
             return listOfInts.stream()
                     .filter(e -> e < 0)
                     .map(Object::toString)
                     .findAny()
-                    .orElse("");
-        }
+                    .orElseThrow();
     }
 
     //Return first negative int string from the given list of ints. Return minimum possible int value if not found in the given list.

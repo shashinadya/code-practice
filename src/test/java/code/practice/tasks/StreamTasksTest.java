@@ -1,12 +1,12 @@
 package code.practice.tasks;
 
-import code.practice.exceptions.UnexpectedMajorException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,18 +41,20 @@ class StreamTasksTest {
     }
 
     @Test
-    void getAnyNegativeIntAsStringTest() throws UnexpectedMajorException {
+    void getAnyNegativeIntAsStringTest() {
         var listOfInts = List.of(1, -4, 5, 1, 6);
         assertEquals("-4", streamTasks.getAnyNegativeIntAsString(listOfInts));
     }
 
     @Test
-    void getAnyNegativeIntAsStringIfNoNegativeIntegersFoundTest() throws UnexpectedMajorException {
+    void getAnyNegativeIntAsStringIfNoNegativeIntegersFoundTest() {
         var listOfInts = List.of(1, 4, 5, 1, 6);
-        UnexpectedMajorException e = assertThrows(UnexpectedMajorException.class, () -> {
+
+        NoSuchElementException e = assertThrows(NoSuchElementException.class, () -> {
             streamTasks.getAnyNegativeIntAsString(listOfInts);
         });
-        assertEquals("No negative integers found", e.getMessage());
+
+        assertEquals("No value present", e.getMessage());
     }
 
     @Test
