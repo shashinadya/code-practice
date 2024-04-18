@@ -26,21 +26,20 @@ public class StreamTasks {
 
     //Print sequence between from and to
     public void justPrintSequence(int from, int to) {
-        IntStream
-                .rangeClosed(from, to)
-                .forEach(System.out::println);
+        IntStream.rangeClosed(from, to)
+                .forEach(System.out::print);
     }
 
     //Return any negative int string from the given list of ints. Throw some exception if not found.
     public String getAnyNegativeIntAsString(List<Integer> listOfInts) throws UnexpectedMajorException {
-        try {
+        if (listOfInts.stream().noneMatch(e -> e < 0)) {
+            throw new UnexpectedMajorException("No negative integers found");
+        } else {
             return listOfInts.stream()
                     .filter(e -> e < 0)
                     .map(Object::toString)
                     .findAny()
                     .orElse("");
-        } catch (Exception e) {
-            throw new UnexpectedMajorException("Caught UnexpectedMajorException: " + e.getMessage());
         }
     }
 

@@ -1,15 +1,25 @@
 package code.practice.tasks;
 
 import code.practice.exceptions.UnexpectedMajorException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StreamTasksTest {
+    private final PrintStream standardOut = System.out;
+    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     StreamTasks streamTasks = new StreamTasks();
+
+    @BeforeEach
+    public void setUp() {
+        System.setOut(new PrintStream(outputStreamCaptor));
+    }
 
     @Test
     void sumOfPositiveIntegersTest() {
@@ -19,19 +29,30 @@ class StreamTasksTest {
 
     @Test
     void sumOfIntegersTest() {
-        var numbersLists = List.of(List.of("1", "-4", "5", "-1", "6"));
+        var numbersLists = List.of(List.of("1", "-4", "5", "-1", "6"), List.of("-1", "4", "-5", "1", "-6"));
         assertEquals(12, streamTasks.sumOfIntegers(numbersLists));
     }
 
     @Test
     void justPrintSequenceTest() {
         streamTasks.justPrintSequence(2, 9);
+        assertEquals("23456789", outputStreamCaptor.toString()
+                .trim());
     }
 
     @Test
     void getAnyNegativeIntAsStringTest() throws UnexpectedMajorException {
         var listOfInts = List.of(1, -4, 5, 1, 6);
         assertEquals("-4", streamTasks.getAnyNegativeIntAsString(listOfInts));
+    }
+
+    @Test
+    void getAnyNegativeIntAsStringIfNoNegativeIntegersFoundTest() throws UnexpectedMajorException {
+        var listOfInts = List.of(1, 4, 5, 1, 6);
+        UnexpectedMajorException e = assertThrows(UnexpectedMajorException.class, () -> {
+            streamTasks.getAnyNegativeIntAsString(listOfInts);
+        });
+        assertEquals("No negative integers found", e.getMessage());
     }
 
     @Test

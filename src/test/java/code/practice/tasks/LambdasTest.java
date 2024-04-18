@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class LambdasTest {
-    Lambdas lambdas = new Lambdas();
+    private final Lambdas lambdas = new Lambdas();
 
     @Test
     void predicateForStringTest() {
