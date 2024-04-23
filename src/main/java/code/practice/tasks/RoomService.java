@@ -4,8 +4,8 @@ import code.practice.model.Room;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 public class RoomService {
     //Declare a Collection to store Room Inventory
@@ -33,24 +33,17 @@ public class RoomService {
 
     //Returns a new collection of rooms that meet or exceed the provided capacity
     public Collection<Room> getRoomsByCapacity(final int requiredCapacity) {
-        Collection<Room> inventoriesWithRequiredCapacity = new HashSet<>();
-        inventory.forEach(r -> {
-            if (r.getCapacity() >= requiredCapacity) {
-                inventoriesWithRequiredCapacity.add(r);
-            }
-        });
-        return inventoriesWithRequiredCapacity;
+        return inventory.stream()
+                .filter(r -> r.getCapacity() >= requiredCapacity)
+                .collect(Collectors.toSet());
     }
 
     //Returns a new collection of rooms with a rate below the provided rate and that match the provided type
     public Collection<Room> getRoomByRateAndType(final double rate, final String type) {
-        Collection<Room> inventoriesWithProvidedRateAndType = new HashSet<>();
-        inventory.forEach(r -> {
-            if ((r.getRate() == rate) & (r.getType().equals(type))) {
-                inventoriesWithProvidedRateAndType.add(r);
-            }
-        });
-        return inventoriesWithProvidedRateAndType;
+        return inventory.stream()
+                .filter(r -> r.getRate() == rate)
+                .filter(r -> r.getType().equals(type))
+                .collect(Collectors.toSet());
     }
 
     public void createRooms(Room[] rooms) {
@@ -67,18 +60,13 @@ public class RoomService {
         return inventory.toArray(new Room[0]);
     }
 
-    public Collection<Room> getByType(String type) {
-
-	/*
+    /*
 	   Return a new Collection of Rooms where Room#type matches the provided String.
 	   The original Room Inventory collection MUST NOT BE MODIFIED.
 	*/
-        Collection<Room> newInventory = new HashSet<>();
-        inventory.forEach(r -> {
-            if (r.getType().equals(type)) {
-                newInventory.add(r);
-            }
-        });
-        return newInventory;
+    public Collection<Room> getByType(String type) {
+        return inventory.stream()
+                .filter(r -> r.getType().equals(type))
+                .collect(Collectors.toSet());
     }
 }

@@ -1,5 +1,6 @@
 package code.practice.tasks;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,20 +18,9 @@ public class WordCounter {
         if ((str == null) || (str.isEmpty())) {
             throw new IllegalArgumentException("String cannot be null or empty.");
         }
-
         Map<String, Integer> wordCountMap = new HashMap<>();
         String[] words = str.split(" ");
-
-        int wordCount = 0;
-        for (String word : words) {
-            String lowerCaseWord = word.toLowerCase();
-            if (wordCountMap.containsKey(lowerCaseWord)) {
-                wordCount = wordCountMap.get(lowerCaseWord);
-                wordCountMap.put(lowerCaseWord, wordCount + 1);
-            } else {
-                wordCountMap.put(lowerCaseWord, 1);
-            }
-        }
+        Arrays.stream(words).map(String::toLowerCase).forEach(w -> wordCountMap.merge(w, 1, Integer::sum));
         return wordCountMap;
     }
 }
