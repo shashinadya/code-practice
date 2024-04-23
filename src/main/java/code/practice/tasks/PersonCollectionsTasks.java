@@ -73,7 +73,8 @@ public class PersonCollectionsTasks {
     public Double findAverageAge(List<Person> people) {
         return people.stream()
                 .mapToInt(Person::getAge)
-                .average().orElse(0.0);
+                .average()
+                .orElse(0.0);
     }
 
     /**
