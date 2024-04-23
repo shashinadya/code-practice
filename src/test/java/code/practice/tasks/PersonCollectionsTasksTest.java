@@ -1,7 +1,6 @@
 package code.practice.tasks;
 
 import code.practice.model.Person;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,8 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PersonCollectionsTasksTest {
-    private PersonCollectionsTasks personCollectionsTasks;
+class PersonCollectionsTasksTest {
+    private final PersonCollectionsTasks personCollectionsTasks = new PersonCollectionsTasks();
 
     private final List<Person> people = List.of(
             new Person("Nadya", 33, "Russia"),
@@ -20,11 +19,6 @@ public class PersonCollectionsTasksTest {
             new Person("Sonia", 21, "Russia"),
             new Person("Barbara", 45, "USA")
     );
-
-    @BeforeEach
-    void setUp() {
-        personCollectionsTasks = new PersonCollectionsTasks();
-    }
 
     @Test
     void filterAndSortListTest() {
@@ -99,6 +93,13 @@ public class PersonCollectionsTasksTest {
     @Test
     void findAverageAgeTest() {
         assertEquals(31.8, personCollectionsTasks.findAverageAge(people));
+    }
+
+    @Test
+    void findAverageAgeIfListIsEmptyTest() {
+        List<Person> emptyPeopleList = List.of();
+
+        assertEquals(0.0, personCollectionsTasks.findAverageAge(emptyPeopleList));
     }
 
     @Test
