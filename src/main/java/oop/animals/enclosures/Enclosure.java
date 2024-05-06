@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Enclosure<T extends Animal> {
-    private final List<T> animals = new ArrayList<>();
+    private List<T> animals = new ArrayList<>();
 
     public void addAnimal(T animal) {
         animals.add(animal);
@@ -27,6 +27,13 @@ public class Enclosure<T extends Animal> {
 
     public boolean containsOf(T animal) {
         return animals.contains(animal);
+    }
+
+    public Enclosure(Enclosure<T> enclosureToClone) {
+        this.animals = new ArrayList<>(enclosureToClone.animals);
+    }
+
+    public Enclosure() {
     }
 
     @Override
