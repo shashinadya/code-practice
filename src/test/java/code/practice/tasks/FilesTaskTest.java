@@ -17,6 +17,7 @@ import static code.practice.tasks.FilesTask.INVALID_FILE_DIR_MSG;
 import static code.practice.tasks.FilesTask.INVALID_PATH_MSG;
 import static code.practice.tasks.FilesTask.NO_NUMBER_MSG;
 import static code.practice.tasks.FilesTask.PROTECTED_FILE_MSG;
+import static code.practice.tasks.FilesTask.formatMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -48,22 +49,23 @@ public class FilesTaskTest {
     }
 
     @Test
-    void deleteEvenNumbersFromEmptyFileTest() throws IOException {
+    void deleteEvenNumbersFromEmptyFileTest() throws FileNotFoundException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/EmptyFile.txt");
         InvalidFileDataFormatException exception = assertThrows(InvalidFileDataFormatException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(getFilePath("FilesTaskTest_1/EmptyFile.txt"));
+            filesTask.deleteEvenNumbersFromFile(filePath);
         });
 
-        assertEquals(EMPTY_FILE_MSG, exception.getMessage());
+        assertEquals(formatMessage(filePath, EMPTY_FILE_MSG), exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersFileContainsOnlyLettersTest() throws IOException, URISyntaxException {
+    void deleteEvenNumbersFileContainsOnlyLettersTest() throws URISyntaxException, FileNotFoundException {
         String filePath = getFilePath("FilesTaskTest_1/OnlyLettersFile.txt");
         InvalidFileDataFormatException exception = assertThrows(InvalidFileDataFormatException.class, () -> {
             filesTask.deleteEvenNumbersFromFile(filePath);
         });
 
-        assertEquals(filePath + NO_NUMBER_MSG, exception.getMessage());
+        assertEquals(formatMessage(filePath, NO_NUMBER_MSG), exception.getMessage());
     }
 
     @Test
@@ -74,7 +76,7 @@ public class FilesTaskTest {
             filesTask.deleteEvenNumbersFromFile(filePath);
         });
 
-        assertEquals(filePath + PROTECTED_FILE_MSG, exception.getMessage());
+        assertEquals(formatMessage(filePath, PROTECTED_FILE_MSG), exception.getMessage());
     }
 
     @Test
@@ -85,8 +87,7 @@ public class FilesTaskTest {
             filesTask.deleteEvenNumbersFromFile(nonExistFilePath);
         });
 
-        assertEquals(nonExistFilePath + INVALID_FILE_DIR_MSG,
-                exception.getMessage());
+        assertEquals(formatMessage(nonExistFilePath, INVALID_FILE_DIR_MSG), exception.getMessage());
     }
 
     @Test
@@ -97,8 +98,7 @@ public class FilesTaskTest {
             filesTask.deleteEvenNumbersFromFile(invalidFilePath);
         });
 
-        assertEquals(invalidFilePath + INVALID_PATH_MSG,
-                exception.getMessage());
+        assertEquals(formatMessage(invalidFilePath, INVALID_PATH_MSG), exception.getMessage());
     }
 
     @Test
@@ -109,8 +109,7 @@ public class FilesTaskTest {
             filesTask.deleteEvenNumbersFromFile(invalidDirNameInPath);
         });
 
-        assertEquals(invalidDirNameInPath + INVALID_FILE_DIR_MSG,
-                exception.getMessage());
+        assertEquals(formatMessage(invalidDirNameInPath, INVALID_FILE_DIR_MSG), exception.getMessage());
     }
 
     @Test

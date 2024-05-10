@@ -10,38 +10,36 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FilesTask {
-
-    static final String EMPTY_FILE_MSG = "File is empty and has no data.";
-    static final String INVALID_FILE_DIR_MSG = " contains invalid file or directory name.";
-    static final String PROTECTED_FILE_MSG = " is not writable.";
-    static final String NO_NUMBER_MSG = " doesn't contain any number.";
-    static final String INVALID_PATH_MSG = " contains invalid characters.";
+    static final String EMPTY_FILE_MSG = "Given file is empty and has no data";
+    static final String INVALID_FILE_DIR_MSG = "Given path contains invalid file or directory name";
+    static final String PROTECTED_FILE_MSG = "Given file is not writable";
+    static final String NO_NUMBER_MSG = "Given file doesn't contain any number";
+    static final String INVALID_PATH_MSG = "Given path contains invalid characters";
 
     //Given a text file containing integers. Remove all even numbers from it.
     public void deleteEvenNumbersFromFile(String uriOfFileWithIntegers) throws IOException {
-
         if (uriOfFileWithIntegers.matches(".*[@#$%^&!?].*")) {
-            throw new IOException(uriOfFileWithIntegers + INVALID_PATH_MSG);
+            throw new IOException(formatMessage(uriOfFileWithIntegers, INVALID_PATH_MSG));
         }
 
         Path path = Path.of(uriOfFileWithIntegers);
 
         if (!path.toFile().exists() || !Files.exists(path)) {
-            throw new IOException(uriOfFileWithIntegers + INVALID_FILE_DIR_MSG);
+            throw new IOException(formatMessage(uriOfFileWithIntegers, INVALID_FILE_DIR_MSG));
         }
 
         if (!path.toFile().canWrite()) {
-            throw new IOException(uriOfFileWithIntegers + PROTECTED_FILE_MSG);
+            throw new IOException(formatMessage(uriOfFileWithIntegers, PROTECTED_FILE_MSG));
         }
 
         String result = Files.readString(path);
 
         if (result.isEmpty()) {
-            throw new InvalidFileDataFormatException(EMPTY_FILE_MSG);
+            throw new InvalidFileDataFormatException(formatMessage(uriOfFileWithIntegers, EMPTY_FILE_MSG));
         }
 
         if (!result.matches(".*\\d.*")) {
-            throw new InvalidFileDataFormatException(uriOfFileWithIntegers + NO_NUMBER_MSG);
+            throw new InvalidFileDataFormatException(formatMessage(uriOfFileWithIntegers, NO_NUMBER_MSG));
         }
 
         List<String> numbers = Arrays.asList(result.split(","));
@@ -66,5 +64,9 @@ public class FilesTask {
                 .collect(Collectors.joining(","));
 
         Files.writeString(path, wordsWithoutNumbers);
+    }
+
+    static String formatMessage(String filePath, String exceptionMessage) {
+        return exceptionMessage + ": " + filePath;
     }
 }
