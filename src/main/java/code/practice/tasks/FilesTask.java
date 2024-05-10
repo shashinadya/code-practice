@@ -54,4 +54,17 @@ public class FilesTask {
 
         Files.writeString(path, oddNumbers);
     }
+
+    //In this text file, delete all words that contain at least one number.
+    public void deleteAllWordsThatContainAtLeastOneNumber(String uriOfFileWithIntegers) throws IOException {
+        Path path = Path.of(uriOfFileWithIntegers);
+        String result = Files.readString(path);
+        List<String> words = Arrays.asList(result.split(","));
+
+        String wordsWithoutNumbers = words.stream()
+                .filter(w -> !w.matches(".*\\d.*"))
+                .collect(Collectors.joining(","));
+
+        Files.writeString(path, wordsWithoutNumbers);
+    }
 }

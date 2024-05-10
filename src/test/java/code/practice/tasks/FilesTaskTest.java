@@ -112,4 +112,13 @@ public class FilesTaskTest {
         assertEquals(invalidDirNameInPath + INVALID_FILE_DIR_MSG,
                 exception.getMessage());
     }
+
+    @Test
+    void deleteAllWordsThatContainAtLeastOneNumberTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/WordsWithNumbers.txt");
+        filesTask.deleteAllWordsThatContainAtLeastOneNumber(filePath);
+
+        assertEquals("word,word,number", Files.readString(Path.of(filePath)));
+        revert(filePath, "word,word1,word2,word,word3,number");
+    }
 }
