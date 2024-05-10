@@ -1,94 +1,115 @@
 package code.practice.tasks;
 
-import org.junit.jupiter.api.BeforeEach;
+import code.practice.exceptions.InvalidFileDataFormatException;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
 
+import static code.practice.tasks.FilesTask.EMPTY_FILE_MSG;
+import static code.practice.tasks.FilesTask.INVALID_FILE_DIR_MSG;
+import static code.practice.tasks.FilesTask.INVALID_PATH_MSG;
+import static code.practice.tasks.FilesTask.NO_NUMBER_MSG;
+import static code.practice.tasks.FilesTask.PROTECTED_FILE_MSG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FilesTaskTest {
-    private final String VALID_DATA_FILE_URI = "./src/test/resources/FilesTaskTest_1/ValidDataFile.txt";
-    private final String EMPTY_FILE_URI = "./src/test/resources/FilesTaskTest_1/EmptyFile.txt";
-    private final String ONLY_LETTERS_FILE_URI = "./src/test/resources/FilesTaskTest_1/OnlyLettersFile.txt";
-    private final String VALID_DATA_FILE_PROTECTED_URI =
-            "./src/test/resources/FilesTaskTest_1/ValidDataFileProtected.txt";
-    private final String FILE_NOT_FOUND_URI = "./src/test/resources/" +
-            "FilesTaskTest_1/FileIsNotFound.txt";
-    private final String INVALID_PATH_URI = "./src/test/resources/FilesTaskTest_1?/ValidDataFile.txt";
-    private final String INVALID_DIRECTORY_URI = "./src/test/resources/FilesTaskTest/ValidDataFile.txt";
-
     private final FilesTask filesTask = new FilesTask();
 
-    @BeforeEach
-    void setUp() throws IOException {
-        Files.writeString(Path.of(VALID_DATA_FILE_URI), "1,2,3,4,5,6,7,8,9");
+    private String getFilePath(String fileName) throws URISyntaxException, FileNotFoundException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        URI filePathURI;
+        try {
+            filePathURI = Objects.requireNonNull(classLoader.getResource(fileName)).toURI();
+        } catch (NullPointerException e) {
+            throw new FileNotFoundException("File is not found: " + fileName);
+        }
+        return Paths.get(filePathURI).toString();
+    }
+
+    private void revert(String filePath, String content) throws IOException {
+        Files.writeString(Path.of(filePath), content);
     }
 
     @Test
-    void deleteEvenNumbersFromFileWithValidDataAndAvailableForRewriteTest() throws IOException {
-        filesTask.deleteEvenNumbersFromFile(VALID_DATA_FILE_URI);
+    void deleteEvenNumbersFromFileWithValidDataAndAvailableForRewriteTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/ValidDataFile.txt");
+        filesTask.deleteEvenNumbersFromFile(filePath);
 
-        assertEquals("1,3,5,7,9", Files.readString(Path.of(VALID_DATA_FILE_URI)));
+        assertEquals("1,3,5,7,9", Files.readString(Path.of(filePath)));
+        revert(filePath, "1,2,3,4,5,6,7,8,9");
     }
 
     @Test
     void deleteEvenNumbersFromEmptyFileTest() throws IOException {
-        IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(EMPTY_FILE_URI);
+        InvalidFileDataFormatException exception = assertThrows(InvalidFileDataFormatException.class, () -> {
+            filesTask.deleteEvenNumbersFromFile(getFilePath("FilesTaskTest_1/EmptyFile.txt"));
         });
 
-        assertEquals("File is empty and has no data.", exception.getMessage());
+        assertEquals(EMPTY_FILE_MSG, exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersFileContainsOnlyLettersTest() throws IOException {
-        IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(ONLY_LETTERS_FILE_URI);
+    void deleteEvenNumbersFileContainsOnlyLettersTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/OnlyLettersFile.txt");
+        InvalidFileDataFormatException exception = assertThrows(InvalidFileDataFormatException.class, () -> {
+            filesTask.deleteEvenNumbersFromFile(filePath);
         });
 
-        assertEquals(ONLY_LETTERS_FILE_URI + " doesn't contain any number.", exception.getMessage());
+        assertEquals(filePath + NO_NUMBER_MSG, exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersFileIsProtectedTest() throws IOException {
+    void deleteEvenNumbersFileIsProtectedTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/ValidDataFileProtected.txt");
+        Path.of(filePath).toFile().setReadOnly();
         IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(VALID_DATA_FILE_PROTECTED_URI);
+            filesTask.deleteEvenNumbersFromFile(filePath);
         });
 
-        assertEquals(VALID_DATA_FILE_PROTECTED_URI + " is not writable.", exception.getMessage());
+        assertEquals(filePath + PROTECTED_FILE_MSG, exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersFileIsNotFoundTest() throws IOException {
+    void deleteEvenNumbersFileIsNotFoundTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/ValidDataFile.txt");
+        var nonExistFilePath = filePath.replace("ValidDataFile.txt", "ValidDataFile1.txt");
         IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(FILE_NOT_FOUND_URI);
+            filesTask.deleteEvenNumbersFromFile(nonExistFilePath);
         });
 
-        assertEquals(FILE_NOT_FOUND_URI + " contains invalid file or directory name.",
+        assertEquals(nonExistFilePath + INVALID_FILE_DIR_MSG,
                 exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersInvalidPathTest() throws IOException {
+    void deleteEvenNumbersInvalidPathTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/ValidDataFile.txt");
+        var invalidFilePath = filePath.replace("FilesTaskTest_1", "Fi&lesTaskTest_1");
         IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(INVALID_PATH_URI);
+            filesTask.deleteEvenNumbersFromFile(invalidFilePath);
         });
 
-        assertEquals(INVALID_PATH_URI + " contains invalid characters.",
+        assertEquals(invalidFilePath + INVALID_PATH_MSG,
                 exception.getMessage());
     }
 
     @Test
-    void deleteEvenNumbersInvalidDirectoryName() throws IOException {
+    void deleteEvenNumbersInvalidDirectoryName() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/ValidDataFile.txt");
+        var invalidDirNameInPath = filePath.replace("FilesTaskTest_1", "FilesTaskTest_11");
         IOException exception = assertThrows(IOException.class, () -> {
-            filesTask.deleteEvenNumbersFromFile(INVALID_DIRECTORY_URI);
+            filesTask.deleteEvenNumbersFromFile(invalidDirNameInPath);
         });
 
-        assertEquals(INVALID_DIRECTORY_URI + " contains invalid file or directory name.",
+        assertEquals(invalidDirNameInPath + INVALID_FILE_DIR_MSG,
                 exception.getMessage());
     }
 }
