@@ -20,24 +20,10 @@ import static code.practice.tasks.FilesTask.PROTECTED_FILE_MSG;
 import static code.practice.tasks.FilesTask.formatMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FilesTaskTest {
     private final FilesTask filesTask = new FilesTask();
-
-    private String getFilePath(String fileName) throws URISyntaxException, FileNotFoundException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        URI filePathURI;
-        try {
-            filePathURI = Objects.requireNonNull(classLoader.getResource(fileName)).toURI();
-        } catch (NullPointerException e) {
-            throw new FileNotFoundException("File is not found: " + fileName);
-        }
-        return Paths.get(filePathURI).toString();
-    }
-
-    private void revert(String filePath, String content) throws IOException {
-        Files.writeString(Path.of(filePath), content);
-    }
 
     @Test
     void deleteEvenNumbersFromFileWithValidDataAndAvailableForRewriteTest() throws IOException, URISyntaxException {
@@ -71,7 +57,9 @@ public class FilesTaskTest {
     @Test
     void deleteEvenNumbersFileIsProtectedTest() throws IOException, URISyntaxException {
         String filePath = getFilePath("FilesTaskTest_1/ValidDataFileProtected.txt");
-        Path.of(filePath).toFile().setReadOnly();
+        boolean fileSetToReadOnly = Path.of(filePath).toFile().setReadOnly();
+        assertTrue(fileSetToReadOnly);
+
         IOException exception = assertThrows(IOException.class, () -> {
             filesTask.deleteEvenNumbersFromFile(filePath);
         });
@@ -119,5 +107,20 @@ public class FilesTaskTest {
 
         assertEquals("word,word,number", Files.readString(Path.of(filePath)));
         revert(filePath, "word,word1,word2,word,word3,number");
+    }
+
+    private String getFilePath(String fileName) throws URISyntaxException, FileNotFoundException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        URI filePathURI;
+        try {
+            filePathURI = Objects.requireNonNull(classLoader.getResource(fileName)).toURI();
+        } catch (NullPointerException e) {
+            throw new FileNotFoundException("File is not found: " + fileName);
+        }
+        return Paths.get(filePathURI).toString();
+    }
+
+    private void revert(String filePath, String content) throws IOException {
+        Files.writeString(Path.of(filePath), content);
     }
 }
