@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,8 +62,8 @@ public class FilesTask {
     }
 
     //In this text file, delete all words that contain at least one number.
-    public void deleteAllWordsThatContainAtLeastOneNumber(String uriOfFileWithIntegers) throws IOException {
-        Path path = Path.of(uriOfFileWithIntegers);
+    public void deleteAllWordsThatContainAtLeastOneNumber(String uriOfFileWithWords) throws IOException {
+        Path path = Path.of(uriOfFileWithWords);
         String result = Files.readString(path);
         List<String> words = Arrays.asList(result.split(","));
 
@@ -77,20 +76,16 @@ public class FilesTask {
 
     //Given a text file. Create a new file, each line of which is obtained from the corresponding
     // line of the source file by rearranging the words in reverse order.
-    public File createNewFileWithReversedWords(String uriOfFileWithIntegers, boolean rewriteIfExist)
+    public File createNewFileWithReversedWords(String uriOfFileWithWords, boolean rewriteIfExist)
             throws IOException, URISyntaxException {
-        Path path = Path.of(uriOfFileWithIntegers);
+        Path path = Path.of(uriOfFileWithWords);
         List<String> reversedLines = Files.lines(path)
-                .map(line -> {
-                    String[] words = line.split(" ");
-                    List<String> reversedWords = Collections.singletonList(stream(words)
-                            .map(StringBuilder::new).reduce((sb1, sb2) -> sb2.append(" ").append(sb1))
-                            .orElse(new StringBuilder())
-                            .toString());
-                    return String.join(" ", reversedWords);
-                })
+                .map(line -> stream(line.split(" "))
+                        .map(StringBuilder::new)
+                        .reduce((sb1, sb2) -> sb2.append(" ").append(sb1))
+                        .orElse(new StringBuilder())
+                        .toString())
                 .collect(Collectors.toList());
-
 
         URI resourceFolder = getClass().getResource(File.separator).toURI();
         String pathToResourceFolder = Paths.get(resourceFolder).toString();
@@ -105,7 +100,50 @@ public class FilesTask {
         return reversedWords;
     }
 
+    //Given a text file. Create a new file consisting of those lines of the source file from the numbers of which
+    // you can create an arithmetic progression.
+    public File createNewFileWithArithmeticProgression(String uriOfFileWithIntegers, boolean rewriteIfExist)
+            throws IOException, URISyntaxException {
+        Path path = Path.of(uriOfFileWithIntegers);
+        List<String> arithmeticProgressionLines = Files.lines(path)
+                .map(line -> stream(line.split(","))
+                        .mapToInt(Integer::parseInt)
+                        .toArray())
+                .filter(FilesTask::isArithmeticProgression)
+                .map(array -> Arrays.stream(array)
+                        .mapToObj(String::valueOf)
+                        .collect(joining(",")))
+                .toList();
+
+        URI resourceFolder = getClass().getResource(File.separator).toURI();
+        String pathToResourceFolder = Paths.get(resourceFolder).toString();
+        File arithmeticProgressionFile = new File(Paths
+                .get(pathToResourceFolder + File.separator + "ArithmeticProgressionFile.txt").toUri());
+
+        if (!arithmeticProgressionFile.createNewFile() && !rewriteIfExist) {
+            throw new IOException(formatMessage(arithmeticProgressionFile.toPath().toString(),
+                    "ArithmeticProgressionFile.txt file already exists"));
+        }
+
+        Files.write(arithmeticProgressionFile.toPath(), arithmeticProgressionLines);
+        return arithmeticProgressionFile;
+    }
+
     static String formatMessage(String filePath, String exceptionMessage) {
         return exceptionMessage + ": " + filePath;
+    }
+
+    static boolean isArithmeticProgression(int[] sequence) {
+        if (sequence.length <= 2) {
+            return false;
+        }
+        int difference = sequence[1] - sequence[0];
+
+        for (int i = 2; i < sequence.length; i++) {
+            if (sequence[i] - sequence[i - 1] != difference) {
+                return false;
+            }
+        }
+        return true;
     }
 }
