@@ -3,6 +3,7 @@ package code.practice.tasks;
 import code.practice.exceptions.InvalidFileDataFormatException;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
@@ -19,6 +20,7 @@ import static code.practice.tasks.FilesTask.NO_NUMBER_MSG;
 import static code.practice.tasks.FilesTask.PROTECTED_FILE_MSG;
 import static code.practice.tasks.FilesTask.formatMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -107,6 +109,39 @@ public class FilesTaskTest {
 
         assertEquals("word,word,number", Files.readString(Path.of(filePath)));
         revert(filePath, "word,word1,word2,word,word3,number");
+    }
+
+    @Test
+    void createNewFileWithReversedWordsPositiveTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/WordsToReverse.txt");
+        String reversedWords = "words line First" + System.lineSeparator() +
+                "beach Second" + System.lineSeparator() +
+                "Trail Pond Creek Gold" + System.lineSeparator();
+        File reversedFile = filesTask.createNewFileWithReversedWords(filePath, true);
+        String result = Files.readString(reversedFile.toPath());
+
+        assertEquals(reversedWords, result);
+
+        reversedFile.delete();
+        assertFalse(reversedFile.exists());
+    }
+
+    @Test
+    void createNewFileWithReversedWordsNegativeTest() throws IOException, URISyntaxException {
+        String filePath = getFilePath("FilesTaskTest_1/WordsToReverse.txt");
+        String reversedWords = "words line First" + System.lineSeparator() +
+                "beach Second" + System.lineSeparator() +
+                "Trail Pond Creek Gold" + System.lineSeparator();
+        File reversedFile = filesTask.createNewFileWithReversedWords(filePath, true);
+        IOException exception = assertThrows(IOException.class, () -> {
+            filesTask.createNewFileWithReversedWords(filePath, false);
+        });
+
+        assertEquals("ReversedWords.txt file already exists: " + reversedFile.getPath(),
+                exception.getMessage());
+
+        reversedFile.delete();
+        assertFalse(reversedFile.exists());
     }
 
     private String getFilePath(String fileName) throws URISyntaxException, FileNotFoundException {
