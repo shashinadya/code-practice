@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Class extends BaseEntity {
+public class Course extends BaseEntity {
     private String name;
     private final List<Student> students = new ArrayList<>();
 
-    public Class(int id, String name, List<Student> students) {
+    public Course() {
+    }
+
+    public Course(int id, String name, List<Student> students) {
         super();
         this.name = name;
         this.students.addAll(students);
@@ -30,8 +33,8 @@ public class Class extends BaseEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Class aClass = (Class) o;
-        return Objects.equals(name, aClass.name) && Objects.equals(students, aClass.students);
+        Course aCourse = (Course) o;
+        return Objects.equals(name, aCourse.name) && Objects.equals(students, aCourse.students);
     }
 
     @Override

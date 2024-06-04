@@ -4,13 +4,16 @@ import java.util.Objects;
 
 public class Student extends BaseEntity {
     private String fullName;
-    private Integer classId;
+    private Integer courseId;
     private Double averageScore;
 
-    public Student(String fullName, Integer classId, Double averageScore) {
+    public Student() {
+    }
+
+    public Student(String fullName, Integer courseId, Double averageScore) {
         super();
         this.fullName = fullName;
-        this.classId = classId;
+        this.courseId = courseId;
         this.averageScore = averageScore;
     }
 
@@ -22,12 +25,12 @@ public class Student extends BaseEntity {
         this.fullName = fullName;
     }
 
-    public Integer getClassId() {
-        return classId;
+    public Integer getCourseId() {
+        return courseId;
     }
 
-    public void setClassId(Integer classId) {
-        this.classId = classId;
+    public void setCourseId(Integer courseId) {
+        this.courseId = courseId;
     }
 
     public Double getAverageScore() {
@@ -43,12 +46,12 @@ public class Student extends BaseEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Student student = (Student) o;
-        return Objects.equals(fullName, student.fullName) && Objects.equals(classId, student.classId)
+        return Objects.equals(fullName, student.fullName) && Objects.equals(courseId, student.courseId)
                 && Objects.equals(averageScore, student.averageScore);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fullName, classId, averageScore);
+        return Objects.hash(fullName, courseId, averageScore);
     }
 }

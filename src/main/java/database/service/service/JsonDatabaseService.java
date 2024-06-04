@@ -2,21 +2,24 @@ package database.service.service;
 
 import code.practice.exceptions.CriticalDatabaseException;
 import code.practice.exceptions.DatabaseDoesNotExistException;
-import code.practice.exceptions.TableIsNotCompatibleWithEntityException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import code.practice.exceptions.ProvidedIdDoesNotExistException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import database.service.entity.BaseEntity;
 import database.service.helper.Settings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class JsonDatabaseService implements DatabaseService {
@@ -43,21 +46,19 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T extends BaseEntity> T addNewRecordToTable(T entity) throws DatabaseDoesNotExistException,
-            TableIsNotCompatibleWithEntityException, IOException {
+    public <T extends BaseEntity> T addNewRecordToTable(T entity) throws DatabaseDoesNotExistException, IOException {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
         if (!Files.exists(databasePath)) {
-            throw new DatabaseDoesNotExistException("Database does not exist" + databasePath);
+            throw new DatabaseDoesNotExistException("Database does not exist.");
         }
 
-        if (isTableCompatibleWithEntity(databasePath, entityClass)) {
-            throw new TableIsNotCompatibleWithEntityException("Table " + databasePath +
-                    " is not compatible with entity " + entityClass);
-        }
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
 
-        List<T> entities = objectMapper.readValue(Files.newBufferedReader(databasePath), new TypeReference<>() {});
+        List<T> entities = objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
         String entityClassName = entityClass.getName();
         var lastUsedId = entityIds.get(entityClassName);
 
@@ -78,8 +79,28 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T, I> void updateRecordInTable(T entity, I id) {
+    public <T extends BaseEntity, I> T updateRecordInTable(T entity, I id) throws IOException,
+            ProvidedIdDoesNotExistException {
+        Class<? extends BaseEntity> entityClass = entity.getClass();
+        Path databasePath = Path.of(getDatabasePath(entityClass));
 
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        List<T> entities = objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+
+        Optional<T> optionalEntity = entities.stream().filter(e -> id.equals(e.getId())).findFirst();
+        T entityFoundById;
+        if (optionalEntity.isPresent()) {
+            entityFoundById = optionalEntity.get();
+            updateEntityFields(entityFoundById, entity);
+        } else {
+            throw new ProvidedIdDoesNotExistException("Entity with provided Id does not exist.");
+        }
+
+        objectMapper.writeValue(databasePath.toFile(), entities);
+        return entityFoundById;
     }
 
     @Override
@@ -93,17 +114,17 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T, I> T getById(Class<? extends BaseEntity> entityClass, I id) {
+    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) {
         return null;
     }
 
     @Override
-    public <T> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
+    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         return null;
     }
 
     @Override
-    public <T, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass, Set<Pair<String, V>> filters) {
+    public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass, Set<Pair<String, V>> filters) {
         return null;
     }
 
@@ -112,8 +133,16 @@ public class JsonDatabaseService implements DatabaseService {
         return databaseFolder + File.separator + entityClass.getSimpleName() + "Table" + ".json";
     }
 
-    private <T extends BaseEntity> boolean isTableCompatibleWithEntity(Path databasePath, Class<T> entityClass) {
-        String entityClassName = entityClass.getSimpleName();
-        return databasePath.toString().startsWith(entityClassName);
+    private <T extends BaseEntity> void updateEntityFields(T outcomeIntity, T incomeIntity) {
+        Field[] fields = incomeIntity.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            try {
+                Object value = field.get(incomeIntity);
+                field.set(outcomeIntity, value);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
