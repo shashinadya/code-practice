@@ -104,42 +104,76 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id) {
-        return false;
+    public <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id) throws IOException {
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        List<? extends BaseEntity> entities =
+                objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+
+        boolean isEntityRemoved = entities.removeIf(e -> id.equals(e.getId()));
+
+        objectMapper.writeValue(databasePath.toFile(), entities);
+        return isEntityRemoved;
     }
 
     @Override
-    public boolean removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
-        return false;
+    public void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass) throws IOException {
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        Files.writeString(databasePath, "[]");
     }
 
     @Override
-    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) {
+    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) throws IOException,
+            ProvidedIdDoesNotExistException {
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        List<T> entities =
+                objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+
+        return entities.stream()
+                .filter(e -> id.equals(e.getId()))
+                .findFirst()
+                .orElseThrow(() -> new ProvidedIdDoesNotExistException("Entity with provided Id does not exist."));
+    }
+
+    @Override
+    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass)
+            throws IOException {
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        return objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+    }
+
+    @Override
+    public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
+                                                              Set<Pair<String, V>> filters) {
         return null;
     }
 
-    @Override
-    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
-        return null;
-    }
-
-    @Override
-    public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass, Set<Pair<String, V>> filters) {
-        return null;
-    }
-
-    private String getDatabasePath(Class<? extends BaseEntity> entityClass) {
+    String getDatabasePath(Class<? extends BaseEntity> entityClass) {
         var databaseFolder = settings.getDatabasePath();
         return databaseFolder + File.separator + entityClass.getSimpleName() + "Table" + ".json";
     }
 
-    private <T extends BaseEntity> void updateEntityFields(T outcomeIntity, T incomeIntity) {
-        Field[] fields = incomeIntity.getClass().getDeclaredFields();
+    private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
+        Field[] fields = incomeEntity.getClass().getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
             try {
-                Object value = field.get(incomeIntity);
-                field.set(outcomeIntity, value);
+                Object value = field.get(incomeEntity);
+                field.set(outcomeEntity, value);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
