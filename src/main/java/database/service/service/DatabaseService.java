@@ -32,5 +32,5 @@ public interface DatabaseService {
             throws IOException;
 
     <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
-                                                       Set<Pair<String, V>> filters);
+                                                       Set<Pair<String, V>> filters) throws IOException;
 }

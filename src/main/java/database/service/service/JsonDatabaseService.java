@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JsonDatabaseService implements DatabaseService {
     private final Settings settings = new Settings();
@@ -54,11 +55,7 @@ public class JsonDatabaseService implements DatabaseService {
             throw new DatabaseDoesNotExistException("Database does not exist.");
         }
 
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        JavaType genericType = typeFactory.constructType(entityClass);
-        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
-
-        List<T> entities = objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
         String entityClassName = entityClass.getName();
         var lastUsedId = entityIds.get(entityClassName);
 
@@ -84,11 +81,7 @@ public class JsonDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        JavaType genericType = typeFactory.constructType(entityClass);
-        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
-
-        List<T> entities = objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
 
         Optional<T> optionalEntity = entities.stream().filter(e -> id.equals(e.getId())).findFirst();
         T entityFoundById;
@@ -107,12 +100,7 @@ public class JsonDatabaseService implements DatabaseService {
     public <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id) throws IOException {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        JavaType genericType = typeFactory.constructType(entityClass);
-        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
-
-        List<? extends BaseEntity> entities =
-                objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+        List<? extends BaseEntity> entities = deserializeEntities(entityClass, Files.readString(databasePath));
 
         boolean isEntityRemoved = entities.removeIf(e -> id.equals(e.getId()));
 
@@ -131,12 +119,7 @@ public class JsonDatabaseService implements DatabaseService {
             ProvidedIdDoesNotExistException {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        JavaType genericType = typeFactory.constructType(entityClass);
-        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
-
-        List<T> entities =
-                objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
 
         return entities.stream()
                 .filter(e -> id.equals(e.getId()))
@@ -149,17 +132,38 @@ public class JsonDatabaseService implements DatabaseService {
             throws IOException {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        JavaType genericType = typeFactory.constructType(entityClass);
-        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
-
-        return objectMapper.readValue(Files.newBufferedReader(databasePath), listType);
+        return deserializeEntities(entityClass, Files.readString(databasePath));
     }
 
     @Override
     public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
-                                                              Set<Pair<String, V>> filters) {
-        return null;
+                                                              Set<Pair<String, V>> filters) throws IOException {
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
+
+        return entities.stream()
+                .filter(entity -> {
+                    for (Pair<String, V> filter : filters) {
+                        String propertyName = filter.getKey();
+                        V expectedValue = filter.getValue();
+
+                        try {
+                            Field field = entityClass.getDeclaredField(propertyName);
+                            field.setAccessible(true);
+                            Object actualValue = field.get(entity);
+
+                            if (!expectedValue.equals(actualValue)) {
+                                return false;
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            e.printStackTrace();
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
 
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {
@@ -178,5 +182,14 @@ public class JsonDatabaseService implements DatabaseService {
                 e.printStackTrace();
             }
         }
+    }
+
+    private <T extends BaseEntity> List<T> deserializeEntities(Class<? extends BaseEntity> entityClass,
+                                                               String content) throws IOException {
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        JavaType genericType = typeFactory.constructType(entityClass);
+        JavaType listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        return objectMapper.readValue(content, listType);
     }
 }
