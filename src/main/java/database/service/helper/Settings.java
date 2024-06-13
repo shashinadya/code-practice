@@ -1,10 +1,9 @@
 package database.service.helper;
 
-import code.practice.exceptions.CriticalDatabaseException;
+import code.practice.exceptions.database.CreationDatabaseException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -19,13 +18,15 @@ import java.util.Properties;
 public class Settings {
     private String propertyFileName;
     private final Path defaultJsonDatabasePath;
+    static final String DATABASE_STORAGE_PATH = "database.storage.path";
+    static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
 //    private static final Logger logger = LogManager.getLogger(Settings.class);
 
-    public Settings() throws CriticalDatabaseException {
-        defaultJsonDatabasePath = getFilePath("database");
+    public Settings() throws CreationDatabaseException {
+        defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
     }
 
-    public Settings(String propertyFileName) throws CriticalDatabaseException {
+    public Settings(String propertyFileName) throws CreationDatabaseException {
         this();
         this.propertyFileName = propertyFileName;
     }
@@ -43,24 +44,23 @@ public class Settings {
             return defaultJsonDatabasePath;
         }
 
-        Properties properties = new Properties();
-        InputStream input = Settings.class.getClassLoader().getResourceAsStream(propertyFileName);
+        var properties = new Properties();
+        var input = Settings.class.getClassLoader().getResourceAsStream(propertyFileName);
 
         if (input == null) {
             return defaultJsonDatabasePath;
         }
         try {
             properties.load(input);
-            String databaseStoragePath = properties.getProperty("database.storage.path");
+            String databaseStoragePath = properties.getProperty(DATABASE_STORAGE_PATH);
             return Path.of(databaseStoragePath);
         } catch (IOException e) {
 //            logger.error(e);
-            e.getMessage();
             return defaultJsonDatabasePath;
         }
     }
 
-    public Path getFilePath(String directoryName) throws CriticalDatabaseException {
+    public Path getFilePath(String directoryName) throws CreationDatabaseException {
         URI resourceFolder;
         String pathToResourceFolder;
 
@@ -68,7 +68,7 @@ public class Settings {
             resourceFolder = getClass().getResource(File.separator).toURI();
         } catch (URISyntaxException e) {
 //            logger.error("URL cannot be converted to URI.");
-            throw new CriticalDatabaseException("URL cannot be converted to URI: " + e.getMessage());
+            throw new CreationDatabaseException("URL cannot be converted to URI: " + e.getMessage());
         }
 
         pathToResourceFolder = Paths.get(resourceFolder).toString();
@@ -82,7 +82,7 @@ public class Settings {
             return Files.createDirectory(path);
         } catch (IOException e) {
 //            logger.error("Directory cannot be created.");
-            throw new CriticalDatabaseException("Directory cannot be created: " + e.getMessage());
+            throw new CreationDatabaseException("Directory cannot be created: " + e.getMessage());
         }
     }
 }

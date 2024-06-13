@@ -6,12 +6,12 @@ import java.util.Objects;
 
 public class Course extends BaseEntity {
     private String name;
-    private final List<Student> students = new ArrayList<>();
+    private List<Student> students = new ArrayList<>();
 
     public Course() {
     }
 
-    public Course(int id, String name, List<Student> students) {
+    public Course(String name, List<Student> students) {
         super();
         this.name = name;
         this.students.addAll(students);
@@ -27,6 +27,10 @@ public class Course extends BaseEntity {
 
     public List<Student> getStudents() {
         return students;
+    }
+
+    public void setStudents(List<Student> students) {
+        this.students = students;
     }
 
     @Override
