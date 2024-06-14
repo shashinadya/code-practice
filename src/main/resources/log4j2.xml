@@ -11,5 +11,8 @@
         <Root level="error">
             <AppenderRef ref="fout"/>
         </Root>
+        <Root level="info">
+            <AppenderRef ref="fout"/>
+        </Root>
     </Loggers>
 </Configuration>

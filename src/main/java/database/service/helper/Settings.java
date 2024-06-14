@@ -11,16 +11,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-//TODO: logger temporary disabled to do not spam to console, and need to add SLF4J
-//import org.apache.logging.log4j.Logger;
-//import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class Settings {
     private String propertyFileName;
     private final Path defaultJsonDatabasePath;
     static final String DATABASE_STORAGE_PATH = "database.storage.path";
     static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
-//    private static final Logger logger = LogManager.getLogger(Settings.class);
+    private static final Logger logger = LogManager.getLogger(Settings.class);
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
@@ -55,7 +54,7 @@ public class Settings {
             String databaseStoragePath = properties.getProperty(DATABASE_STORAGE_PATH);
             return Path.of(databaseStoragePath);
         } catch (IOException e) {
-//            logger.error(e);
+            logger.error(e.getMessage());
             return defaultJsonDatabasePath;
         }
     }
@@ -67,7 +66,7 @@ public class Settings {
         try {
             resourceFolder = getClass().getResource(File.separator).toURI();
         } catch (URISyntaxException e) {
-//            logger.error("URL cannot be converted to URI.");
+            logger.error("URL cannot be converted to URI.");
             throw new CreationDatabaseException("URL cannot be converted to URI: " + e.getMessage());
         }
 
@@ -81,7 +80,7 @@ public class Settings {
         try {
             return Files.createDirectory(path);
         } catch (IOException e) {
-//            logger.error("Directory cannot be created.");
+            logger.error("Directory cannot be created.");
             throw new CreationDatabaseException("Directory cannot be created: " + e.getMessage());
         }
     }
