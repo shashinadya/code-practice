@@ -11,15 +11,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Settings {
     private String propertyFileName;
     private final Path defaultJsonDatabasePath;
     static final String DATABASE_STORAGE_PATH = "database.storage.path";
     static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
-    private static final Logger logger = LogManager.getLogger(Settings.class);
+    private static final Logger logger = LoggerFactory.getLogger(Settings.class);
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
