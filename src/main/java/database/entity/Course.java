@@ -1,12 +1,13 @@
-package database.service.entity;
+package database.entity;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class Course extends BaseEntity {
     private String name;
-    private List<Student> students = new ArrayList<>();
+    private Set<Student> students = new HashSet<>();
 
     public Course() {
     }
@@ -25,11 +26,11 @@ public class Course extends BaseEntity {
         this.name = name;
     }
 
-    public List<Student> getStudents() {
+    public Set<Student> getStudents() {
         return students;
     }
 
-    public void setStudents(List<Student> students) {
+    public void setStudents(Set<Student> students) {
         this.students = students;
     }
 
@@ -37,8 +38,8 @@ public class Course extends BaseEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Course aCourse = (Course) o;
-        return Objects.equals(name, aCourse.name) && Objects.equals(students, aCourse.students);
+        Course course = (Course) o;
+        return Objects.equals(name, course.name) && Objects.equals(students, course.students);
     }
 
     @Override

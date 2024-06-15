@@ -1,4 +1,4 @@
-package database.service.entity;
+package database.entity;
 
 public abstract class BaseEntity {
     private Integer id;

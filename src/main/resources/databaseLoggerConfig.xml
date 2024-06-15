@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug" name="database" packages="">
+<Configuration status="ERROR" name="database" packages="">
     <Appenders>
-        <File name="fout" fileName="DatabaseSettings.log" append="true">
+        <File name="FileAppender" fileName="DatabaseSettings.log" append="true">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %m%n</Pattern>
             </PatternLayout>
@@ -9,10 +9,7 @@
     </Appenders>
     <Loggers>
         <Root level="error">
-            <AppenderRef ref="fout"/>
-        </Root>
-        <Root level="info">
-            <AppenderRef ref="fout"/>
+            <AppenderRef ref="FileAppender"/>
         </Root>
     </Loggers>
 </Configuration>

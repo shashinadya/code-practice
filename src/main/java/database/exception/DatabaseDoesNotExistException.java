@@ -1,4 +1,4 @@
-package code.practice.exceptions.database;
+package database.exception;
 
 public class DatabaseDoesNotExistException extends RuntimeException {
 

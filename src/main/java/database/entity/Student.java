@@ -1,20 +1,21 @@
-package database.service.entity;
+package database.entity;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Student extends BaseEntity {
     private String fullName;
-    private Integer courseId;
     private Double averageScore;
+    private List<Integer> courseIds;
 
     public Student() {
     }
 
-    public Student(String fullName, Integer courseId, Double averageScore) {
+    public Student(String fullName, Double averageScore, List<Integer> courseIds) {
         super();
         this.fullName = fullName;
-        this.courseId = courseId;
         this.averageScore = averageScore;
+        this.courseIds = courseIds;
     }
 
     public String getFullName() {
@@ -25,14 +26,6 @@ public class Student extends BaseEntity {
         this.fullName = fullName;
     }
 
-    public Integer getCourseId() {
-        return courseId;
-    }
-
-    public void setCourseId(Integer courseId) {
-        this.courseId = courseId;
-    }
-
     public Double getAverageScore() {
         return averageScore;
     }
@@ -41,17 +34,25 @@ public class Student extends BaseEntity {
         this.averageScore = averageScore;
     }
 
+    public List<Integer> getCourseIds() {
+        return courseIds;
+    }
+
+    public void setCourseIds(List<Integer> courseIds) {
+        this.courseIds = courseIds;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Student student = (Student) o;
-        return Objects.equals(fullName, student.fullName) && Objects.equals(courseId, student.courseId)
-                && Objects.equals(averageScore, student.averageScore);
+        return Objects.equals(fullName, student.fullName) && Objects.equals(averageScore, student.averageScore) &&
+                Objects.equals(courseIds, student.courseIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fullName, courseId, averageScore);
+        return Objects.hash(fullName, averageScore, courseIds);
     }
 }
