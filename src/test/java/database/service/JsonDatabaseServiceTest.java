@@ -1,19 +1,23 @@
 package database.service;
 
 import database.exception.DatabaseDoesNotExistException;
+import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
 import database.entity.Student;
+import database.exception.IncorrectPropertyNameException;
+import database.exception.IncorrectValueTypeException;
+import database.exception.NullPropertyNameOrValueException;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
+import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -34,7 +38,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void addNewRecordToTablePositiveTest() throws IOException {
+    public void addNewRecordToTablePositiveTest() {
         jsonDatabaseService.createTable(Student.class);
 
         Student receivedFirstStudent = jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -53,14 +57,16 @@ public class JsonDatabaseServiceTest {
         DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
                 jsonDatabaseService.addNewRecordToTable(firstStudent));
 
-        assertEquals("Database does not exist.", exception.getMessage());
+        assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
-    public void updateRecordInTableWIthCorrectIdTest() throws IOException {
+    public void updateRecordInTableWIthCorrectIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        //Check that original Id is not changed
+        secondStudent.setId(5);
 
         assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
         assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
@@ -68,19 +74,19 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void updateRecordInTableWIthIncorrectIdTest() throws IOException {
+    public void updateRecordInTableWIthIncorrectIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
         IdDoesNotExistException exception = assertThrows(IdDoesNotExistException.class, () ->
                 jsonDatabaseService.updateRecordInTable(secondStudent, 12));
 
-        assertEquals("Entity with provided Id does not exist.", exception.getMessage());
+        assertEquals(ENTITY_DOES_NOT_EXIST, exception.getMessage());
         assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
-    public void removeRecordFromTableTest() throws IOException {
+    public void removeRecordFromTableTest() {
         List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent);
         List<Student> studentsAfterDeletion = List.of(secondStudent);
 
@@ -98,20 +104,20 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void removeAllRecordsFromTableTest() throws IOException {
+    public void removeAllRecordsFromTableTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(secondStudent);
 
         jsonDatabaseService.removeAllRecordsFromTable(Student.class);
         Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
-        assertEquals(EMPTY_BRACKETS_TO_JSON, Files.readString(databasePath));
+        assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
 
         assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
-    public void getByIdTest() throws IOException {
+    public void getByIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(secondStudent);
@@ -125,7 +131,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByIdWhenIdDoesNotExistTest() throws IOException {
+    public void getByIdWhenIdDoesNotExistTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
@@ -135,7 +141,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getAllRecordsFromTableTest() throws IOException {
+    public void getAllRecordsFromTableTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
 
         jsonDatabaseService.createTable(Student.class);
@@ -148,12 +154,10 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersAllFiltersMatchTest() throws IOException {
+    public void getByFiltersAllFiltersMatchTest() {
         List<Student> students = List.of(firstStudent, fourthStudent);
 
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("courseIds", List.of(0));
-        filters.put("averageScore", 5.0);
+        Map<String, Object> filters = Map.of("courseIds", List.of(0), "averageScore", 5.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -167,12 +171,10 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersOnlyOneFilterMatchesTest() throws IOException {
+    public void getByFiltersOnlyOneFilterMatchesTest() {
         List<Student> students = List.of(thirdStudent);
 
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("courseIds", List.of(1));
-        filters.put("averageScore", 5.0);
+        Map<String, Object> filters = Map.of("courseIds", List.of(1), "averageScore", 5.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -186,12 +188,10 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersNoFilterMatchesTest() throws IOException {
+    public void getByFiltersNoFilterMatchesTest() {
         List<Student> students = new ArrayList<>();
 
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("courseIds", List.of(4));
-        filters.put("averageScore", 3.0);
+        Map<String, Object> filters = Map.of("courseIds", List.of(4), "averageScore", 3.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -199,6 +199,80 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
 
         assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void getByFiltersPropertyNameIsNullTest() {
+        Map<String, Object> filters = new HashMap<>() {{
+            put(null, 0);
+        }};
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+        NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
+                jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals("Property name and value cannot be null.", exception.getMessage());
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void getByFiltersValueIsNullTest() {
+        Map<String, Object> filters = new HashMap<>() {{
+            put("averageScore", null);
+        }};
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+        NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
+                jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals("Property name and value cannot be null.", exception.getMessage());
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void getByFiltersValueIsEmptyTest() {
+        Map<String, Object> filters = Map.of("fullName", "");
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+        EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
+                jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals("Value cannot be empty.", exception.getMessage());
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void getByFiltersIncorrectPropertyNameTest() {
+        Map<String, Object> filters = Map.of("firstName", "Mikhail");
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+        IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
+                jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals("Incorrect property name: firstName", exception.getMessage());
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void getByFiltersIncorrectValueTypeTest() {
+        Map<String, Object> filters = Map.of("fullName", 100);
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+        IncorrectValueTypeException exception = assertThrows(IncorrectValueTypeException.class, () ->
+                jsonDatabaseService.getByFilters(Student.class, filters));
+        assertTrue(exception.getMessage().contains("Incorrect value type for filter: fullName"));
 
         assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }

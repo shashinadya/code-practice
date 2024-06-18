@@ -13,13 +13,12 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class Settings {
     private String propertyFileName;
     private final Path defaultJsonDatabasePath;
+    private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
     static final String DATABASE_STORAGE_PATH = "database.storage.path";
-    public static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
-    private static final Logger logger = LoggerFactory.getLogger(Settings.class);
+    static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
@@ -54,19 +53,19 @@ public class Settings {
             String databaseStoragePath = properties.getProperty(DATABASE_STORAGE_PATH);
             return Path.of(databaseStoragePath);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            LOG.error("Database path cannot be retrieved: {}", e.getMessage());
             return defaultJsonDatabasePath;
         }
     }
 
-    protected Path getFilePath(String directoryName) throws CreationDatabaseException {
+    Path getFilePath(String directoryName) throws CreationDatabaseException {
         URI resourceFolder;
         String pathToResourceFolder;
 
         try {
             resourceFolder = getClass().getResource(File.separator).toURI();
         } catch (Exception e) {
-            logger.error("URL cannot be converted to URI.");
+            LOG.error("JSON file path cannot be retrieved: {}", e.getMessage());
             throw new CreationDatabaseException("URL cannot be converted to URI: " + e.getMessage());
         }
 
@@ -80,7 +79,7 @@ public class Settings {
         try {
             return Files.createDirectory(path);
         } catch (IOException e) {
-            logger.error("Directory cannot be created.");
+            LOG.error("Directory {} cannot be created: {}", path, e.getMessage());
             throw new CreationDatabaseException("Directory cannot be created: " + e.getMessage());
         }
     }

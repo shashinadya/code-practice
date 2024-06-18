@@ -5,10 +5,12 @@ import database.exception.DatabaseDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
+import database.exception.ReadFileException;
 import database.exception.SerializeDatabaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import database.entity.BaseEntity;
+import database.exception.WriteFileException;
 import database.helper.Settings;
 import database.helper.Validator;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +33,15 @@ public class JsonDatabaseService implements DatabaseService {
     private final Settings settings;
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;
-    private static final Logger logger = LoggerFactory.getLogger(Settings.class);
-    public static final String EMPTY_BRACKETS_TO_JSON = "[]";
+    private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
+    static final String EMPTY_BRACKETS_TO_JSON = "[]";
+    static final String UNABLE_CREATE_DB_FILE = "Unable to create database file";
+    static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file";
+    static final String DB_FILE_NOT_EXIST = "Database file does not exist";
+    static final String UNABLE_SERIALIZE_DATA = "Unable to serialize data";
+    static final String UNABLE_DESERIALIZE_DATA = "Unable to deserialize data";
+    static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
+    static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
 
     public JsonDatabaseService() throws CreationDatabaseException {
         settings = new Settings();
@@ -50,12 +60,12 @@ public class JsonDatabaseService implements DatabaseService {
         File jsonDatabaseFile = new File(getDatabasePath(entityClass));
         try {
             if (!jsonDatabaseFile.createNewFile()) {
-                throw new CreationDatabaseException("Unable to create database file.");
+                throw new CreationDatabaseException(UNABLE_CREATE_DB_FILE);
             }
             return Files.writeString(jsonDatabaseFile.toPath(), EMPTY_BRACKETS_TO_JSON).toFile().exists();
         } catch (IOException e) {
-            logger.error("Unable to create database file.");
-            throw new CreationDatabaseException("Unable to create database file.");
+            LOG.error(UNABLE_CREATE_DB_FILE + ": {}", jsonDatabaseFile.toPath());
+            throw new CreationDatabaseException(UNABLE_CREATE_DB_FILE);
         }
     }
 
@@ -65,23 +75,23 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             Files.delete(databasePath);
         } catch (IOException e) {
-            logger.error("Unable to delete database file at {}", databasePath.toAbsolutePath());
-            throw new DeletionDatabaseException("Unable to delete database file.");
+            LOG.error(UNABLE_DELETE_DB_FILE + ": {}", databasePath.toAbsolutePath());
+            throw new DeletionDatabaseException(UNABLE_DELETE_DB_FILE);
         }
         return !Files.exists(databasePath);
     }
 
     @Override
-    public <T extends BaseEntity> T addNewRecordToTable(T entity) throws IOException {
+    public <T extends BaseEntity> T addNewRecordToTable(T entity) {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
         if (!Files.exists(databasePath)) {
-            logger.error("Database file {} does not exist.", databasePath.toAbsolutePath());
-            throw new DatabaseDoesNotExistException("Database does not exist.");
+            LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
+            throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
         }
 
-        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         String entityClassName = entityClass.getName();
         var lastUsedId = entityIds.get(entityClassName);
@@ -98,41 +108,40 @@ public class JsonDatabaseService implements DatabaseService {
         entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
         entities.add(entity);
 
-        serializeEntities(entities, databasePath);
+        serializeEntitiesAndWriteToFile(entities, databasePath);
         return entity;
     }
 
     @Override
-    public <T extends BaseEntity, I> T updateRecordInTable(T entity, I id) throws IOException {
+    public <T extends BaseEntity, I> T updateRecordInTable(T entity, I id) {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         T entityFoundById = entities.stream()
                 .filter(e -> id.equals(e.getId()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    logger.error("Entity with id {} not found.", id);
-                    return new IdDoesNotExistException("Entity with provided Id does not exist.");
+                    LOG.error(ENTITY_DOES_NOT_EXIST + ": {}", id);
+                    return new IdDoesNotExistException(ENTITY_DOES_NOT_EXIST);
                 });
 
         updateEntityFields(entityFoundById, entity);
 
-        serializeEntities(entities, databasePath);
+        serializeEntitiesAndWriteToFile(entities, databasePath);
         return entityFoundById;
     }
 
     @Override
-    public <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id) throws IOException {
+    public <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        List<? extends BaseEntity> entities = deserializeEntities(entityClass, Files.readString(databasePath));
-
+        List<? extends BaseEntity> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         boolean isEntityRemoved = entities.removeIf(e -> id.equals(e.getId()));
         if (isEntityRemoved) {
-            serializeEntities(entities, databasePath);
+            serializeEntitiesAndWriteToFile(entities, databasePath);
         }
         return isEntityRemoved;
     }
@@ -143,16 +152,16 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             Files.writeString(databasePath, EMPTY_BRACKETS_TO_JSON);
         } catch (IOException e) {
-            logger.error("Unable to serialize data at " + databasePath.toAbsolutePath());
-            throw new SerializeDatabaseException("Unable to serialize data.");
+            LOG.error("Unable to remove all data from file {}", databasePath.toAbsolutePath());
+            throw new WriteFileException("Unable to write content to file.");
         }
     }
 
     @Override
-    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) throws IOException {
+    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         return entities.stream()
                 .filter(e -> id.equals(e.getId()))
@@ -161,21 +170,20 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass)
-            throws IOException {
+    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        return deserializeEntities(entityClass, Files.readString(databasePath));
+        return deserializeEntities(entityClass, readDatabaseFile(databasePath));
     }
 
     @Override
     public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
-                                                              Map<String, V> filters) throws IOException {
+                                                              Map<String, V> filters) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         Field[] fields = entityClass.getDeclaredFields();
         Validator.validateDatabaseFilters(fields, filters);
 
-        List<T> entities = deserializeEntities(entityClass, Files.readString(databasePath));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         return entities.stream()
                 .filter(entity -> {
@@ -191,13 +199,9 @@ public class JsonDatabaseService implements DatabaseService {
                             if (!expectedValue.equals(actualValue)) {
                                 return false;
                             }
-                        } catch (IllegalAccessException e) {
-                            logger.error("Unable to access property " + fieldName);
-                            e.printStackTrace();
+                        } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                            LOG.error(UNABLE_ACCESS_PROPERTY + ": {}", fieldName);
                             return false;
-                        } catch (InvocationTargetException | NoSuchMethodException e) {
-                            logger.error("No such method for " + fieldName);
-                            throw new RuntimeException(e);
                         }
                     }
                     return true;
@@ -211,7 +215,10 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
-        Field[] fields = incomeEntity.getClass().getDeclaredFields();
+        Field[] fields = Arrays.stream(incomeEntity.getClass().getDeclaredFields())
+                .filter(f -> !f.getName().equals("Id"))
+                .toArray(Field[]::new);
+
         for (Field field : fields) {
             String fieldName = field.getName();
             String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
@@ -223,11 +230,8 @@ public class JsonDatabaseService implements DatabaseService {
 
                 Method setterMethod = outcomeEntity.getClass().getMethod(setterName, field.getType());
                 setterMethod.invoke(outcomeEntity, value);
-            } catch (IllegalAccessException | NoSuchMethodException e) {
-                logger.error("Unable to access property " + fieldName);
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                logger.error("Invocation Target Exception for " + fieldName);
+            } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                LOG.error(UNABLE_ACCESS_PROPERTY + " {}", fieldName);
                 throw new RuntimeException(e);
             }
         }
@@ -242,17 +246,17 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             return objectMapper.readValue(content, listType);
         } catch (IOException e) {
-            logger.error("Unable to deserialize data at " + content);
-            throw new DeserializeDatabaseException("Unable to deserialize data.");
+            LOG.error(UNABLE_DESERIALIZE_DATA + " {}", entityClass);
+            throw new DeserializeDatabaseException(UNABLE_DESERIALIZE_DATA);
         }
     }
 
-    private <T extends BaseEntity> void serializeEntities(List<T> entities, Path databasePath) {
+    private <T extends BaseEntity> void serializeEntitiesAndWriteToFile(List<T> entities, Path databasePath) {
         try {
             objectMapper.writeValue(databasePath.toFile(), entities);
         } catch (IOException e) {
-            logger.error("Unable to serialize data at " + databasePath.toAbsolutePath());
-            throw new SerializeDatabaseException("Unable to serialize data.");
+            LOG.error(UNABLE_SERIALIZE_DATA + ": {}", databasePath.toAbsolutePath());
+            throw new SerializeDatabaseException(UNABLE_SERIALIZE_DATA);
         }
     }
 
@@ -267,6 +271,14 @@ public class JsonDatabaseService implements DatabaseService {
             return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         } else {
             return "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+        }
+    }
+
+    public String readDatabaseFile(Path databasePath) {
+        try {
+            return Files.readString(databasePath);
+        } catch (IOException e) {
+            throw new ReadFileException("Unable to read content from database file.");
         }
     }
 }
