@@ -189,7 +189,7 @@ public class JsonDatabaseServiceTest {
 
     @Test
     public void getByFiltersNoFilterMatchesTest() {
-        List<Student> students = new ArrayList<>();
+        List<Student> students = List.of();
 
         Map<String, Object> filters = Map.of("courseIds", List.of(4), "averageScore", 3.0);
 
