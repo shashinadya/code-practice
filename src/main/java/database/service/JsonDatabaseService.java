@@ -108,7 +108,7 @@ public class JsonDatabaseService implements DatabaseService {
         entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
         entities.add(entity);
 
-        serializeEntitiesAndWriteToFile(entities, databasePath);
+        saveEntitiesToDatabase(entities, databasePath);
         return entity;
     }
 
@@ -129,7 +129,7 @@ public class JsonDatabaseService implements DatabaseService {
 
         updateEntityFields(entityFoundById, entity);
 
-        serializeEntitiesAndWriteToFile(entities, databasePath);
+        saveEntitiesToDatabase(entities, databasePath);
         return entityFoundById;
     }
 
@@ -141,7 +141,7 @@ public class JsonDatabaseService implements DatabaseService {
 
         boolean isEntityRemoved = entities.removeIf(e -> id.equals(e.getId()));
         if (isEntityRemoved) {
-            serializeEntitiesAndWriteToFile(entities, databasePath);
+            saveEntitiesToDatabase(entities, databasePath);
         }
         return isEntityRemoved;
     }
@@ -251,7 +251,7 @@ public class JsonDatabaseService implements DatabaseService {
         }
     }
 
-    private <T extends BaseEntity> void serializeEntitiesAndWriteToFile(List<T> entities, Path databasePath) {
+    private <T extends BaseEntity> void saveEntitiesToDatabase(List<T> entities, Path databasePath) {
         try {
             objectMapper.writeValue(databasePath.toFile(), entities);
         } catch (IOException e) {
