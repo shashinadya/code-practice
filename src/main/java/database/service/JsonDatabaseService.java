@@ -122,10 +122,7 @@ public class JsonDatabaseService implements DatabaseService {
         T entityFoundById = entities.stream()
                 .filter(e -> id.equals(e.getId()))
                 .findFirst()
-                .orElseThrow(() -> {
-                    LOG.error(ENTITY_DOES_NOT_EXIST + ": {}", id);
-                    return new IdDoesNotExistException(ENTITY_DOES_NOT_EXIST);
-                });
+                .orElseThrow(() -> new IdDoesNotExistException(ENTITY_DOES_NOT_EXIST));
 
         updateEntityFields(entityFoundById, entity);
 
