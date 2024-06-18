@@ -206,7 +206,7 @@ public class JsonDatabaseService implements DatabaseService {
                 .collect(Collectors.toList());
     }
 
-    public String getDatabasePath(Class<? extends BaseEntity> entityClass) {
+    String getDatabasePath(Class<? extends BaseEntity> entityClass) {
         var databaseFolder = settings.getDatabasePath();
         return databaseFolder + File.separator + entityClass.getSimpleName() + "Table" + ".json";
     }
