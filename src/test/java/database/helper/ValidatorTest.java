@@ -16,10 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ValidatorTest {
-    Field fullNameField = Student.class.getDeclaredField("fullName");
-    Field averageScoreField = Student.class.getDeclaredField("averageScore");
-    Field courseIdsField = Student.class.getDeclaredField("courseIds");
-    Field[] declaredFields = {fullNameField, averageScoreField, courseIdsField};
+    private final Field fullNameField = Student.class.getDeclaredField("fullName");
+    private final Field averageScoreField = Student.class.getDeclaredField("averageScore");
+    private final Field courseIdsField = Student.class.getDeclaredField("courseIds");
+    private final Field[] declaredFields = {fullNameField, averageScoreField, courseIdsField};
 
     public ValidatorTest() throws NoSuchFieldException {
     }
