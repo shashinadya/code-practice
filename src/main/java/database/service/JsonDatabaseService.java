@@ -262,6 +262,7 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             field = entityClass.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
+            LOG.error("Unable to get declared field {}", fieldName);
             throw new RuntimeException(e);
         }
         if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
@@ -275,6 +276,7 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             return Files.readString(databasePath);
         } catch (IOException e) {
+            LOG.error("Unable to read content from database file: {}", databasePath);
             throw new ReadFileException("Unable to read content from database file.");
         }
     }
