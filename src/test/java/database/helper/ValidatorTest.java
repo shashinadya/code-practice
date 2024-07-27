@@ -54,7 +54,7 @@ public class ValidatorTest {
 
     @Test
     public void validateDatabaseFiltersIncorrectPropertyNameTest() {
-        Map<String, Object> filters = Map.of("firstName", "Mikhail");
+        Map<String, Object> filters = Map.of("firstName", "FirstName1");
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
                 Validator.validateDatabaseFilters(declaredFields, filters));

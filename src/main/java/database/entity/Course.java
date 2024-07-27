@@ -1,6 +1,5 @@
 package database.entity;
 
-import java.util.List;
 import java.util.Objects;
 
 public class Course extends BaseEntity {
@@ -9,7 +8,7 @@ public class Course extends BaseEntity {
     public Course() {
     }
 
-    public Course(String name, List<Student> students) {
+    public Course(String name) {
         super();
         this.name = name;
     }
