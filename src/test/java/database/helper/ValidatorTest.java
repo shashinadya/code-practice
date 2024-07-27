@@ -18,8 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ValidatorTest {
     private final Field fullNameField = Student.class.getDeclaredField("fullName");
     private final Field averageScoreField = Student.class.getDeclaredField("averageScore");
-    private final Field courseIdsField = Student.class.getDeclaredField("courseIds");
-    private final Field[] declaredFields = {fullNameField, averageScoreField, courseIdsField};
+    private final Field[] declaredFields = {fullNameField, averageScoreField};
 
     public ValidatorTest() throws NoSuchFieldException {
     }

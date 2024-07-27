@@ -1,21 +1,18 @@
 package database.entity;
 
-import java.util.List;
 import java.util.Objects;
 
 public class Student extends BaseEntity {
     private String fullName;
     private Double averageScore;
-    private List<Integer> courseIds;
 
     public Student() {
     }
 
-    public Student(String fullName, Double averageScore, List<Integer> courseIds) {
+    public Student(String fullName, Double averageScore) {
         super();
         this.fullName = fullName;
         this.averageScore = averageScore;
-        this.courseIds = courseIds;
     }
 
     public String getFullName() {
@@ -34,25 +31,16 @@ public class Student extends BaseEntity {
         this.averageScore = averageScore;
     }
 
-    public List<Integer> getCourseIds() {
-        return courseIds;
-    }
-
-    public void setCourseIds(List<Integer> courseIds) {
-        this.courseIds = courseIds;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Student student = (Student) o;
-        return Objects.equals(fullName, student.fullName) && Objects.equals(averageScore, student.averageScore) &&
-                Objects.equals(courseIds, student.courseIds);
+        return Objects.equals(fullName, student.fullName) && Objects.equals(averageScore, student.averageScore);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fullName, averageScore, courseIds);
+        return Objects.hash(fullName, averageScore);
     }
 }

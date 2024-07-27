@@ -24,10 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JsonDatabaseServiceTest {
-    private final Student firstStudent = new Student("Mikhail Shashin", 5.0, List.of(0));
-    private final Student secondStudent = new Student("Nadezhda Shashina", 4.5, List.of(1));
-    private final Student thirdStudent = new Student("Nika Shashina", 5.0, List.of(1));
-    private final Student fourthStudent = new Student("Harry Potter", 5.0, List.of(0));
+    private final Student firstStudent = new Student("Mikhail Shashin", 5.0);
+    private final Student secondStudent = new Student("Nadezhda Shashina", 4.5);
+    private final Student thirdStudent = new Student("Nika Shashina", 5.0);
+    private final Student fourthStudent = new Student("Mikhail Shashin", 5.0);
     private final JsonDatabaseService jsonDatabaseService = new JsonDatabaseService();
 
     @Test
@@ -64,7 +64,7 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        //Check that original Id is not changed
+
         secondStudent.setId(5);
 
         assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
@@ -156,7 +156,7 @@ public class JsonDatabaseServiceTest {
     public void getByFiltersAllFiltersMatchTest() {
         List<Student> students = List.of(firstStudent, fourthStudent);
 
-        Map<String, Object> filters = Map.of("courseIds", List.of(0), "averageScore", 5.0);
+        Map<String, Object> filters = Map.of("fullName", "Mikhail Shashin", "averageScore", 5.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -171,9 +171,9 @@ public class JsonDatabaseServiceTest {
 
     @Test
     public void getByFiltersOnlyOneFilterMatchesTest() {
-        List<Student> students = List.of(thirdStudent);
+        List<Student> students = List.of();
 
-        Map<String, Object> filters = Map.of("courseIds", List.of(1), "averageScore", 5.0);
+        Map<String, Object> filters = Map.of("fullName", "Harry Potter", "averageScore", 5.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -190,7 +190,7 @@ public class JsonDatabaseServiceTest {
     public void getByFiltersNoFilterMatchesTest() {
         List<Student> students = List.of();
 
-        Map<String, Object> filters = Map.of("courseIds", List.of(4), "averageScore", 3.0);
+        Map<String, Object> filters = Map.of("fullName", "Mikhail Shashin", "averageScore", 3.0);
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
