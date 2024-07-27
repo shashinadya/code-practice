@@ -155,7 +155,7 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id) {
+    public <T extends BaseEntity> T getById(Class<? extends BaseEntity> entityClass, Integer id) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));

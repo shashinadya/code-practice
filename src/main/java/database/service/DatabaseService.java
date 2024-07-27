@@ -18,7 +18,7 @@ public interface DatabaseService {
 
     void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 
-    <T extends BaseEntity, I> T getById(Class<? extends BaseEntity> entityClass, I id);
+    <T extends BaseEntity> T getById(Class<? extends BaseEntity> entityClass, Integer id);
 
     <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 
