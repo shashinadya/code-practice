@@ -12,9 +12,9 @@ public interface DatabaseService {
 
     <T extends BaseEntity> T addNewRecordToTable(T entity);
 
-    <T extends BaseEntity, I> T updateRecordInTable(T entity, I id);
+    <T extends BaseEntity> T updateRecordInTable(T entity, Integer id);
 
-    <I> boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, I id);
+    boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id);
 
     void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 
