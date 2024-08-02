@@ -1,10 +1,10 @@
 package database.helper;
 
 import database.entity.Student;
-import database.exception.EmptyValueException;
-import database.exception.IncorrectPropertyNameException;
-import database.exception.IncorrectValueTypeException;
-import database.exception.NullPropertyNameOrValueException;
+import database.exception.exception.EmptyValueException;
+import database.exception.exception.IncorrectPropertyNameException;
+import database.exception.exception.IncorrectValueTypeException;
+import database.exception.exception.NullPropertyNameOrValueException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
