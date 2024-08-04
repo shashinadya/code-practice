@@ -2,7 +2,7 @@ package database;
 
 import database.entity.BaseEntity;
 import database.entity.Student;
-import database.exception.handler.FileDatabaseExceptionHandler;
+import database.controller.FileDatabaseExceptionHandler;
 import database.service.JsonDatabaseService;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
@@ -20,13 +20,14 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 
 //TODO: now it works for particular entity, it should be rewrite with generics
 public class Main {
-    static JsonDatabaseService databaseService = new JsonDatabaseService();
+    private static final JsonDatabaseService databaseService = new JsonDatabaseService();
 
     public static void main(String[] args) {
         var app = Javalin.create(Main::configureRouter)
                 .start();
 
-        FileDatabaseExceptionHandler.register(app);
+        FileDatabaseExceptionHandler fileDatabaseExceptionHandler = new FileDatabaseExceptionHandler();
+        fileDatabaseExceptionHandler.register(app);
     }
 
     private static void configureRouter(JavalinConfig config) {
@@ -36,16 +37,18 @@ public class Main {
                     delete(ctx -> ctx.json(databaseService.deleteTable(Student.class)));
                     path("/{entities}", () -> {
                         post(ctx -> ctx.json(databaseService.addNewRecordToTable(ctx.bodyAsClass(Student.class))));
-                        get(ctx -> ctx.json(databaseService.getAllRecordsFromTable(Student.class)));
-                        put(ctx -> databaseService.removeAllRecordsFromTable(Student.class));
                         path("/filter", () -> get(Main::handleGetByFilters));
+                        get(ctx -> ctx.json(databaseService.getAllRecordsFromTable(Student.class)));
                         path("/{id}", () -> {
-                            put(ctx -> ctx.json(databaseService.updateRecordInTable(ctx.bodyAsClass(Student.class),
-                                    ctx.bodyAsClass(Student.class).getId())));
+                            put(ctx -> {
+                                var body = ctx.bodyAsClass(Student.class);
+                                ctx.json(databaseService.updateRecordInTable(body, body.getId()));
+                            });
                             delete(ctx -> ctx.json(databaseService.removeRecordFromTable(Student.class,
                                     Integer.parseInt(ctx.pathParam("id")))));
                             get(Main::handleGetById);
                         });
+                        delete(ctx -> databaseService.removeAllRecordsFromTable(Student.class));
                     });
                 }));
     }
@@ -56,8 +59,12 @@ public class Main {
 
         Map<String, String> filters = new HashMap<>();
 
-        if (fullName != null) filters.put("fullName", fullName);
-        if (averageScore != null) filters.put("averageScore", averageScore);
+        if (fullName != null) {
+            filters.put("fullName", fullName);
+        }
+        if (averageScore != null) {
+            filters.put("averageScore", averageScore);
+        }
 
         Iterable<? extends BaseEntity> result = databaseService.getByFilters(Student.class, filters);
 
@@ -67,10 +74,9 @@ public class Main {
     private static void handleGetById(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         var entity = databaseService.getById(Student.class, id);
-        if (entity != null) {
-            ctx.json(entity);
-        } else {
+        if (entity == null) {
             throw new NotFoundResponse("Entity with provided id not found: " + id);
         }
+        ctx.json(entity);
     }
 }

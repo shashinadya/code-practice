@@ -1,6 +1,6 @@
 package database.helper;
 
-import database.exception.exception.CreationDatabaseException;
+import database.exception.CreationDatabaseException;
 
 import java.io.File;
 import java.io.IOException;

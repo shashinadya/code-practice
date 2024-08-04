@@ -1,16 +1,16 @@
 package database.service;
 
-import database.exception.exception.CreationDatabaseException;
-import database.exception.exception.DatabaseDoesNotExistException;
-import database.exception.exception.DeletionDatabaseException;
-import database.exception.exception.DeserializeDatabaseException;
-import database.exception.exception.IdDoesNotExistException;
-import database.exception.exception.ReadFileException;
-import database.exception.exception.SerializeDatabaseException;
+import database.exception.CreationDatabaseException;
+import database.exception.DatabaseDoesNotExistException;
+import database.exception.DeletionDatabaseException;
+import database.exception.DeserializeDatabaseException;
+import database.exception.IdDoesNotExistException;
+import database.exception.ReadFileException;
+import database.exception.SerializeDatabaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import database.entity.BaseEntity;
-import database.exception.exception.WriteFileException;
+import database.exception.WriteFileException;
 import database.helper.Settings;
 import database.helper.Validator;
 import org.slf4j.Logger;
@@ -35,8 +35,8 @@ public class JsonDatabaseService implements DatabaseService {
     private final Map<String, Integer> entityIds;
     private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
     static final String EMPTY_BRACKETS_TO_JSON = "[]";
-    static final String UNABLE_CREATE_DB_FILE = "Unable to create database file";
-    static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file";
+    static final String UNABLE_CREATE_DB_FILE = "Unable to create database file. Please check if file already exists.";
+    static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file. Please check if file does not exist.";
     static final String DB_FILE_NOT_EXIST = "Database file does not exist";
     static final String UNABLE_SERIALIZE_DATA = "Unable to serialize data";
     static final String UNABLE_DESERIALIZE_DATA = "Unable to deserialize data";

@@ -1,12 +1,12 @@
 package database.service;
 
-import database.exception.exception.DatabaseDoesNotExistException;
-import database.exception.exception.EmptyValueException;
-import database.exception.exception.IdDoesNotExistException;
+import database.exception.DatabaseDoesNotExistException;
+import database.exception.EmptyValueException;
+import database.exception.IdDoesNotExistException;
 import database.entity.Student;
-import database.exception.exception.IncorrectPropertyNameException;
-import database.exception.exception.IncorrectValueTypeException;
-import database.exception.exception.NullPropertyNameOrValueException;
+import database.exception.IncorrectPropertyNameException;
+import database.exception.IncorrectValueTypeException;
+import database.exception.NullPropertyNameOrValueException;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;

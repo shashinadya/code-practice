@@ -1,4 +1,4 @@
-package database.exception.exception;
+package database.exception;
 
 public class ReadFileException extends RuntimeException {
 
