@@ -3,21 +3,21 @@ package database.controller;
 import java.util.Objects;
 
 public class ErrorResponse {
-    private String status;
+    private int status;
     private String error;
     private String message;
 
-    public ErrorResponse(String status, String error, String message) {
+    public ErrorResponse(int status, String error, String message) {
         this.status = status;
         this.error = error;
         this.message = message;
     }
 
-    public String getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
