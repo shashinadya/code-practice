@@ -1,6 +1,6 @@
 package database.exception;
 
-public class IncorrectValueTypeException extends RuntimeException {
+public class IncorrectValueTypeException extends BadRequestException {
 
     public IncorrectValueTypeException(String message) {
         super(message);

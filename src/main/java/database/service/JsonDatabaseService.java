@@ -35,8 +35,8 @@ public class JsonDatabaseService implements DatabaseService {
     private final Map<String, Integer> entityIds;
     private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
     static final String EMPTY_BRACKETS_TO_JSON = "[]";
-    static final String UNABLE_CREATE_DB_FILE = "Unable to create database file";
-    static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file";
+    static final String UNABLE_CREATE_DB_FILE = "Unable to create database file. Please check if file already exists.";
+    static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file. Please check if file does not exist.";
     static final String DB_FILE_NOT_EXIST = "Database file does not exist";
     static final String UNABLE_SERIALIZE_DATA = "Unable to serialize data";
     static final String UNABLE_DESERIALIZE_DATA = "Unable to deserialize data";

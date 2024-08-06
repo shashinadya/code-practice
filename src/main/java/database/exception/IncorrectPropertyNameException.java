@@ -1,6 +1,6 @@
 package database.exception;
 
-public class IncorrectPropertyNameException extends RuntimeException {
+public class IncorrectPropertyNameException extends BadRequestException {
 
     public IncorrectPropertyNameException(String message) {
         super(message);

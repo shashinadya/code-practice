@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="ERROR" name="database">
     <Appenders>
-        <File name="FileAppender" fileName="DatabaseSettings.log" append="true">
+        <File name="FileAppender" fileName="DatabaseLogs.log" append="true">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %m%n</Pattern>
             </PatternLayout>
