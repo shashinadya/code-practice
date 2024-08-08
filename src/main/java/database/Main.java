@@ -37,7 +37,7 @@ public class Main {
                     post(ctx -> ctx.json(databaseService.createTable(Student.class)));
                     delete(ctx -> ctx.json(databaseService.deleteTable(Student.class)));
                     path("/{entities}", () -> {
-                        post(ctx -> ctx.json(databaseService.addNewRecordToTable(ctx.bodyAsClass(Student.class))));
+                        post(Main::handleAddNewRecordToTable);
                         path("/filter", () -> get(Main::handleGetByFilters));
                         get(ctx -> ctx.json(databaseService.getAllRecordsFromTable(Student.class)));
                         path("/{id}", () -> {
@@ -83,6 +83,15 @@ public class Main {
         if (entity == null) {
             throw new NotFoundResponse("Entity with provided id not found: " + id);
         }
+        ctx.json(entity);
+    }
+
+    private static void handleAddNewRecordToTable(Context ctx) {
+        var entity = ctx.bodyAsClass(Student.class);
+        if (entity.getId() != null) {
+            throw new NotFoundResponse("User cannot provide id manually. Ids are filled automatically.");
+        }
+        databaseService.addNewRecordToTable(entity);
         ctx.json(entity);
     }
 }
