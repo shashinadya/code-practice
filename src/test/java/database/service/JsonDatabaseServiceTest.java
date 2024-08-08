@@ -116,6 +116,22 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
+    public void removeAllRecordsResetIdCounterCheckTest() {
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        jsonDatabaseService.addNewRecordToTable(secondStudent);
+
+        jsonDatabaseService.removeAllRecordsFromTable(Student.class);
+        Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
+        assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
+
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        assertEquals(firstStudent, jsonDatabaseService.getById(Student.class, 0));
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
     public void getByIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
