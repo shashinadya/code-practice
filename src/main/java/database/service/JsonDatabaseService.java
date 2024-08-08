@@ -5,6 +5,7 @@ import database.exception.DatabaseDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
+import database.exception.IdProvidedManuallyException;
 import database.exception.ReadFileException;
 import database.exception.SerializeDatabaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_DESERIALIZE_DATA = "Unable to deserialize data";
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
+    static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
 
     public JsonDatabaseService() throws CreationDatabaseException {
         settings = new Settings();
@@ -83,6 +85,10 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public <T extends BaseEntity> T addNewRecordToTable(T entity) {
+        if (entity.getId() != null) {
+            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
+        }
+
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
 

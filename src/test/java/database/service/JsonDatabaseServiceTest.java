@@ -4,6 +4,7 @@ import database.exception.DatabaseDoesNotExistException;
 import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
 import database.entity.Student;
+import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.IncorrectValueTypeException;
 import database.exception.NullPropertyNameOrValueException;
@@ -17,6 +18,7 @@ import java.util.Map;
 import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
 import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
+import static database.service.JsonDatabaseService.ID_PROVIDED_MANUALLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -57,6 +59,20 @@ public class JsonDatabaseServiceTest {
                 jsonDatabaseService.addNewRecordToTable(firstStudent));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
+    }
+
+    @Test
+    public void addNewRecordIdProvidedManually() {
+        jsonDatabaseService.createTable(Student.class);
+
+        Student studentWithManuallyProvidedId = new Student("FirstName1 LastName1", 5.0);
+        studentWithManuallyProvidedId.setId(7);
+
+        IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
+                jsonDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
+
+        assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
