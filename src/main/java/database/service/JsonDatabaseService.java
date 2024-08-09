@@ -154,7 +154,7 @@ public class JsonDatabaseService implements DatabaseService {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         try {
             Files.writeString(databasePath, EMPTY_BRACKETS_TO_JSON);
-            entityIds.clear();
+            entityIds.remove(entityClass.getName());
         } catch (IOException e) {
             LOG.error("Unable to remove all data from file {}", databasePath.toAbsolutePath());
             throw new WriteFileException("Unable to write content to file.");
