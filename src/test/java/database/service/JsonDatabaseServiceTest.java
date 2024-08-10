@@ -147,7 +147,9 @@ public class JsonDatabaseServiceTest {
 
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
         assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
-        assertEquals(0, jsonDatabaseService.getById(Course.class, 0).getId());
+
+        jsonDatabaseService.addNewRecordToTable(new Course("Course2"));
+        assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
 
         assertTrue(jsonDatabaseService.deleteTable(Student.class));
         assertTrue(jsonDatabaseService.deleteTable(Course.class));

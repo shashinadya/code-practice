@@ -76,6 +76,7 @@ public class JsonDatabaseService implements DatabaseService {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         try {
             Files.delete(databasePath);
+            entityIds.remove(entityClass.getName());
         } catch (IOException e) {
             LOG.error(UNABLE_DELETE_DB_FILE + ": {}", databasePath.toAbsolutePath());
             throw new DeletionDatabaseException(UNABLE_DELETE_DB_FILE);
@@ -154,7 +155,7 @@ public class JsonDatabaseService implements DatabaseService {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         try {
             Files.writeString(databasePath, EMPTY_BRACKETS_TO_JSON);
-            entityIds.remove(entityClass.getName());
+            entityIds.put(entityClass.getName(), -1);
         } catch (IOException e) {
             LOG.error("Unable to remove all data from file {}", databasePath.toAbsolutePath());
             throw new WriteFileException("Unable to write content to file.");
