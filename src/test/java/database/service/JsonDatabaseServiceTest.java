@@ -1,5 +1,6 @@
 package database.service;
 
+import database.entity.Course;
 import database.exception.DatabaseDoesNotExistException;
 import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
@@ -129,6 +130,29 @@ public class JsonDatabaseServiceTest {
         assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
 
         assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    public void removeAllRecordsResetIdCounterCheckTest() {
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        jsonDatabaseService.addNewRecordToTable(secondStudent);
+
+        jsonDatabaseService.createTable(Course.class);
+        jsonDatabaseService.addNewRecordToTable(new Course("Course1"));
+
+        jsonDatabaseService.removeAllRecordsFromTable(Student.class);
+        Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
+        assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
+
+        jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
+
+        jsonDatabaseService.addNewRecordToTable(new Course("Course2"));
+        assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
+
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+        assertTrue(jsonDatabaseService.deleteTable(Course.class));
     }
 
     @Test
