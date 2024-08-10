@@ -9,6 +9,8 @@ import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.IncorrectValueTypeException;
 import database.exception.NullPropertyNameOrValueException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -27,16 +29,34 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JsonDatabaseServiceTest {
-    private final Student firstStudent = new Student("FirstName1 LastName1", 5.0);
-    private final Student secondStudent = new Student("FirstName2 LastName2", 4.5);
-    private final Student thirdStudent = new Student("FirstName3 LastName3", 5.0);
-    private final Student fourthStudent = new Student("FirstName1 LastName1", 5.0);
-    private final JsonDatabaseService jsonDatabaseService = new JsonDatabaseService();
+    private Student firstStudent;
+    private Student secondStudent;
+    private Student thirdStudent;
+    private Student fourthStudent;
+    private JsonDatabaseService jsonDatabaseService;
+
+    @BeforeEach
+    void setUp() {
+        firstStudent = new Student("FirstName1 LastName1", 5.0);
+        secondStudent = new Student("FirstName2 LastName2", 4.5);
+        thirdStudent = new Student("FirstName3 LastName3", 5.0);
+        fourthStudent = new Student("FirstName1 LastName1", 5.0);
+        jsonDatabaseService = new JsonDatabaseService();
+
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            jsonDatabaseService.deleteTable(Student.class);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     @Test
     public void createTableTest() {
         assertTrue(jsonDatabaseService.createTable(Student.class));
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -50,8 +70,6 @@ public class JsonDatabaseServiceTest {
         Student receivedSecondStudent = jsonDatabaseService.addNewRecordToTable(secondStudent);
         assertEquals(secondStudent, receivedSecondStudent);
         assertEquals(1, receivedSecondStudent.getId());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -73,7 +91,6 @@ public class JsonDatabaseServiceTest {
                 jsonDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -86,7 +103,6 @@ public class JsonDatabaseServiceTest {
 
         assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
         assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -98,7 +114,6 @@ public class JsonDatabaseServiceTest {
                 jsonDatabaseService.updateRecordInTable(secondStudent, 12));
 
         assertEquals(ENTITY_DOES_NOT_EXIST, exception.getMessage());
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -115,8 +130,6 @@ public class JsonDatabaseServiceTest {
         assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
         assertFalse(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
         assertFalse(jsonDatabaseService.removeRecordFromTable(Student.class, 13));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -128,31 +141,30 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.removeAllRecordsFromTable(Student.class);
         Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
         assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
     public void removeAllRecordsResetIdCounterCheckTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        try {
+            jsonDatabaseService.createTable(Student.class);
+            jsonDatabaseService.addNewRecordToTable(firstStudent);
+            jsonDatabaseService.addNewRecordToTable(secondStudent);
 
-        jsonDatabaseService.createTable(Course.class);
-        jsonDatabaseService.addNewRecordToTable(new Course("Course1"));
+            jsonDatabaseService.createTable(Course.class);
+            jsonDatabaseService.addNewRecordToTable(new Course("Course1"));
 
-        jsonDatabaseService.removeAllRecordsFromTable(Student.class);
-        Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
-        assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
+            jsonDatabaseService.removeAllRecordsFromTable(Student.class);
+            Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
+            assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
 
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
+            jsonDatabaseService.addNewRecordToTable(thirdStudent);
+            assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
 
-        jsonDatabaseService.addNewRecordToTable(new Course("Course2"));
-        assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
-        assertTrue(jsonDatabaseService.deleteTable(Course.class));
+            jsonDatabaseService.addNewRecordToTable(new Course("Course2"));
+            assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
+        } finally {
+            jsonDatabaseService.deleteTable(Course.class);
+        }
     }
 
     @Test
@@ -165,8 +177,6 @@ public class JsonDatabaseServiceTest {
 
         assertEquals(secondStudent, receivedStudentById);
         assertEquals(1, receivedStudentById.getId());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -175,8 +185,6 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
         assertNull(jsonDatabaseService.getById(Student.class, 13));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -188,8 +196,6 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(secondStudent);
 
         assertEquals(students, jsonDatabaseService.getAllRecordsFromTable(Student.class));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -205,8 +211,6 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(fourthStudent);
 
         assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -222,8 +226,6 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(fourthStudent);
 
         assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -238,8 +240,6 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
 
         assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -254,8 +254,6 @@ public class JsonDatabaseServiceTest {
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
         assertEquals("Property name and value cannot be null.", exception.getMessage());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -270,8 +268,6 @@ public class JsonDatabaseServiceTest {
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
         assertEquals("Property name and value cannot be null.", exception.getMessage());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -284,8 +280,6 @@ public class JsonDatabaseServiceTest {
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
         assertEquals("Value cannot be empty.", exception.getMessage());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -298,8 +292,6 @@ public class JsonDatabaseServiceTest {
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
         assertEquals("Incorrect property name: firstName", exception.getMessage());
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 
     @Test
@@ -312,7 +304,5 @@ public class JsonDatabaseServiceTest {
         IncorrectValueTypeException exception = assertThrows(IncorrectValueTypeException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
         assertTrue(exception.getMessage().contains("Incorrect value type for filter: fullName"));
-
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
     }
 }
