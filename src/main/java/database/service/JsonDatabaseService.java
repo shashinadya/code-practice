@@ -44,6 +44,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
+    static final int ID_COUNTER_INITIAL_VALUE = -1;
 
     public JsonDatabaseService() throws CreationDatabaseException {
         settings = new Settings();
@@ -105,7 +106,7 @@ public class JsonDatabaseService implements DatabaseService {
 
         if (lastUsedId == null) {
             if (entities.isEmpty()) {
-                entityIds.put(entityClassName, -1);
+                entityIds.put(entityClassName, ID_COUNTER_INITIAL_VALUE);
             } else {
                 int lastEntityId = entities.get(entities.size() - 1).getId();
                 entityIds.put(entityClassName, lastEntityId);
@@ -155,7 +156,7 @@ public class JsonDatabaseService implements DatabaseService {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         try {
             Files.writeString(databasePath, EMPTY_BRACKETS_TO_JSON);
-            entityIds.put(entityClass.getName(), -1);
+            entityIds.put(entityClass.getName(), ID_COUNTER_INITIAL_VALUE);
         } catch (IOException e) {
             LOG.error("Unable to remove all data from file {}", databasePath.toAbsolutePath());
             throw new WriteFileException("Unable to write content to file.");
