@@ -8,6 +8,7 @@ import database.entity.Student;
 import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.IncorrectValueTypeException;
+import database.exception.InvalidParameterValueException;
 import database.exception.NullPropertyNameOrValueException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
 import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
 import static database.service.JsonDatabaseService.ID_PROVIDED_MANUALLY;
+import static database.service.JsonDatabaseService.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -42,7 +44,6 @@ public class JsonDatabaseServiceTest {
         thirdStudent = new Student("FirstName3 LastName3", 5.0);
         fourthStudent = new Student("FirstName1 LastName1", 5.0);
         jsonDatabaseService = new JsonDatabaseService();
-
     }
 
     @AfterEach
@@ -196,6 +197,35 @@ public class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(secondStudent);
 
         assertEquals(students, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    public void getAllRecordsFromTableWithValidLimitOffsetParametersTest() {
+        List<Student> resultStudents = List.of(secondStudent, thirdStudent);
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+
+        assertEquals(resultStudents, jsonDatabaseService.getAllRecordsFromTable(Student.class, 2, 1));
+    }
+
+    @Test
+    public void getAllRecordsFromTableWithNegativeLimitOffsetParametersTest() {
+        InvalidParameterValueException exception = assertThrows(InvalidParameterValueException.class, () ->
+                jsonDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
+
+        assertEquals(INVALID_PARAMETER_VALUE, exception.getMessage());
+    }
+
+    @Test
+    public void getAllRecordsFromTableWithOverLimitParameterTest() {
+        InvalidParameterValueException exception = assertThrows(InvalidParameterValueException.class, () ->
+                jsonDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
+
+        assertEquals(INVALID_PARAMETER_VALUE, exception.getMessage());
     }
 
     @Test

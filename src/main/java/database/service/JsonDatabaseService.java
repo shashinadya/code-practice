@@ -6,6 +6,7 @@ import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
+import database.exception.InvalidParameterValueException;
 import database.exception.ReadFileException;
 import database.exception.SerializeDatabaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +45,8 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
+    static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
+            "Limit value should not be less than 0, offset value should be more than 0 and less than 200";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
     public JsonDatabaseService() throws CreationDatabaseException {
@@ -179,7 +182,28 @@ public class JsonDatabaseService implements DatabaseService {
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
 
-        return deserializeEntities(entityClass, readDatabaseFile(databasePath));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
+
+        return entities.stream()
+                .skip(settings.getOffset())
+                .limit(settings.getLimit())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass,
+                                                                     int limit, int offset) {
+        if (limit < 0 || limit > 100 || offset < 0) {
+            LOG.error("Invalid value for limit or offset parameter {}{}", limit, offset);
+            throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE);
+        }
+
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
+        return entities.stream()
+                .skip(offset)
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -3,6 +3,7 @@ package database.helper;
 import org.junit.jupiter.api.Test;
 
 import static database.helper.Settings.DEFAULT_DATABASE_STORAGE_PATH;
+import static database.helper.Settings.DEFAULT_LIMIT_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SettingsTest {
@@ -21,5 +22,29 @@ public class SettingsTest {
 
         assertEquals(testDefaultPath,
                 settings.getDatabasePath().toString());
+    }
+
+    @Test
+    void getLimitTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileExist.properties");
+        assertEquals(10, settings.getLimit());
+    }
+
+    @Test
+    void getLimitDefaultPathReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_LIMIT_VALUE, settings.getLimit());
+    }
+
+    @Test
+    void getOffsetTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileExist.properties");
+        assertEquals(1, settings.getOffset());
+    }
+
+    @Test
+    void getOffsetDefaultPathReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(0, settings.getOffset());
     }
 }

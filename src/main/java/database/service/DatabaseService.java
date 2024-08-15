@@ -22,5 +22,8 @@ public interface DatabaseService {
 
     <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 
+    <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass,
+                                                              int limit, int offset);
+
     <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass, Map<String, V> filters);
 }
