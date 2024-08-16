@@ -4,6 +4,7 @@ import database.exception.CreationDatabaseException;
 import database.exception.DatabaseDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
+import database.exception.GetFileSizeException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.ReadFileException;
@@ -44,6 +45,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
+    static final String UNABLE_GET_FILE_SIZE = "Unable to get file size";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
     public JsonDatabaseService() throws CreationDatabaseException {
@@ -99,6 +101,16 @@ public class JsonDatabaseService implements DatabaseService {
             throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
         }
 
+        try {
+            if (Files.size(databasePath) >= 10 * 1024 * 1024) {
+                databasePath = createNewDatabaseFile(databasePath, entityClass);
+            }
+        } catch (IOException e) {
+            LOG.error(UNABLE_GET_FILE_SIZE + ": {}", databasePath.toAbsolutePath());
+            throw new GetFileSizeException(UNABLE_GET_FILE_SIZE);
+        }
+
+        //Why does content parameter for deserializeEntities is empty? My test addNewRecordAndCreateNewTable failed
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         String entityClassName = entityClass.getName();
@@ -215,9 +227,32 @@ public class JsonDatabaseService implements DatabaseService {
                 .collect(Collectors.toList());
     }
 
+    public String readDatabaseFile(Path databasePath) {
+        try {
+            return Files.readString(databasePath);
+        } catch (IOException e) {
+            LOG.error("Unable to read content from database file: {}", databasePath);
+            throw new ReadFileException("Unable to read content from database file.");
+        }
+    }
+
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {
         var databaseFolder = settings.getDatabasePath();
         return databaseFolder + File.separator + entityClass.getSimpleName() + "Table" + ".json";
+    }
+
+    private Path createNewDatabaseFile(Path databasePath, Class<? extends BaseEntity> entityClass) throws IOException {
+        String baseFilePath = databasePath.toString().replace(".json", "");
+
+        int index = 1;
+        Path newDatabasePath;
+        do {
+            newDatabasePath = Path.of(baseFilePath + index + ".json");
+            index++;
+        } while (Files.exists(newDatabasePath));
+
+        Files.createFile(newDatabasePath);
+        return newDatabasePath;
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
@@ -278,15 +313,6 @@ public class JsonDatabaseService implements DatabaseService {
             return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         } else {
             return "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-        }
-    }
-
-    public String readDatabaseFile(Path databasePath) {
-        try {
-            return Files.readString(databasePath);
-        } catch (IOException e) {
-            LOG.error("Unable to read content from database file: {}", databasePath);
-            throw new ReadFileException("Unable to read content from database file.");
         }
     }
 }

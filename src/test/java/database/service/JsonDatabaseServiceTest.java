@@ -13,7 +13,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +94,17 @@ public class JsonDatabaseServiceTest {
                 jsonDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+    }
+
+    @Test
+    public void addNewRecordAndCreateNewTable() throws IOException {
+        jsonDatabaseService.createTable(Student.class);
+        Path databasePath = Paths.get(jsonDatabaseService.getDatabasePath(Student.class));
+        Files.write(databasePath, new byte[10 * 1024 * 1024 + 1]);
+
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+
+
     }
 
     @Test
