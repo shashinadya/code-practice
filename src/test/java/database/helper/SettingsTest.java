@@ -35,16 +35,4 @@ public class SettingsTest {
         settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
         assertEquals(DEFAULT_LIMIT_VALUE, settings.getLimit());
     }
-
-    @Test
-    void getOffsetTest() {
-        settings = new Settings("Db_app_properties_files/applicationFileExist.properties");
-        assertEquals(1, settings.getOffset());
-    }
-
-    @Test
-    void getOffsetDefaultPathReturnedTest() {
-        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
-        assertEquals(0, settings.getOffset());
-    }
 }

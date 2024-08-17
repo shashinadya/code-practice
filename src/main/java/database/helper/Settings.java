@@ -14,24 +14,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Settings {
+    static final String DATABASE_STORAGE_PATH_PROPERTY_NAME = "database.storage.path";
+    static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
+    static final int DEFAULT_LIMIT_VALUE = 100;
+    private static final String LIMIT_PROPERTY_NAME = "limit";
+    private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
     private String propertyFileName;
     private final Path defaultJsonDatabasePath;
-    private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
-    static final String DATABASE_STORAGE_PATH = "database.storage.path";
-    static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
-    public static final String LIMIT = "limit";
-    public static final String OFFSET = "offset";
-    public static final int DEFAULT_LIMIT_VALUE = 100;
-    public static final int DEFAULT_OFFSET_VALUE = 0;
-    Properties properties = new Properties();
+    private final Properties properties = new Properties();
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
+        loadProperties();
     }
 
     public Settings(String propertyFileName) throws CreationDatabaseException {
         this();
         this.propertyFileName = propertyFileName;
+        loadProperties();
     }
 
     public String getPropertyFileName() {
@@ -40,21 +40,15 @@ public class Settings {
 
     public void setPropertyFileName(String propertyFileName) {
         this.propertyFileName = propertyFileName;
+        loadProperties();
     }
 
     public int getLimit() {
-        String limitStr = getProperty(LIMIT, String.valueOf(DEFAULT_LIMIT_VALUE));
-        return Integer.parseInt(limitStr);
-    }
-
-    public int getOffset() {
-        String offsetStr = getProperty(OFFSET, String.valueOf(DEFAULT_OFFSET_VALUE));
-        return Integer.parseInt(offsetStr);
+        return Integer.parseInt(properties.getProperty(LIMIT_PROPERTY_NAME, String.valueOf(DEFAULT_LIMIT_VALUE)));
     }
 
     public Path getDatabasePath() {
-        String databaseStoragePath = getProperty(DATABASE_STORAGE_PATH, defaultJsonDatabasePath.toString());
-        return Path.of(databaseStoragePath);
+        return Path.of(properties.getProperty(DATABASE_STORAGE_PATH_PROPERTY_NAME, defaultJsonDatabasePath.toString()));
     }
 
     Path getFilePath(String directoryName) throws CreationDatabaseException {
@@ -83,28 +77,26 @@ public class Settings {
         }
     }
 
-    private Properties loadProperties() {
+    private void loadProperties() {
+        properties.clear();
         if (propertyFileName == null) {
-            return null;
+            return;
         }
 
         try (var input = Settings.class.getClassLoader().getResourceAsStream(propertyFileName)) {
             if (input == null) {
-                return null;
+                setDefaultProperties();
+                return;
             }
             properties.load(input);
-            return properties;
         } catch (IOException e) {
             LOG.error("Properties file cannot be loaded: {}", e.getMessage());
-            return null;
+            setDefaultProperties();
         }
     }
 
-    private String getProperty(String propertyName, String defaultValue) {
-        Properties properties = loadProperties();
-        if (properties == null) {
-            return defaultValue;
-        }
-        return properties.getProperty(propertyName, defaultValue);
+    private void setDefaultProperties() {
+        properties.setProperty(DATABASE_STORAGE_PATH_PROPERTY_NAME, defaultJsonDatabasePath.toString());
+        properties.setProperty(LIMIT_PROPERTY_NAME, String.valueOf(DEFAULT_LIMIT_VALUE));
     }
 }

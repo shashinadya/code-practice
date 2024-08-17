@@ -46,7 +46,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
     static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
-            "Limit value should not be less than 0, offset value should be more than 0 and less than 200";
+            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0 and < 200";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
     public JsonDatabaseService() throws CreationDatabaseException {
@@ -185,7 +185,7 @@ public class JsonDatabaseService implements DatabaseService {
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         return entities.stream()
-                .skip(settings.getOffset())
+                .skip(0)
                 .limit(settings.getLimit())
                 .collect(Collectors.toList());
     }
@@ -193,9 +193,10 @@ public class JsonDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass,
                                                                      int limit, int offset) {
-        if (limit < 0 || limit > 100 || offset < 0) {
-            LOG.error("Invalid value for limit or offset parameter {}{}", limit, offset);
-            throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE);
+        if (limit < 0 || limit > settings.getLimit() || offset < 0) {
+            LOG.error("Invalid value for limit {} or offset {} parameter", limit, offset);
+            throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE
+                    .replace("{MAX_LIMIT_VALUE}", String.valueOf(settings.getLimit())));
         }
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
