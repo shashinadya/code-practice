@@ -17,11 +17,11 @@ public class Settings {
     private final Path defaultJsonDatabasePath;
     private Properties properties;
     private String propertyFileName;
+    private static final String LIMIT_PROPERTY_NAME = "limit";
+    private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
     static final String DATABASE_STORAGE_PATH_PROPERTY_NAME = "database.storage.path";
     static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
     static final int DEFAULT_LIMIT_VALUE = 100;
-    private static final String LIMIT_PROPERTY_NAME = "limit";
-    private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
@@ -29,7 +29,7 @@ public class Settings {
     }
 
     public Settings(String propertyFileName) throws CreationDatabaseException {
-        this();
+        defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
         this.propertyFileName = propertyFileName;
         loadProperties();
     }

@@ -23,6 +23,7 @@ import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
 import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
 import static database.service.JsonDatabaseService.ID_PROVIDED_MANUALLY;
+import static database.service.JsonDatabaseService.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,8 +36,6 @@ class JsonDatabaseServiceTest {
     private Student thirdStudent;
     private Student fourthStudent;
     private JsonDatabaseService jsonDatabaseService;
-    private final String INVALID_PARAMETER_VALUE = "Invalid parameter value. Limit value should be in(0..100), " +
-            "offset value should be >= 0";
 
     @BeforeEach
     void setUp() {
@@ -218,7 +217,8 @@ class JsonDatabaseServiceTest {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
 
-        assertEquals(INVALID_PARAMETER_VALUE, exception.getMessage());
+        assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
+                exception.getMessage());
     }
 
     @Test
@@ -226,7 +226,8 @@ class JsonDatabaseServiceTest {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
 
-        assertEquals(INVALID_PARAMETER_VALUE, exception.getMessage());
+        assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
+                exception.getMessage());
     }
 
     @Test
