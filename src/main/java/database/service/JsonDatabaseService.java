@@ -46,7 +46,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
     static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
-            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0 and < 200";
+            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
     public JsonDatabaseService() throws CreationDatabaseException {
@@ -185,7 +185,6 @@ public class JsonDatabaseService implements DatabaseService {
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         return entities.stream()
-                .skip(0)
                 .limit(settings.getLimit())
                 .collect(Collectors.toList());
     }

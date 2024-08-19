@@ -14,14 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Settings {
+    private final Path defaultJsonDatabasePath;
+    private Properties properties;
+    private String propertyFileName;
     static final String DATABASE_STORAGE_PATH_PROPERTY_NAME = "database.storage.path";
     static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
     static final int DEFAULT_LIMIT_VALUE = 100;
     private static final String LIMIT_PROPERTY_NAME = "limit";
     private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
-    private String propertyFileName;
-    private final Path defaultJsonDatabasePath;
-    private final Properties properties = new Properties();
 
     public Settings() throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
@@ -78,7 +78,7 @@ public class Settings {
     }
 
     private void loadProperties() {
-        properties.clear();
+        properties = new Properties();
         if (propertyFileName == null) {
             return;
         }

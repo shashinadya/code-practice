@@ -6,7 +6,7 @@ import static database.helper.Settings.DEFAULT_DATABASE_STORAGE_PATH;
 import static database.helper.Settings.DEFAULT_LIMIT_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SettingsTest {
+class SettingsTest {
     private Settings settings;
 
     @Test

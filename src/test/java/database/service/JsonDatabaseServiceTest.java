@@ -29,14 +29,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JsonDatabaseServiceTest {
+class JsonDatabaseServiceTest {
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
     private JsonDatabaseService jsonDatabaseService;
     private final String INVALID_PARAMETER_VALUE = "Invalid parameter value. Limit value should be in(0..100), " +
-            "offset value should be >= 0 and < 200";
+            "offset value should be >= 0";
 
     @BeforeEach
     void setUp() {
@@ -57,12 +57,12 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void createTableTest() {
+    void createTableTest() {
         assertTrue(jsonDatabaseService.createTable(Student.class));
     }
 
     @Test
-    public void addNewRecordToTablePositiveTest() {
+    void addNewRecordToTablePositiveTest() {
         jsonDatabaseService.createTable(Student.class);
 
         Student receivedFirstStudent = jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -75,7 +75,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void addNewRecordWhenDatabaseDoesNotExistTest() {
+    void addNewRecordWhenDatabaseDoesNotExistTest() {
         DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
                 jsonDatabaseService.addNewRecordToTable(firstStudent));
 
@@ -83,7 +83,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void addNewRecordIdProvidedManually() {
+    void addNewRecordIdProvidedManually() {
         jsonDatabaseService.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student("FirstName1 LastName1", 5.0);
@@ -96,7 +96,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void updateRecordInTableWIthCorrectIdTest() {
+    void updateRecordInTableWIthCorrectIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
@@ -108,7 +108,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void updateRecordInTableWIthIncorrectIdTest() {
+    void updateRecordInTableWIthIncorrectIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
@@ -119,7 +119,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void removeRecordFromTableTest() {
+    void removeRecordFromTableTest() {
         List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent);
         List<Student> studentsAfterDeletion = List.of(secondStudent);
 
@@ -135,7 +135,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void removeAllRecordsFromTableTest() {
+    void removeAllRecordsFromTableTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(secondStudent);
@@ -146,7 +146,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void removeAllRecordsResetIdCounterCheckTest() {
+    void removeAllRecordsResetIdCounterCheckTest() {
         try {
             jsonDatabaseService.createTable(Student.class);
             jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -170,7 +170,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByIdTest() {
+    void getByIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(secondStudent);
@@ -182,7 +182,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByIdWhenIdDoesNotExistTest() {
+    void getByIdWhenIdDoesNotExistTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
@@ -190,7 +190,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getAllRecordsFromTableTest() {
+    void getAllRecordsFromTableTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
 
         jsonDatabaseService.createTable(Student.class);
@@ -201,7 +201,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getAllRecordsFromTableWithValidLimitOffsetParametersTest() {
+    void getAllRecordsFromTableWithValidLimitOffsetParametersTest() {
         List<Student> resultStudents = List.of(secondStudent, thirdStudent);
 
         jsonDatabaseService.createTable(Student.class);
@@ -214,7 +214,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getAllRecordsFromTableWithNegativeLimitOffsetParametersTest() {
+    void getAllRecordsFromTableWithNegativeLimitOffsetParametersTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
 
@@ -222,15 +222,15 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getAllRecordsFromTableWithOverLimitParameterTest() {
-        InvalidParameterValueException exception = assertThrows(InvalidParameterValueException.class, () ->
+    void getAllRecordsFromTableWithOverLimitParameterTest() {
+        var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
 
         assertEquals(INVALID_PARAMETER_VALUE, exception.getMessage());
     }
 
     @Test
-    public void getByFiltersAllFiltersMatchTest() {
+    void getByFiltersAllFiltersMatchTest() {
         List<Student> students = List.of(firstStudent, fourthStudent);
 
         Map<String, Object> filters = Map.of("fullName", "FirstName1 LastName1", "averageScore", 5.0);
@@ -245,7 +245,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersOnlyOneFilterMatchesTest() {
+    void getByFiltersOnlyOneFilterMatchesTest() {
         List<Student> students = List.of();
 
         Map<String, Object> filters = Map.of("fullName", "Harry Potter", "averageScore", 5.0);
@@ -260,7 +260,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersNoFilterMatchesTest() {
+    void getByFiltersNoFilterMatchesTest() {
         List<Student> students = List.of();
 
         Map<String, Object> filters = Map.of("fullName", "FirstName1 LastName1", "averageScore", 3.0);
@@ -274,7 +274,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersPropertyNameIsNullTest() {
+    void getByFiltersPropertyNameIsNullTest() {
         Map<String, Object> filters = new HashMap<>() {{
             put(null, 0);
         }};
@@ -288,7 +288,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersValueIsNullTest() {
+    void getByFiltersValueIsNullTest() {
         Map<String, Object> filters = new HashMap<>() {{
             put("averageScore", null);
         }};
@@ -302,7 +302,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersValueIsEmptyTest() {
+    void getByFiltersValueIsEmptyTest() {
         Map<String, Object> filters = Map.of("fullName", "");
 
         jsonDatabaseService.createTable(Student.class);
@@ -314,7 +314,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersIncorrectPropertyNameTest() {
+    void getByFiltersIncorrectPropertyNameTest() {
         Map<String, Object> filters = Map.of("firstName", "FirstName1");
 
         jsonDatabaseService.createTable(Student.class);
@@ -326,7 +326,7 @@ public class JsonDatabaseServiceTest {
     }
 
     @Test
-    public void getByFiltersIncorrectValueTypeTest() {
+    void getByFiltersIncorrectValueTypeTest() {
         Map<String, Object> filters = Map.of("fullName", 100);
 
         jsonDatabaseService.createTable(Student.class);
