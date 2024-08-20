@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ValidatorTest {
+class ValidatorTest {
     private final Field fullNameField = Student.class.getDeclaredField("fullName");
     private final Field averageScoreField = Student.class.getDeclaredField("averageScore");
     private final Field[] declaredFields = {fullNameField, averageScoreField};
@@ -24,7 +24,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void validateDatabaseFiltersPropertyNameIsNullTest() {
+    void validateDatabaseFiltersPropertyNameIsNullTest() {
         Map<String, Object> filters = new HashMap<>();
         filters.put(null, 0);
 
@@ -34,7 +34,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void validateDatabaseFiltersValueIsNullTest() {
+    void validateDatabaseFiltersValueIsNullTest() {
         Map<String, Object> filters = new HashMap<>();
         filters.put("averageScore", null);
 
@@ -44,7 +44,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void validateDatabaseFiltersValueIsEmptyTest() {
+    void validateDatabaseFiltersValueIsEmptyTest() {
         Map<String, Object> filters = Map.of("fullName", "");
 
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
@@ -53,7 +53,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void validateDatabaseFiltersIncorrectPropertyNameTest() {
+    void validateDatabaseFiltersIncorrectPropertyNameTest() {
         Map<String, Object> filters = Map.of("firstName", "FirstName1");
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
@@ -62,7 +62,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void validateDatabaseFiltersIncorrectValueTypeTest() {
+    void validateDatabaseFiltersIncorrectValueTypeTest() {
         Map<String, Object> filters = Map.of("fullName", 100);
 
         IncorrectValueTypeException exception = assertThrows(IncorrectValueTypeException.class, () ->
