@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -245,8 +246,9 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
-        Field[] fields = Arrays.stream(incomeEntity.getClass().getDeclaredFields())
-                .filter(f -> !f.getName().equals("Id"))
+        Field[] fields = getAllFields(incomeEntity.getClass())
+                .stream()
+                .filter(f -> !f.getName().equalsIgnoreCase("id"))
                 .toArray(Field[]::new);
 
         for (Field field : fields) {
@@ -265,6 +267,15 @@ public class JsonDatabaseService implements DatabaseService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private List<Field> getAllFields(Class<?> entityClass) {
+        List<Field> fields = new ArrayList<>();
+        while (entityClass != null && entityClass != Object.class) {
+            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
+            entityClass = entityClass.getSuperclass();
+        }
+        return fields;
     }
 
     private <T extends BaseEntity> List<T> deserializeEntities(Class<? extends BaseEntity> entityClass,
@@ -291,18 +302,28 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     private String getGetterName(Class<?> entityClass, String fieldName) {
-        Field field;
-        try {
-            field = entityClass.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            LOG.error("Unable to get declared field {}", fieldName);
-            throw new RuntimeException(e);
+        Field field = getFieldFromHierarchy(entityClass, fieldName);
+        if (field == null) {
+            LOG.error("Unable to find field {} in the class hierarchy", fieldName);
+            throw new RuntimeException(new NoSuchFieldException(fieldName));
         }
+
         if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
             return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         } else {
             return "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         }
+    }
+
+    private Field getFieldFromHierarchy(Class<?> entityClass, String fieldName) {
+        while (entityClass != null && entityClass != Object.class) {
+            try {
+                return entityClass.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                entityClass = entityClass.getSuperclass();
+            }
+        }
+        return null;
     }
 
     public String readDatabaseFile(Path databasePath) {
