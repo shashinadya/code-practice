@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="ERROR" name="database">
     <Appenders>
-        <File name="FileAppender" fileName="DatabaseLogs.log" append="true">
+        <RollingFile name="RollingFileAppender" fileName="DatabaseLogs.log"
+                     filePattern="DatabaseLogs-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n</Pattern>
             </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
             <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
-        </File>
+        </RollingFile>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %p %c{1} - %m%n"/>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
@@ -15,7 +21,7 @@
     <Loggers>
         <Root level="info">
             <AppenderRef ref="ConsoleAppender"/>
-            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="RollingFileAppender"/>
         </Root>
     </Loggers>
 </Configuration>
