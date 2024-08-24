@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -210,7 +211,7 @@ public class JsonDatabaseService implements DatabaseService {
     public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                               Map<String, V> filters) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
-        Field[] fields = entityClass.getDeclaredFields();
+        List<Field> fields = getAllFields(entityClass);
         Validator.validateDatabaseFilters(fields, filters);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
@@ -220,7 +221,11 @@ public class JsonDatabaseService implements DatabaseService {
                     for (Map.Entry<String, V> filter : filters.entrySet()) {
                         String fieldName = filter.getKey();
                         V expectedValue = filter.getValue();
-                        String getterName = getGetterName(entityClass, fieldName);
+                        Field field = fields.stream()
+                                .filter(e -> e.getName().equals(fieldName))
+                                .findFirst()
+                                .orElse(null);
+                        String getterName = getGetterName(field);
 
                         try {
                             Method getterMethod = entityClass.getMethod(getterName);
@@ -245,14 +250,15 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
-        Field[] fields = Arrays.stream(incomeEntity.getClass().getDeclaredFields())
-                .filter(f -> !f.getName().equals("Id"))
-                .toArray(Field[]::new);
+        List<Field> fields = getAllFields(incomeEntity.getClass())
+                .stream()
+                .filter(f -> !f.getName().equalsIgnoreCase("id"))
+                .toList();
 
         for (Field field : fields) {
             String fieldName = field.getName();
             String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-            String getterName = getGetterName(incomeEntity.getClass(), fieldName);
+            String getterName = getGetterName(field);
 
             try {
                 Method getterMethod = incomeEntity.getClass().getMethod(getterName);
@@ -265,6 +271,15 @@ public class JsonDatabaseService implements DatabaseService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private List<Field> getAllFields(Class<?> entityClass) {
+        List<Field> fields = new ArrayList<>();
+        while (entityClass != null && entityClass != Object.class) {
+            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
+            entityClass = entityClass.getSuperclass();
+        }
+        return fields;
     }
 
     private <T extends BaseEntity> List<T> deserializeEntities(Class<? extends BaseEntity> entityClass,
@@ -290,14 +305,13 @@ public class JsonDatabaseService implements DatabaseService {
         }
     }
 
-    private String getGetterName(Class<?> entityClass, String fieldName) {
-        Field field;
-        try {
-            field = entityClass.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            LOG.error("Unable to get declared field {}", fieldName);
-            throw new RuntimeException(e);
+    private String getGetterName(Field field) {
+        if (field == null) {
+            LOG.error("Unable to get name for null field.");
+            throw new RuntimeException(new NoSuchFieldException());
         }
+
+        String fieldName = field.getName();
         if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
             return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         } else {

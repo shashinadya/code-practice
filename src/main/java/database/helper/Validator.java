@@ -6,12 +6,12 @@ import database.exception.IncorrectValueTypeException;
 import database.exception.NullPropertyNameOrValueException;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class Validator {
 
-    public static <V> void validateDatabaseFilters(Field[] declaredFields, Map<String, V> filters)
+    public static <V> void validateDatabaseFilters(List<Field> declaredFields, Map<String, V> filters)
             throws NullPropertyNameOrValueException, EmptyValueException, IncorrectPropertyNameException,
             IncorrectValueTypeException {
 
@@ -26,7 +26,7 @@ public class Validator {
                 throw new EmptyValueException("Value cannot be empty.");
             }
 
-            Field matchingField = Arrays.stream(declaredFields)
+            Field matchingField = declaredFields.stream()
                     .filter(field -> field.getName().equals(propertyName))
                     .findFirst()
                     .orElseThrow(() -> new IncorrectPropertyNameException("Incorrect property name: " + propertyName));
