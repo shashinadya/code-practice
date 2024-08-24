@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ValidatorTest {
     private final Field fullNameField = Student.class.getDeclaredField("fullName");
     private final Field averageScoreField = Student.class.getDeclaredField("averageScore");
-    private final Field[] declaredFields = {fullNameField, averageScoreField};
+    private final List<Field> declaredFields = List.of(fullNameField, averageScoreField);
 
     public ValidatorTest() throws NoSuchFieldException {
     }

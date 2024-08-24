@@ -3,21 +3,21 @@ package database.entity;
 import java.util.Objects;
 
 public class OxfordStudent extends Student {
-    private int age;
+    private Integer age;
 
     public OxfordStudent() {
     }
 
-    public OxfordStudent(String fullName, Double averageScore, int age) {
+    public OxfordStudent(String fullName, Double averageScore, Integer age) {
         super(fullName, averageScore);
         this.age = age;
     }
 
-    public int getAge() {
+    public Integer getAge() {
         return age;
     }
 
-    public void setAge(int age) {
+    public void setAge(Integer age) {
         this.age = age;
     }
 
@@ -27,7 +27,7 @@ public class OxfordStudent extends Student {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         OxfordStudent that = (OxfordStudent) o;
-        return age == that.age;
+        return Objects.equals(age, that.age);
     }
 
     @Override

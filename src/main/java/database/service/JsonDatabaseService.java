@@ -211,7 +211,7 @@ public class JsonDatabaseService implements DatabaseService {
     public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                               Map<String, V> filters) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
-        Field[] fields = entityClass.getDeclaredFields();
+        List<Field> fields = getAllFields(entityClass);
         Validator.validateDatabaseFilters(fields, filters);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
@@ -221,7 +221,11 @@ public class JsonDatabaseService implements DatabaseService {
                     for (Map.Entry<String, V> filter : filters.entrySet()) {
                         String fieldName = filter.getKey();
                         V expectedValue = filter.getValue();
-                        String getterName = getGetterName(entityClass, fieldName);
+                        Field field = fields.stream()
+                                .filter(e -> e.getName().equals(fieldName))
+                                .findFirst()
+                                .orElse(null);
+                        String getterName = getGetterName(field);
 
                         try {
                             Method getterMethod = entityClass.getMethod(getterName);
@@ -246,15 +250,15 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {
-        Field[] fields = getAllFields(incomeEntity.getClass())
+        List<Field> fields = getAllFields(incomeEntity.getClass())
                 .stream()
                 .filter(f -> !f.getName().equalsIgnoreCase("id"))
-                .toArray(Field[]::new);
+                .toList();
 
         for (Field field : fields) {
             String fieldName = field.getName();
             String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-            String getterName = getGetterName(incomeEntity.getClass(), fieldName);
+            String getterName = getGetterName(field);
 
             try {
                 Method getterMethod = incomeEntity.getClass().getMethod(getterName);
@@ -301,29 +305,18 @@ public class JsonDatabaseService implements DatabaseService {
         }
     }
 
-    private String getGetterName(Class<?> entityClass, String fieldName) {
-        Field field = getFieldFromHierarchy(entityClass, fieldName);
+    private String getGetterName(Field field) {
         if (field == null) {
-            LOG.error("Unable to find field {} in the class hierarchy", fieldName);
-            throw new RuntimeException(new NoSuchFieldException(fieldName));
+            LOG.error("Unable to find field {} in the class hierarchy", field);
+            throw new RuntimeException(new NoSuchFieldException());
         }
 
+        String fieldName = field.getName();
         if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
             return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         } else {
             return "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
         }
-    }
-
-    private Field getFieldFromHierarchy(Class<?> entityClass, String fieldName) {
-        while (entityClass != null && entityClass != Object.class) {
-            try {
-                return entityClass.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                entityClass = entityClass.getSuperclass();
-            }
-        }
-        return null;
     }
 
     public String readDatabaseFile(Path databasePath) {

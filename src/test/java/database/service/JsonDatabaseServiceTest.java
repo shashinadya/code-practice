@@ -108,7 +108,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void updateOxfordStudent() {
+    void updateOxfordStudentTest() {
         jsonDatabaseService.createTable(OxfordStudent.class);
         OxfordStudent os = new OxfordStudent("N", 4.5, 20);
         OxfordStudent os2 = new OxfordStudent("M", 4.2, 21);
@@ -256,6 +256,20 @@ class JsonDatabaseServiceTest {
         jsonDatabaseService.addNewRecordToTable(fourthStudent);
 
         assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersOxfordStudentTest() {
+        Map<String, Object> filters = Map.of("fullName", "N", "averageScore", 4.5, "age", 20);
+        OxfordStudent os = new OxfordStudent("N", 4.5, 20);
+        List<OxfordStudent> students = List.of(os);
+
+        jsonDatabaseService.createTable(OxfordStudent.class);
+        jsonDatabaseService.addNewRecordToTable(os);
+
+        assertEquals(students, jsonDatabaseService.getByFilters(OxfordStudent.class, filters));
+
+        jsonDatabaseService.deleteTable(OxfordStudent.class);
     }
 
     @Test
