@@ -307,7 +307,7 @@ public class JsonDatabaseService implements DatabaseService {
 
     private String getGetterName(Field field) {
         if (field == null) {
-            LOG.error("Unable to find field {} in the class hierarchy", field);
+            LOG.error("Unable to get name for null field.");
             throw new RuntimeException(new NoSuchFieldException());
         }
 
