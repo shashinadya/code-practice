@@ -13,6 +13,7 @@ target/
 *.ipr
 .idea/
 *.log
+*.log.gz
 
 ### Eclipse ###
 .apt_generated

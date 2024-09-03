@@ -1,37 +1,40 @@
 package database.controller;
 
 import database.entity.BaseEntity;
+import database.service.DatabaseService;
 import database.service.JsonDatabaseService;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static io.javalin.apibuilder.ApiBuilder.*;
+import static io.javalin.apibuilder.ApiBuilder.delete;
+import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.put;
 
 public class DatabaseServiceRestController {
-    private static final JsonDatabaseService databaseService = new JsonDatabaseService();
+    private static final DatabaseService databaseService = new JsonDatabaseService();
 
     public void configureRouter(JavalinConfig config) {
         config.router.apiBuilder(() ->
-                path("/api/v1/database", () -> {
-                    path("/{entityClass}", () -> {
+                path("/api/v1/database/{entityClass}", () -> {
+                    path("/table", () -> {
                         post(this::handleCreateTable);
                         delete(this::handleDeleteTable);
-                        path("/{entities}", () -> {
-                            post(this::handleAddNewRecord);
-                            path("/filter", () -> get(this::handleGetByFilters));
-                            get(this::handleGetAllRecords);
-                            path("/{id}", () -> {
-                                put(this::handleUpdateRecord);
-                                delete(this::handleDeleteRecord);
-                                get(this::handleGetById);
-                            });
-                            delete(this::handleRemoveAllRecords);
-                        });
+                    });
+                    post(this::handleAddNewRecord);
+                    get(this::handleGetAllRecords);
+                    delete(this::handleRemoveAllRecords);
+                    path("/filter", () -> get(this::handleGetByFilters));
+                    path("/{id}", () -> {
+                        put(this::handleUpdateRecord);
+                        delete(this::handleDeleteRecord);
+                        get(this::handleGetById);
                     });
                 }));
     }
@@ -48,31 +51,17 @@ public class DatabaseServiceRestController {
 
     private void handleAddNewRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        BaseEntity entity = ctx.bodyAsClass(entityClass);
+        var entity = ctx.bodyAsClass(entityClass);
         ctx.json(databaseService.addNewRecordToTable(entity));
     }
 
+    //TODO: do not use this method since service method will be reworked
     private void handleGetByFilters(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        Map<String, Object> filters = new HashMap<>();
 
-        //TODO: change filter logic with generics
-        String fullName = ctx.queryParam("fullName");
-        String averageScoreParam = ctx.queryParam("averageScore");
+        Map<String, List<String>> queryParameters = ctx.queryParamMap();
 
-        if (fullName != null) {
-            filters.put("fullName", fullName);
-        }
-        if (averageScoreParam != null) {
-            try {
-                double averageScore = Double.parseDouble(averageScoreParam);
-                filters.put("averageScore", averageScore);
-            } catch (NumberFormatException e) {
-                throw new BadRequestResponse("Invalid format for averageScore. Expected a number.");
-            }
-        }
-
-        Iterable<? extends BaseEntity> result = databaseService.getByFilters(entityClass, filters);
+        Iterable<? extends BaseEntity> result = databaseService.getByFilters(entityClass, queryParameters);
         ctx.json(result);
     }
 
@@ -83,7 +72,7 @@ public class DatabaseServiceRestController {
 
     private void handleUpdateRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        BaseEntity entity = ctx.bodyAsClass(entityClass);
+        var entity = ctx.bodyAsClass(entityClass);
         ctx.json(databaseService.updateRecordInTable(entity, entity.getId()));
     }
 
