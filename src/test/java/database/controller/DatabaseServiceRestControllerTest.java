@@ -7,16 +7,16 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
+import static database.controller.DatabaseServiceRestController.ID_PARAMETER_NAME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,11 +27,6 @@ class DatabaseServiceRestControllerTest {
 
     public DatabaseServiceRestControllerTest() {
         controller.setDatabaseService(databaseService);
-    }
-
-    @BeforeEach
-    void setUp() {
-        reset(ctx);
     }
 
     @Test
@@ -160,7 +155,7 @@ class DatabaseServiceRestControllerTest {
         entity.setId(id);
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
-        when(ctx.pathParam("id")).thenReturn(String.valueOf(id));
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.removeRecordFromTable(Student.class, 1)).thenReturn(true);
 
         controller.handleRemoveRecord(ctx);
@@ -175,7 +170,7 @@ class DatabaseServiceRestControllerTest {
         entity.setId(id);
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
-        when(ctx.pathParam("id")).thenReturn(String.valueOf(id));
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.removeRecordFromTable(Student.class, 10)).thenReturn(false);
 
         controller.handleRemoveRecord(ctx);
@@ -201,7 +196,7 @@ class DatabaseServiceRestControllerTest {
         entity.setId(id);
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
-        when(ctx.pathParam("id")).thenReturn(String.valueOf(id));
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.getById(Student.class, id)).thenReturn(entity);
 
         controller.handleGetById(ctx);
@@ -216,9 +211,23 @@ class DatabaseServiceRestControllerTest {
         entity.setId(id);
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
-        when(ctx.pathParam("id")).thenReturn(String.valueOf(id));
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.getById(Student.class, id)).thenThrow(NotFoundResponse.class);
 
         assertThrows(NotFoundResponse.class, () -> controller.handleGetById(ctx));
+    }
+
+    @Test
+    void GET_to_get_entities_by_filters_return_json_with_entities() {
+        String entityClass = "Student";
+        Map<String, List<String>> queryParameters = mock(Map.class);
+        Iterable<BaseEntity> entities = List.of(new Student());
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.queryParamMap()).thenReturn(queryParameters);
+        when(databaseService.getByFilters(Student.class, queryParameters)).thenReturn(entities);
+
+        controller.handleGetByFilters(ctx);
+        verify(ctx).json(entities);
     }
 }

@@ -17,8 +17,8 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.apibuilder.ApiBuilder.put;
 
 public class DatabaseServiceRestController {
-    private static final String ID_PARAMETER_NAME = "id";
     private DatabaseService databaseService;
+    static final String ID_PARAMETER_NAME = "id";
 
     public DatabaseServiceRestController() {
     }
