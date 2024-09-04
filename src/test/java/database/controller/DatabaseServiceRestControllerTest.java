@@ -9,6 +9,7 @@ import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -220,7 +221,9 @@ class DatabaseServiceRestControllerTest {
     @Test
     void GET_to_get_entities_by_filters_return_json_with_entities() {
         String entityClass = "Student";
-        Map<String, List<String>> queryParameters = mock(Map.class);
+        Map<String, List<String>> queryParameters = new HashMap<>();
+        List<String> fullNames = List.of("FirstStudent", "SecondStudent");
+        queryParameters.put("fullNames", fullNames);
         Iterable<BaseEntity> entities = List.of(new Student());
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
