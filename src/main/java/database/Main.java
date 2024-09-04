@@ -2,12 +2,14 @@ package database;
 
 import database.controller.DatabaseServiceRestController;
 import database.controller.FileDatabaseExceptionHandler;
+import database.service.JsonDatabaseService;
 import io.javalin.Javalin;
 
 public class Main {
-    private static final DatabaseServiceRestController dbServiceRestController = new DatabaseServiceRestController();
 
     public static void main(String[] args) {
+        final var databaseService = new JsonDatabaseService();
+        final var dbServiceRestController = new DatabaseServiceRestController(databaseService);
         var app = Javalin.create(dbServiceRestController::configureRouter)
                 .start();
 

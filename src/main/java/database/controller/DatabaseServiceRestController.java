@@ -2,7 +2,6 @@ package database.controller;
 
 import database.entity.BaseEntity;
 import database.service.DatabaseService;
-import database.service.JsonDatabaseService;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
@@ -18,7 +17,23 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.apibuilder.ApiBuilder.put;
 
 public class DatabaseServiceRestController {
-    private static final DatabaseService databaseService = new JsonDatabaseService();
+    private static final String ID_PARAMETER_NAME = "id";
+    private DatabaseService databaseService;
+
+    public DatabaseServiceRestController() {
+    }
+
+    public DatabaseServiceRestController(DatabaseService databaseService) {
+        this.databaseService = databaseService;
+    }
+
+    public DatabaseService getDatabaseService() {
+        return databaseService;
+    }
+
+    public void setDatabaseService(DatabaseService databaseService) {
+        this.databaseService = databaseService;
+    }
 
     public void configureRouter(JavalinConfig config) {
         config.router.apiBuilder(() ->
@@ -33,58 +48,56 @@ public class DatabaseServiceRestController {
                     path("/filter", () -> get(this::handleGetByFilters));
                     path("/{id}", () -> {
                         put(this::handleUpdateRecord);
-                        delete(this::handleDeleteRecord);
+                        delete(this::handleRemoveRecord);
                         get(this::handleGetById);
                     });
                 }));
     }
 
-    private void handleCreateTable(Context ctx) {
+    void handleCreateTable(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         ctx.json(databaseService.createTable(entityClass));
     }
 
-    private void handleDeleteTable(Context ctx) {
+    void handleDeleteTable(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         ctx.json(databaseService.deleteTable(entityClass));
     }
 
-    private void handleAddNewRecord(Context ctx) {
+    void handleAddNewRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         var entity = ctx.bodyAsClass(entityClass);
         ctx.json(databaseService.addNewRecordToTable(entity));
     }
 
     //TODO: do not use this method since service method will be reworked
-    private void handleGetByFilters(Context ctx) {
+    void handleGetByFilters(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-
         Map<String, List<String>> queryParameters = ctx.queryParamMap();
-
         Iterable<? extends BaseEntity> result = databaseService.getByFilters(entityClass, queryParameters);
         ctx.json(result);
     }
 
-    private void handleGetAllRecords(Context ctx) {
+    void handleGetAllRecords(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         ctx.json(databaseService.getAllRecordsFromTable(entityClass));
     }
 
-    private void handleUpdateRecord(Context ctx) {
+    void handleUpdateRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         var entity = ctx.bodyAsClass(entityClass);
         ctx.json(databaseService.updateRecordInTable(entity, entity.getId()));
     }
 
-    private void handleDeleteRecord(Context ctx) {
+    void handleRemoveRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
         ctx.json(databaseService.removeRecordFromTable(entityClass, id));
     }
 
-    private void handleGetById(Context ctx) {
+    void handleGetById(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
         var entity = databaseService.getById(entityClass, id);
         if (entity == null) {
             throw new NotFoundResponse("Entity with provided id not found: " + id);
@@ -92,7 +105,7 @@ public class DatabaseServiceRestController {
         ctx.json(entity);
     }
 
-    private void handleRemoveAllRecords(Context ctx) {
+    void handleRemoveAllRecords(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         databaseService.removeAllRecordsFromTable(entityClass);
     }
