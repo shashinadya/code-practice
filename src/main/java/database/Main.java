@@ -13,6 +13,8 @@ public class Main {
         var app = Javalin.create(dbServiceRestController::configureRouter)
                 .start();
 
+        System.out.println("Check out Swagger UI docs at http://localhost:8080/swagger");
+
         FileDatabaseExceptionHandler fileDatabaseExceptionHandler = new FileDatabaseExceptionHandler();
         fileDatabaseExceptionHandler.register(app);
     }
