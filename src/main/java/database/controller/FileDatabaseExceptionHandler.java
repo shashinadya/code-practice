@@ -6,6 +6,10 @@ import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.http.HttpStatus;
 
+import static io.javalin.http.HttpStatus.BAD_REQUEST;
+import static io.javalin.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static io.javalin.http.HttpStatus.NOT_FOUND;
+
 public class FileDatabaseExceptionHandler {
 
     public void register(Javalin app) {
@@ -15,15 +19,15 @@ public class FileDatabaseExceptionHandler {
     }
 
     private void handleBadRequest(BadRequestException e, Context ctx) {
-        setResponse(ctx, HttpStatus.BAD_REQUEST, "Bad Request", e.getMessage());
+        setResponse(ctx, BAD_REQUEST, BAD_REQUEST.getMessage(), e.getMessage());
     }
 
     private void handleNotFound(NotFoundResponse e, Context ctx) {
-        setResponse(ctx, HttpStatus.NOT_FOUND, "Not found", e.getMessage());
+        setResponse(ctx, NOT_FOUND, NOT_FOUND.getMessage(), e.getMessage());
     }
 
     private void handleInternalServerError(Exception e, Context ctx) {
-        setResponse(ctx, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage());
+        setResponse(ctx, INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR.getMessage(), e.getMessage());
     }
 
     private void setResponse(Context ctx, HttpStatus status, String error, String message) {
