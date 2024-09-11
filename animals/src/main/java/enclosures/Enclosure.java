@@ -1,6 +1,6 @@
 package enclosures;
 
-import model.Animal;
+import practice.model.Animal;
 
 import java.util.ArrayList;
 import java.util.List;

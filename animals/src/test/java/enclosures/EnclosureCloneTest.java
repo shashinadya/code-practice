@@ -1,6 +1,6 @@
 package enclosures;
 
-import model.mammals.artiodactyls.Cow;
+import practice.model.mammals.artiodactyls.Cow;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

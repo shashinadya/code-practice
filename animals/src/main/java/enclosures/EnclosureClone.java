@@ -1,6 +1,6 @@
 package enclosures;
 
-import model.mammals.artiodactyls.Cow;
+import practice.model.mammals.artiodactyls.Cow;
 
 public class EnclosureClone {
 

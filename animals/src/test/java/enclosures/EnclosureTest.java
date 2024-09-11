@@ -1,17 +1,17 @@
 package enclosures;
 
-import model.mammals.Mammal;
-import model.mammals.predators.aquatic.KillerWhale;
-import model.mammals.predators.ground.Coyote;
-import model.mammals.predators.ground.Lion;
+import practice.model.mammals.Mammal;
+import practice.model.mammals.predators.aquatic.KillerWhale;
+import practice.model.mammals.predators.ground.Coyote;
+import practice.model.mammals.predators.ground.Lion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static model.mammals.predators.Predator.WeaponType.CLAWS;
-import static model.mammals.predators.Predator.WeaponType.TEETH;
+import static practice.model.mammals.predators.Predator.WeaponType.CLAWS;
+import static practice.model.mammals.predators.Predator.WeaponType.TEETH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

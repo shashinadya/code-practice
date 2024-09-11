@@ -1,11 +1,11 @@
 package task;
 
-import model.mammals.predators.aquatic.Cachalot;
+import practice.model.mammals.predators.aquatic.Cachalot;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static model.mammals.predators.Predator.WeaponType.TEETH;
+import static practice.model.mammals.predators.Predator.WeaponType.TEETH;
 
 public class Lambdas {
 

@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import model.mammals.predators.aquatic.Cachalot;
+import practice.model.mammals.predators.aquatic.Cachalot;
 
-import static model.mammals.predators.Predator.WeaponType.TEETH;
+import static practice.model.mammals.predators.Predator.WeaponType.TEETH;
 
 import java.util.List;
 import java.util.stream.Collectors;
