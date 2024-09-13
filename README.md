@@ -1,6 +1,6 @@
 # DatabaseService
 
-DatabaseService is a Java service for managing data across various databases.
+DatabaseService is a Java database.service for managing data across various databases.
 
 ## Installation
 
