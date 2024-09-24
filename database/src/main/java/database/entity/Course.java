@@ -33,4 +33,11 @@ public class Course extends BaseEntity {
     public int hashCode() {
         return Objects.hashCode(name);
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Course{" +
+                "name='" + name + '\'' +
+                '}';
+    }
 }

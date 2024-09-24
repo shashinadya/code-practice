@@ -43,4 +43,12 @@ public class Student extends BaseEntity {
     public int hashCode() {
         return Objects.hash(fullName, averageScore);
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Student{" +
+                "fullName='" + fullName + '\'' +
+                ", averageScore=" + averageScore +
+                '}';
+    }
 }
