@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -110,6 +111,20 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
+    void GET_to_get_all_records_with_limit_offset_returns_json_with_entities() {
+        String entityClass = "Student";
+        Iterable<BaseEntity> entities = List.of(new Student());
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.queryParam("limit")).thenReturn("1");
+        when(ctx.queryParam("offset")).thenReturn("1");
+        when(databaseService.getAllRecordsFromTable(Student.class, 1, 1)).thenReturn(entities);
+
+        controller.handleGetAllRecords(ctx);
+        verify(ctx).json(entities);
+    }
+
+    @Test
     void GET_to_get_all_records_returns_500_when_database_not_exist() {
         String entityClass = "Student";
 
@@ -128,6 +143,7 @@ class DatabaseServiceRestControllerTest {
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
+        when(ctx.pathParam("id")).thenReturn("1");
         when(databaseService.updateRecordInTable(entity, 1)).thenReturn(updatedEntity);
 
         controller.handleUpdateRecord(ctx);
@@ -135,16 +151,16 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void PUT_to_update_record_returns_400_when_id_not_exist() {
+    void PUT_to_update_record_never_called_when_id_not_match() {
         String entityClass = "Student";
         Student entity = new Student();
         entity.setId(1);
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam("id")).thenReturn("2");
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
-        when(databaseService.updateRecordInTable(entity, 1)).thenThrow(BadRequestResponse.class);
 
-        assertThrows(BadRequestResponse.class, () -> controller.handleUpdateRecord(ctx));
+        verify(databaseService, never()).updateRecordInTable(any(), any());
     }
 
     @Test

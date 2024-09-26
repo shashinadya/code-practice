@@ -80,13 +80,35 @@ public class DatabaseServiceRestController {
 
     void handleGetAllRecords(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        ctx.json(databaseService.getAllRecordsFromTable(entityClass));
+        String limitParam = ctx.queryParam("limit");
+        String offsetParam = ctx.queryParam("offset");
+
+        if (limitParam != null && offsetParam != null) {
+            try {
+                int limit = Integer.parseInt(limitParam);
+                int offset = Integer.parseInt(offsetParam);
+
+                ctx.json(databaseService.getAllRecordsFromTable(entityClass, limit, offset));
+            } catch (NumberFormatException e) {
+                ctx.status(400).result("Invalid value for limit or offset parameter. They must be integers.");
+            }
+        } else {
+            ctx.json(databaseService.getAllRecordsFromTable(entityClass));
+        }
     }
 
     void handleUpdateRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
+        Integer pathId = Integer.parseInt(ctx.pathParam("id"));
         var entity = ctx.bodyAsClass(entityClass);
-        ctx.json(databaseService.updateRecordInTable(entity, entity.getId()));
+
+        if (entity.getId() == null || !entity.getId().equals(pathId)) {
+            ctx.status(400);
+            ctx.result("ID in the path and entity ID do not match or entity ID is missing.");
+            return;
+        }
+
+        ctx.json(databaseService.updateRecordInTable(entity, pathId));
     }
 
     void handleRemoveRecord(Context ctx) {

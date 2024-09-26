@@ -5,8 +5,7 @@ import database.exception.CreationDatabaseException;
 import database.exception.DatabaseDoesNotExistException;
 import database.exception.DatabaseOperationException;
 import database.exception.DeletionDatabaseException;
-import database.exception.EntityNotFoundException;
-import database.exception.IdMismatchException;
+import database.exception.FailedAccessFieldValueException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.helper.Settings;
@@ -42,6 +41,7 @@ public class SqlDatabaseService implements DatabaseService {
     static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically";
     static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
             "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0";
+    static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
 
     @Override
     public boolean createTable(Class<? extends BaseEntity> entityClass) {
@@ -69,11 +69,13 @@ public class SqlDatabaseService implements DatabaseService {
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(createTableSQL.toString());
-            return true;
-        } catch (SQLException e) {
-            LOG.error(UNABLE_CREATE_TABLE + ": {}", tableName);
-            throw new CreationDatabaseException(UNABLE_CREATE_TABLE + ": " + e.getMessage());
+            return checkTableExists(tableName, connection);
+        } catch (Exception e) {
+            LOG.error("Unable to create new table: {}, {}", tableName, e.getMessage());
+            throw new CreationDatabaseException(UNABLE_CREATE_TABLE + ": " + tableName + ", " + e.getMessage());
         }
+
+
     }
 
     @Override
@@ -86,10 +88,10 @@ public class SqlDatabaseService implements DatabaseService {
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(dropTableSQL);
-            return true;
-        } catch (SQLException e) {
-            LOG.error(UNABLE_DELETE_TABLE + ": {}", tableName);
-            throw new DeletionDatabaseException(UNABLE_DELETE_TABLE);
+            return !checkTableExists(tableName, connection);
+        } catch (Exception e) {
+            LOG.error("Unable to delete table: {}, {}", tableName, e.getMessage());
+            throw new DeletionDatabaseException(UNABLE_DELETE_TABLE + ": " + tableName + ", " + e.getMessage());
         }
     }
 
@@ -102,75 +104,65 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
-        String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
-                "WHERE table_schema = 'entities' AND table_name = '" + tableName + "'";
-
-        String checkEmptyTableSQL = "SELECT COUNT(*) FROM " + tableName;
-
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
+             Statement statement = connection.createStatement()) {
 
-            if (resultSet.next() && resultSet.getInt(1) > 0) {
-                try (ResultSet emptyTableResultSet = statement.executeQuery(checkEmptyTableSQL)) {
-                    int rowCount = 0;
-                    if (emptyTableResultSet.next()) {
-                        rowCount = emptyTableResultSet.getInt(1);
-                    }
-
-                    if (rowCount == 0) {
-                        String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
-                        statement.executeUpdate(resetAutoIncrementSQL);
-                    }
+            if (checkTableExists(tableName, connection)) {
+                if (isTableEmpty(tableName, connection)) {
+                    String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
+                    statement.executeUpdate(resetAutoIncrementSQL);
                 }
 
                 String insertSQL = generateInsertSQL(entity, tableName);
+
+                LOG.info("Executing SQL: {}", insertSQL);
+
                 int affectedRows = statement.executeUpdate(insertSQL, Statement.RETURN_GENERATED_KEYS);
                 if (affectedRows == 0) {
+                    LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
                     throw new SQLException("Creating record failed, no rows affected.");
                 }
 
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        entity.setId(generatedKeys.getInt(1)); // Получаем сгенерированный ID
+                        entity.setId(generatedKeys.getInt(1));
                     } else {
+                        LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
                         throw new SQLException("Creating record failed, no ID obtained.");
                     }
                 }
             } else {
-                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST);
+                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
             }
-        } catch (SQLException e) {
-            LOG.error(UNABLE_ADD_NEW_RECORD + ": {}", tableName, e);
-            throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD);
+        } catch (Exception e) {
+            LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
+            throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + tableName + ", " + e.getMessage());
         }
 
         return entity;
     }
 
-    //TODO: If entity id doesn't match parameter id, I don't get exception, why? The same problem in
-    // removeRecordFromTable method, when I use wrong id
     @Override
     public <T extends BaseEntity> T updateRecordInTable(T entity, Integer id) {
-        if (entity.getId() == null || !entity.getId().equals(id)) {
-            throw new IdMismatchException("The entity's ID does not match the provided ID.");
-        }
-
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
         String updateSQL = generateUpdateSQL(entity, tableName, id);
+
+        LOG.info("Executing SQL: {}", updateSQL);
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
              Statement statement = connection.createStatement()) {
 
             int affectedRows = statement.executeUpdate(updateSQL);
             if (affectedRows == 0) {
+                LOG.error("Updating record failed in table {}: {}", tableName, updateSQL);
                 throw new SQLException("Updating record failed, no rows affected.");
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             LOG.error("Unable to update record in table {}: {}", tableName, e.getMessage());
-            throw new DatabaseOperationException("Unable to update record.");
+            throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName + ", " +
+                    e.getMessage());
         }
 
         return entity;
@@ -188,8 +180,8 @@ public class SqlDatabaseService implements DatabaseService {
             statement.executeUpdate(deleteRecordSQL);
             return true;
         } catch (SQLException e) {
-            LOG.error(UNABLE_DELETE_RECORD + ": {}", tableName);
-            throw new DeletionDatabaseException(UNABLE_DELETE_RECORD);
+            LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
+            throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
         }
     }
 
@@ -204,8 +196,8 @@ public class SqlDatabaseService implements DatabaseService {
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(deleteAllRecordsSQL);
         } catch (SQLException e) {
-            LOG.error(UNABLE_DELETE_ALL_RECORDS + ": {}", tableName);
-            throw new DeletionDatabaseException(UNABLE_DELETE_ALL_RECORDS);
+            LOG.error(UNABLE_DELETE_ALL_RECORDS + ": {}, {}", tableName, e.getMessage());
+            throw new DeletionDatabaseException(UNABLE_DELETE_ALL_RECORDS + ": " + tableName + ", " + e.getMessage());
         }
     }
 
@@ -220,23 +212,14 @@ public class SqlDatabaseService implements DatabaseService {
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectRecordByIdSQL)) {
             if (resultSet.next()) {
-                T entity = (T) entityClass.getDeclaredConstructor().newInstance();
-
-                List<Field> entityFields = getAllFields(entityClass);
-                for (Field field : entityFields) {
-                    field.setAccessible(true);
-                    String columnName = field.getName();
-
-                    Object value = resultSet.getObject(columnName);
-                    field.set(entity, value);
-                }
-                return entity;
+                return createAndFillEntity(entityClass, resultSet);
             } else {
-                throw new EntityNotFoundException("Record with id " + id + " not found");
+                return null;
             }
         } catch (SQLException | ReflectiveOperationException e) {
-            LOG.error(ENTITY_IS_NOT_FOUND + ": {}", id);
-            throw new DatabaseOperationException("Error retrieving record by id");
+            LOG.error(ENTITY_IS_NOT_FOUND + ": {}, {}, {}", id, tableName, e.getMessage());
+            throw new DatabaseOperationException("Error retrieving record by id " + id + ", " + tableName + ", " +
+                    e.getMessage());
         }
     }
 
@@ -246,34 +229,26 @@ public class SqlDatabaseService implements DatabaseService {
         String selectAllRecordsSQL = "SELECT * FROM " + tableName;
 
         List<T> entities = new ArrayList<>();
+
         LOG.info("Executing SQL: {}", selectAllRecordsSQL);
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
             while (resultSet.next()) {
-                T entity = (T) entityClass.getDeclaredConstructor().newInstance();
-                List<Field> entityFields = getAllFields(entityClass);
-                for (Field field : entityFields) {
-                    field.setAccessible(true);
-                    String columnName = field.getName();
-
-                    Object value = resultSet.getObject(columnName);
-                    field.set(entity, value);
-                }
-                entities.add(entity);
+                entities.add(createAndFillEntity(entityClass, resultSet));
             }
         } catch (SQLException | ReflectiveOperationException e) {
-            LOG.error("Error retrieving all records from table: {}", tableName, e);
-            throw new DatabaseOperationException("Error retrieving all records from table");
+            LOG.error("Error retrieving all records from table: {}, {}", tableName, e.getMessage());
+            throw new DatabaseOperationException("Error retrieving all records from table" + tableName + ", " +
+                    e.getMessage());
         }
         return entities;
     }
 
-    //TODO: This method doesn't work well, when I use limit and offset in query parameters or body in Postman,
-    // I get all records anyway
     @Override
-    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass, int limit, int offset) {
+    public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass, int limit,
+                                                                     int offset) {
         if (limit < 0 || limit > settings.getLimit() || offset < 0) {
             LOG.error("Invalid value for limit {} or offset {} parameter", limit, offset);
             throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE
@@ -284,6 +259,7 @@ public class SqlDatabaseService implements DatabaseService {
         String selectAllRecordsWithParamsSQL = "SELECT * FROM " + tableName + " LIMIT " + limit + " OFFSET " + offset;
 
         List<T> entities = new ArrayList<>();
+
         LOG.info("Executing SQL: {}", selectAllRecordsWithParamsSQL);
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
@@ -291,16 +267,7 @@ public class SqlDatabaseService implements DatabaseService {
              ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
 
             while (resultSet.next()) {
-                T entity = (T) entityClass.getDeclaredConstructor().newInstance();
-                List<Field> entityFields = getAllFields(entityClass);
-                for (Field field : entityFields) {
-                    field.setAccessible(true);
-                    String columnName = field.getName();
-
-                    Object value = resultSet.getObject(columnName);
-                    field.set(entity, value);
-                }
-                entities.add(entity);
+                entities.add(createAndFillEntity(entityClass, resultSet));
             }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records from table: {}", tableName, e);
@@ -309,7 +276,6 @@ public class SqlDatabaseService implements DatabaseService {
         return entities;
     }
 
-    //TODO: This method doesn't work well. I get result [] in Postman every time
     @Override
     public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                               Map<String, V> filters) {
@@ -329,25 +295,18 @@ public class SqlDatabaseService implements DatabaseService {
         }
 
         String selectRecordsByFiltersSQL = sqlBuilder.toString();
+
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUserName, dbPassword);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectRecordsByFiltersSQL)) {
 
-            List<T> results = new ArrayList<>();
+            List<T> entities = new ArrayList<>();
             while (resultSet.next()) {
-                T entity = (T) entityClass.getDeclaredConstructor().newInstance();
-                List<Field> entityFields = getAllFields(entityClass);
-                for (Field field : entityFields) {
-                    field.setAccessible(true);
-                    String columnName = field.getName();
-                    Object value = resultSet.getObject(columnName);
-                    field.set(entity, value);
-                }
-                results.add(entity);
+                entities.add(createAndFillEntity(entityClass, resultSet));
             }
-            return results;
+            return entities;
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records by filters: {}", e.getMessage());
             throw new DatabaseOperationException("Error retrieving records by filters");
@@ -366,6 +325,8 @@ public class SqlDatabaseService implements DatabaseService {
     private String getSQLType(Class<?> fieldType) {
         if (fieldType == int.class || fieldType == Integer.class) {
             return "INT";
+        } else if (fieldType == long.class || fieldType == Long.class) {
+            return "BIGINT";
         } else if (fieldType == String.class) {
             return "VARCHAR(255)";
         } else if (fieldType == boolean.class || fieldType == Boolean.class) {
@@ -415,6 +376,9 @@ public class SqlDatabaseService implements DatabaseService {
 
         List<Field> entityFields = getAllFields(entity.getClass());
         for (Field field : entityFields) {
+            if (field.getName().equals("id")) {
+                continue;
+            }
             field.setAccessible(true);
             try {
                 Object value = field.get(entity);
@@ -427,6 +391,7 @@ public class SqlDatabaseService implements DatabaseService {
                 }
             } catch (IllegalAccessException e) {
                 LOG.error("Failed to access field value for SQL generation", e);
+                throw new FailedAccessFieldValueException(UNABLE_ACCESS_FIELD_VALUE);
             }
         }
 
@@ -434,5 +399,38 @@ public class SqlDatabaseService implements DatabaseService {
         sql.append(" WHERE id = ").append(id);
 
         return sql.toString();
+    }
+
+    private boolean checkTableExists(String tableName, Connection connection) throws SQLException {
+        String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
+                "WHERE table_schema = 'entities' AND table_name = '" + tableName + "'";
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
+            return resultSet.next() && resultSet.getInt(1) > 0;
+        }
+    }
+
+    private boolean isTableEmpty(String tableName, Connection connection) throws SQLException {
+        String checkEmptyTableSQL = "SELECT COUNT(*) FROM " + tableName;
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(checkEmptyTableSQL)) {
+            return resultSet.next() && resultSet.getInt(1) == 0;
+        }
+    }
+
+    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet resultSet)
+            throws ReflectiveOperationException, SQLException {
+        T entity = (T) entityClass.getDeclaredConstructor().newInstance();
+        List<Field> entityFields = getAllFields(entityClass);
+
+        for (Field field : entityFields) {
+            field.setAccessible(true);
+            String columnName = field.getName();
+            Object value = resultSet.getObject(columnName);
+            field.set(entity, value);
+        }
+        return entity;
     }
 }
