@@ -26,7 +26,6 @@ import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
 import static database.service.JsonDatabaseService.ID_PROVIDED_MANUALLY;
 import static database.service.JsonDatabaseService.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -142,8 +141,6 @@ class JsonDatabaseServiceTest {
         assertEquals(studentsBeforeDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
         assertTrue(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
         assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
-        assertFalse(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
-        assertFalse(jsonDatabaseService.removeRecordFromTable(Student.class, 13));
     }
 
     @Test

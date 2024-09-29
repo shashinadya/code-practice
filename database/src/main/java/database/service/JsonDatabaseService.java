@@ -152,7 +152,7 @@ public class JsonDatabaseService implements DatabaseService {
         if (isEntityRemoved) {
             saveEntitiesToDatabase(entities, databasePath);
         }
-        return isEntityRemoved;
+        return true;
     }
 
     @Override

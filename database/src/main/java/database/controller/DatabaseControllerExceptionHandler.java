@@ -10,7 +10,7 @@ import static io.javalin.http.HttpStatus.BAD_REQUEST;
 import static io.javalin.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static io.javalin.http.HttpStatus.NOT_FOUND;
 
-public class FileDatabaseExceptionHandler {
+public class DatabaseControllerExceptionHandler {
 
     public void register(Javalin app) {
         app.exception(BadRequestException.class, this::handleBadRequest);
