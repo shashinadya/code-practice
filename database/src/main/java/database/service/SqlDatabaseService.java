@@ -25,8 +25,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
+import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+
 public class SqlDatabaseService implements DatabaseService {
-    private final Settings settings = new Settings();
+    private final Settings settings;
     private final String dbUserName;
     private final String dbPassword;
     private final String databaseName;
@@ -38,17 +42,16 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_ADD_NEW_RECORD = "Unable to add new record to table";
     static final String UNABLE_DELETE_RECORD = "Unable to delete record from table";
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
-    static final String ENTITY_IS_NOT_FOUND = "Entity with provided Id is not found";
-    static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically";
-    static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
-            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0";
     static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
+    static final String ID_PARAMETER_NAME = "id";
 
-    public SqlDatabaseService(String dbBaseURL, String dbUserName, String dbPassword, String databaseName) throws SQLException {
+    public SqlDatabaseService(String dbBaseURL, String dbUserName, String dbPassword, String databaseName,
+                              String propertyFileName) {
         this.dbUserName = dbUserName;
         this.dbPassword = dbPassword;
         this.databaseName = databaseName;
         this.databaseURL = dbBaseURL + databaseName;
+        settings = new Settings(propertyFileName);
     }
 
     @Override
@@ -62,7 +65,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         for (Field field : fields) {
             String fieldName = field.getName();
-            if (fieldName.equals("id")) {
+            if (fieldName.equals(ID_PARAMETER_NAME)) {
                 continue;
             }
             String fieldType = getSQLType(field.getType());
@@ -144,7 +147,6 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + e.getMessage());
         }
-
         return entity;
     }
 
@@ -170,7 +172,6 @@ public class SqlDatabaseService implements DatabaseService {
             throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName + ", " +
                     e.getMessage());
         }
-
         return entity;
     }
 
@@ -232,7 +233,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsSQL = "SELECT * FROM " + tableName;
+        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT " + settings.getLimit();
 
         List<T> entities = new ArrayList<>();
 
@@ -364,7 +365,7 @@ public class SqlDatabaseService implements DatabaseService {
         for (Field field : entityFields) {
             field.setAccessible(true);
 
-            if (field.getName().equals("id")) {
+            if (field.getName().equals(ID_PARAMETER_NAME)) {
                 continue;
             }
 
@@ -393,7 +394,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         List<Field> entityFields = getAllFields(entity.getClass());
         for (Field field : entityFields) {
-            if (field.getName().equals("id")) {
+            if (field.getName().equals(ID_PARAMETER_NAME)) {
                 continue;
             }
             field.setAccessible(true);

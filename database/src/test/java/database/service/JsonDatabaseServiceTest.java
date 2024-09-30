@@ -22,9 +22,9 @@ import java.util.Map;
 
 import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
-import static database.service.JsonDatabaseService.ENTITY_DOES_NOT_EXIST;
-import static database.service.JsonDatabaseService.ID_PROVIDED_MANUALLY;
-import static database.service.JsonDatabaseService.INVALID_PARAMETER_VALUE;
+import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
+import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,7 +35,8 @@ class JsonDatabaseServiceTest {
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
-    private JsonDatabaseService jsonDatabaseService;
+    private final JsonDatabaseService jsonDatabaseService =
+            new JsonDatabaseService("Db_app_properties_files/application.properties");
 
     @BeforeEach
     void setUp() {
@@ -43,7 +44,6 @@ class JsonDatabaseServiceTest {
         secondStudent = new Student("FirstName2 LastName2", 4.5);
         thirdStudent = new Student("FirstName3 LastName3", 5.0);
         fourthStudent = new Student("FirstName1 LastName1", 5.0);
-        jsonDatabaseService = new JsonDatabaseService();
     }
 
     @AfterEach
@@ -126,7 +126,7 @@ class JsonDatabaseServiceTest {
         IdDoesNotExistException exception = assertThrows(IdDoesNotExistException.class, () ->
                 jsonDatabaseService.updateRecordInTable(secondStudent, 12));
 
-        assertEquals(ENTITY_DOES_NOT_EXIST, exception.getMessage());
+        assertEquals(ENTITY_IS_NOT_FOUND, exception.getMessage());
     }
 
     @Test

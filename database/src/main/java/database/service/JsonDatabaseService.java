@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
+import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+
 public class JsonDatabaseService implements DatabaseService {
     private final Settings settings;
     private final ObjectMapper objectMapper;
@@ -44,17 +48,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_SERIALIZE_DATA = "Unable to serialize data";
     static final String UNABLE_DESERIALIZE_DATA = "Unable to deserialize data";
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
-    static final String ENTITY_DOES_NOT_EXIST = "Entity with provided Id does not exist";
-    static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
-    static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
-            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
-
-    public JsonDatabaseService() throws CreationDatabaseException {
-        settings = new Settings();
-        objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        entityIds = new HashMap<>();
-    }
 
     public JsonDatabaseService(String propertyFileName) throws CreationDatabaseException {
         settings = new Settings(propertyFileName);
@@ -134,7 +128,7 @@ public class JsonDatabaseService implements DatabaseService {
         T entityFoundById = entities.stream()
                 .filter(e -> id.equals(e.getId()))
                 .findFirst()
-                .orElseThrow(() -> new IdDoesNotExistException(ENTITY_DOES_NOT_EXIST));
+                .orElseThrow(() -> new IdDoesNotExistException(ENTITY_IS_NOT_FOUND));
 
         updateEntityFields(entityFoundById, entity);
 

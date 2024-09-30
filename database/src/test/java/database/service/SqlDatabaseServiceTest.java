@@ -12,15 +12,15 @@ import database.exception.InvalidParameterValueException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import static database.service.SqlDatabaseService.ENTITY_IS_NOT_FOUND;
-import static database.service.SqlDatabaseService.ID_PROVIDED_MANUALLY;
-import static database.service.SqlDatabaseService.INVALID_PARAMETER_VALUE;
+import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
+import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+import static database.service.SqlDatabaseService.TABLE_NOT_EXIST;
+import static database.service.SqlDatabaseService.UNABLE_CREATE_TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -28,19 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlDatabaseServiceTest {
-    private SqlDatabaseService sqlDatabaseService;
+    private final SqlDatabaseService sqlDatabaseService =
+            new SqlDatabaseService(DATABASE_URL, DB_USER_NAME, DB_PASSWORD, DATABASE_NAME,
+                    "Db_app_properties_files/application.properties");
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
-    private final String DB_USER_NAME = "test_user";
-    private final String DB_PASSWORD = "Qwerty!1";
-    private final String DATABASE_NAME = "test_entities";
-    private final String DATABASE_URL = "jdbc:mysql://localhost:3306/";
-    private final String UNABLE_CREATE_TABLE =
-            "Unable to create table. Please check if it already exists: Table 'student' already exists";
-    private final String TABLE_NOT_EXIST = "Table does not exist: Student";
-    private MockedStatic<DriverManager> driverManagerMock;
+    private static final String DB_USER_NAME = "test_user";
+    private static final String DB_PASSWORD = "Qwerty!1";
+    private static final String DATABASE_NAME = "test_entities";
+    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/";
+
+    public SqlDatabaseServiceTest() throws SQLException {
+    }
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -48,7 +49,6 @@ public class SqlDatabaseServiceTest {
         secondStudent = new Student("FirstName2 LastName2", 4.5);
         thirdStudent = new Student("FirstName3 LastName3", 5.0);
         fourthStudent = new Student("FirstName1 LastName1", 5.0);
-        sqlDatabaseService = new SqlDatabaseService(DATABASE_URL, DB_USER_NAME, DB_PASSWORD, DATABASE_NAME);
     }
 
     @AfterEach
@@ -75,7 +75,7 @@ public class SqlDatabaseServiceTest {
 
         CreationDatabaseException exception = assertThrows(CreationDatabaseException.class, () ->
                 sqlDatabaseService.createTable(entityClass));
-        assertEquals(UNABLE_CREATE_TABLE, exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(UNABLE_CREATE_TABLE));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordToTablePositiveTest() throws SQLException {
+    void addNewRecordToTablePositiveTest() {
         Class<? extends BaseEntity> entityClass = Student.class;
 
         sqlDatabaseService.createTable(entityClass);
@@ -107,7 +107,7 @@ public class SqlDatabaseServiceTest {
         DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
                 sqlDatabaseService.addNewRecordToTable(firstStudent));
 
-        assertEquals(TABLE_NOT_EXIST, exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
     }
 
     @Test
@@ -137,14 +137,16 @@ public class SqlDatabaseServiceTest {
 
     @Test
     void updateOxfordStudentTest() {
-        sqlDatabaseService.createTable(OxfordStudent.class);
-        OxfordStudent os = new OxfordStudent("N", 4.5, 20);
-        OxfordStudent os2 = new OxfordStudent("M", 4.2, 21);
+        try {
+            sqlDatabaseService.createTable(OxfordStudent.class);
+            OxfordStudent os = new OxfordStudent("N", 4.5, 20);
+            OxfordStudent os2 = new OxfordStudent("M", 4.2, 21);
 
-        sqlDatabaseService.addNewRecordToTable(os);
-        assertEquals(os2, sqlDatabaseService.updateRecordInTable(os2, 1));
-
-        sqlDatabaseService.deleteTable(OxfordStudent.class);
+            sqlDatabaseService.addNewRecordToTable(os);
+            assertEquals(os2, sqlDatabaseService.updateRecordInTable(os2, 1));
+        } finally {
+            sqlDatabaseService.deleteTable(OxfordStudent.class);
+        }
     }
 
     @Test
@@ -268,7 +270,7 @@ public class SqlDatabaseServiceTest {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 sqlDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
 
-        assertEquals(JsonDatabaseService.INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
+        assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
     }
 }

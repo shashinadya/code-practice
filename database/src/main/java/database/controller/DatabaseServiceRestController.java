@@ -1,11 +1,11 @@
 package database.controller;
 
 import database.entity.BaseEntity;
+import database.exception.BadRequestException;
 import database.exception.IdMismatchException;
 import database.exception.InvalidParameterValueException;
 import database.service.DatabaseService;
 import io.javalin.config.JavalinConfig;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 
@@ -114,13 +114,22 @@ public class DatabaseServiceRestController {
 
     void handleRemoveRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
-        ctx.json(databaseService.removeRecordFromTable(entityClass, id));
+        try {
+            int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
+            ctx.json(databaseService.removeRecordFromTable(entityClass, id));
+        } catch (NumberFormatException e) {
+            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+        }
     }
 
     void handleGetById(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
+        int id;
+        try {
+            id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
+        } catch (NumberFormatException e) {
+            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+        }
         var entity = databaseService.getById(entityClass, id);
         if (entity == null) {
             throw new NotFoundResponse("Entity with provided id not found: " + id);
@@ -139,7 +148,7 @@ public class DatabaseServiceRestController {
             String className = "database.entity." + entityClassName;
             return (Class<? extends BaseEntity>) Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new BadRequestResponse("Invalid database.entity class: " + entityClassName);
+            throw new BadRequestException("Invalid database.entity class: " + entityClassName);
         }
     }
 }

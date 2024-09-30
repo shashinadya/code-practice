@@ -2,6 +2,7 @@ package database.controller;
 
 import database.entity.BaseEntity;
 import database.entity.Student;
+import database.exception.BadRequestException;
 import database.service.DatabaseService;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
@@ -194,6 +195,16 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
+    void DELETE_to_remove_record_returns_400_when_invalid_id() {
+        String entityClass = "Student";
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
+
+        assertThrows(BadRequestException.class, () -> controller.handleRemoveRecord(ctx));
+    }
+
+    @Test
     void DELETE_to_remove_all_records_returns_true() {
         String entityClass = "Student";
 
@@ -231,6 +242,16 @@ class DatabaseServiceRestControllerTest {
         when(databaseService.getById(Student.class, id)).thenThrow(NotFoundResponse.class);
 
         assertThrows(NotFoundResponse.class, () -> controller.handleGetById(ctx));
+    }
+
+    @Test
+    void GET_to_get_record_by_id_returns_400_when_invalid_id() {
+        String entityClass = "Student";
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
+
+        assertThrows(BadRequestException.class, () -> controller.handleGetById(ctx));
     }
 
     @Test
