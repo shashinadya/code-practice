@@ -165,6 +165,16 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
+    void PUT_to_update_record_returns_400_when_invalid_id() {
+        String entityClass = "Student";
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
+
+        assertThrows(BadRequestException.class, () -> controller.handleUpdateRecord(ctx));
+    }
+
+    @Test
     void DELETE_to_remove_record_returns_true() {
         String entityClass = "Student";
         int id = 1;

@@ -44,7 +44,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp() {
         firstStudent = new Student("FirstName1 LastName1", 5.0);
         secondStudent = new Student("FirstName2 LastName2", 4.5);
         thirdStudent = new Student("FirstName3 LastName3", 5.0);

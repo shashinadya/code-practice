@@ -102,9 +102,13 @@ public class DatabaseServiceRestController {
 
     void handleUpdateRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        Integer pathId = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
+        Integer pathId;
+        try {
+            pathId = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
+        } catch (NumberFormatException e) {
+            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+        }
         var entity = ctx.bodyAsClass(entityClass);
-
         if (entity.getId() == null || !entity.getId().equals(pathId)) {
             throw new IdMismatchException("ID in the path and entity ID do not match or entity ID is missing.");
         }
