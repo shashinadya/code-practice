@@ -22,6 +22,7 @@ public class DatabaseServiceRestController {
     private DatabaseService databaseService;
     static final String ID_PARAMETER_NAME = "id";
     static final String INVALID_PARAM_VALUE = "Invalid value for limit or offset parameter. They must be integers.";
+    static final String INVALID_ID_VALUE = "Invalid value for id parameter. It must be integer.";
 
     public DatabaseServiceRestController() {
     }
@@ -106,7 +107,7 @@ public class DatabaseServiceRestController {
         try {
             pathId = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
         } catch (NumberFormatException e) {
-            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+            throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
         var entity = ctx.bodyAsClass(entityClass);
         if (entity.getId() == null || !entity.getId().equals(pathId)) {
@@ -122,7 +123,7 @@ public class DatabaseServiceRestController {
             int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
             ctx.json(databaseService.removeRecordFromTable(entityClass, id));
         } catch (NumberFormatException e) {
-            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+            throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
     }
 
@@ -132,7 +133,7 @@ public class DatabaseServiceRestController {
         try {
             id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
         } catch (NumberFormatException e) {
-            throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
+            throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
         var entity = databaseService.getById(entityClass, id);
         if (entity == null) {
