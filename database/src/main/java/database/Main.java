@@ -1,19 +1,22 @@
 package database;
 
 import database.controller.DatabaseServiceRestController;
-import database.controller.FileDatabaseExceptionHandler;
-import database.service.JsonDatabaseService;
+import database.controller.DatabaseControllerExceptionHandler;
+import database.service.SqlDatabaseService;
 import io.javalin.Javalin;
+
+import java.sql.SQLException;
 
 public class Main {
 
-    public static void main(String[] args) {
-        final var databaseService = new JsonDatabaseService();
+    public static void main(String[] args) throws SQLException {
+        final var databaseService = new SqlDatabaseService("jdbc:mysql://localhost:3306/",
+                "db_user", "Qwerty!1", "entities", "application.properties");
         final var dbServiceRestController = new DatabaseServiceRestController(databaseService);
         var app = Javalin.create(dbServiceRestController::configureRouter)
                 .start();
 
-        FileDatabaseExceptionHandler fileDatabaseExceptionHandler = new FileDatabaseExceptionHandler();
+        DatabaseControllerExceptionHandler fileDatabaseExceptionHandler = new DatabaseControllerExceptionHandler();
         fileDatabaseExceptionHandler.register(app);
     }
 }
