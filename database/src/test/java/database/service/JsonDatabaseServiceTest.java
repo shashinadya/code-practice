@@ -11,6 +11,7 @@ import database.exception.IncorrectPropertyNameException;
 import database.exception.IncorrectValueTypeException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullPropertyNameOrValueException;
+import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,12 +32,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JsonDatabaseServiceTest {
+    private final Settings settings = new Settings("Db_app_properties_files/application.properties");
+    private final JsonDatabaseService jsonDatabaseService = new JsonDatabaseService(settings);
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
-    private final JsonDatabaseService jsonDatabaseService =
-            new JsonDatabaseService("Db_app_properties_files/application.properties");
 
     @BeforeEach
     void setUp() {

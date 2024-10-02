@@ -38,9 +38,10 @@ import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
 public class JsonDatabaseService implements DatabaseService {
-    private final Settings settings;
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;
+    private final int maxLimitValue;
+    private final Path databasePath;
     private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
     static final String EMPTY_BRACKETS_TO_JSON = "[]";
     static final String UNABLE_CREATE_DB_FILE = "Unable to create database file. Please check if file already exists.";
@@ -51,8 +52,9 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
-    public JsonDatabaseService(String propertyFileName) throws CreationDatabaseException {
-        settings = new Settings(propertyFileName);
+    public JsonDatabaseService(Settings settings) throws CreationDatabaseException {
+        this.maxLimitValue = settings.getLimit();
+        this.databasePath = settings.getDatabasePath();
         objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         entityIds = new HashMap<>();
     }
@@ -183,17 +185,17 @@ public class JsonDatabaseService implements DatabaseService {
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         return entities.stream()
-                .limit(settings.getLimit())
+                .limit(maxLimitValue)
                 .collect(Collectors.toList());
     }
 
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass,
                                                                      int limit, int offset) {
-        if (limit < 0 || limit > settings.getLimit() || offset < 0) {
+        if (limit < 0 || limit > maxLimitValue || offset < 0) {
             LOG.error("Invalid value for limit {} or offset {} parameter", limit, offset);
             throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE
-                    .replace("{MAX_LIMIT_VALUE}", String.valueOf(settings.getLimit())));
+                    .replace("{MAX_LIMIT_VALUE}", String.valueOf(maxLimitValue)));
         }
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
@@ -242,8 +244,7 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {
-        var databaseFolder = settings.getDatabasePath();
-        return databaseFolder + File.separator + entityClass.getSimpleName() + "Table" + ".json";
+        return databasePath + File.separator + entityClass.getSimpleName() + "Table" + ".json";
     }
 
     private <T extends BaseEntity> void updateEntityFields(T outcomeEntity, T incomeEntity) {

@@ -9,6 +9,7 @@ import database.exception.DatabaseDoesNotExistException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,19 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlDatabaseServiceTest {
-    private final SqlDatabaseService sqlDatabaseService =
-            new SqlDatabaseService(DATABASE_URL, DB_USER_NAME, DB_PASSWORD, DATABASE_NAME,
-                    "Db_app_properties_files/application.properties");
+    private final Settings settings = new Settings("Db_app_properties_files/application.properties");
+    private final SqlDatabaseService sqlDatabaseService = new SqlDatabaseService(settings);
+    private static final String DATABASE_NAME = "test_entities";
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
-    private static final String DB_USER_NAME = "test_user";
-    private static final String DB_PASSWORD = "Qwerty!1";
-    private static final String DATABASE_NAME = "test_entities";
-    private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/";
 
-    public SqlDatabaseServiceTest() throws SQLException {
+    public SqlDatabaseServiceTest() {
     }
 
     @BeforeEach

@@ -30,11 +30,11 @@ import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
 public class SqlDatabaseService implements DatabaseService {
-    private final Settings settings;
     private final String dbUserName;
     private final String dbPassword;
     private final String databaseName;
     private final String databaseURL;
+    private final int maxLimitValue;
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
@@ -45,13 +45,12 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
     static final String ID_PARAMETER_NAME = "id";
 
-    public SqlDatabaseService(String dbBaseURL, String dbUserName, String dbPassword, String databaseName,
-                              String propertyFileName) {
-        this.dbUserName = dbUserName;
-        this.dbPassword = dbPassword;
-        this.databaseName = databaseName;
-        this.databaseURL = dbBaseURL + databaseName;
-        settings = new Settings(propertyFileName);
+    public SqlDatabaseService(Settings settings) {
+        this.dbUserName = settings.getDatabaseUsername();
+        this.dbPassword = settings.getDatabasePassword();
+        this.databaseName = settings.getDatabaseName();
+        this.databaseURL = settings.getDatabaseBaseUrl() + databaseName;
+        this.maxLimitValue = settings.getLimit();
     }
 
     @Override
@@ -233,7 +232,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT " + settings.getLimit();
+        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT " + maxLimitValue;
 
         List<T> entities = new ArrayList<>();
 
@@ -256,10 +255,10 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass, int limit,
                                                                      int offset) {
-        if (limit < 0 || limit > settings.getLimit() || offset < 0) {
+        if (limit < 0 || limit > maxLimitValue || offset < 0) {
             LOG.error("Invalid value for limit {} or offset {} parameter", limit, offset);
             throw new InvalidParameterValueException(INVALID_PARAMETER_VALUE
-                    .replace("{MAX_LIMIT_VALUE}", String.valueOf(settings.getLimit())));
+                    .replace("{MAX_LIMIT_VALUE}", String.valueOf(maxLimitValue)));
         }
 
         String tableName = entityClass.getSimpleName();
