@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +77,8 @@ public class JsonDatabaseService implements DatabaseService {
         try {
             Files.delete(databasePath);
             entityIds.remove(entityClass.getName());
+        } catch (NoSuchFileException e) {
+            return true;
         } catch (IOException e) {
             LOG.error(UNABLE_DELETE_DB_FILE + ": {}", databasePath.toAbsolutePath());
             throw new DeletionDatabaseException(UNABLE_DELETE_DB_FILE);

@@ -61,6 +61,17 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
+    void deleteTableWhenTableExistsTest() {
+        jsonDatabaseService.createTable(Student.class);
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
+    void deleteTableWhenTableDoesNotExistTest() {
+        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+    }
+
+    @Test
     void addNewRecordToTablePositiveTest() {
         jsonDatabaseService.createTable(Student.class);
 
