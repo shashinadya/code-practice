@@ -13,7 +13,7 @@ import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 public class Main {
 
     public static void main(String[] args) {
-        Settings settings = new Settings("application.properties");
+        final Settings settings = new Settings("application.properties");
         final int port = settings.getPort();
         final var entities = Utils.getSubclassesOfBaseEntity();
 
@@ -34,6 +34,6 @@ public class Main {
         var databaseControllerExceptionHandler = new DatabaseControllerExceptionHandler();
         databaseControllerExceptionHandler.register(app);
 
-        System.out.println("Check out Swagger UI docs at http://localhost:8080/swagger");
+        System.out.println("Check out Swagger UI docs at http://localhost:" + port + "/swagger");
     }
 }
