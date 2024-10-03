@@ -40,10 +40,22 @@ class JsonDatabaseServiceTest {
 
     @BeforeEach
     void setUp() {
-        firstStudent = new Student("FirstName1 LastName1", 5.0);
-        secondStudent = new Student("FirstName2 LastName2", 4.5);
-        thirdStudent = new Student("FirstName3 LastName3", 5.0);
-        fourthStudent = new Student("FirstName1 LastName1", 5.0);
+        firstStudent = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+        secondStudent = new Student.Builder()
+                .withFullName("FirstName2 LastName2")
+                .withAverageScore(4.5)
+                .build();
+        thirdStudent = new Student.Builder()
+                .withFullName("FirstName3 LastName3")
+                .withAverageScore(5.0)
+                .build();
+        fourthStudent = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
     }
 
     @AfterEach
@@ -96,7 +108,11 @@ class JsonDatabaseServiceTest {
     void addNewRecordIdProvidedManually() {
         jsonDatabaseService.createTable(Student.class);
 
-        Student studentWithManuallyProvidedId = new Student("FirstName1 LastName1", 5.0);
+        Student studentWithManuallyProvidedId = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+
         studentWithManuallyProvidedId.setId(7);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
@@ -120,8 +136,17 @@ class JsonDatabaseServiceTest {
     @Test
     void updateOxfordStudentTest() {
         jsonDatabaseService.createTable(OxfordStudent.class);
-        OxfordStudent os = new OxfordStudent("N", 4.5, 20);
-        OxfordStudent os2 = new OxfordStudent("M", 4.2, 21);
+
+        OxfordStudent os = new OxfordStudent.Builder()
+                .withFullName("N")
+                .withAverageScore(4.5)
+                .withAge(20)
+                .build();
+        OxfordStudent os2 = new OxfordStudent.Builder()
+                .withFullName("M")
+                .withAverageScore(4.2)
+                .withAge(21)
+                .build();
 
         jsonDatabaseService.addNewRecordToTable(os);
         assertEquals(os2, jsonDatabaseService.updateRecordInTable(os2, 0));
@@ -173,7 +198,9 @@ class JsonDatabaseServiceTest {
             jsonDatabaseService.addNewRecordToTable(secondStudent);
 
             jsonDatabaseService.createTable(Course.class);
-            jsonDatabaseService.addNewRecordToTable(new Course("Course1"));
+            jsonDatabaseService.addNewRecordToTable(new Course.Builder()
+                    .withName("Course1")
+                    .build());
 
             jsonDatabaseService.removeAllRecordsFromTable(Student.class);
             Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
@@ -182,7 +209,10 @@ class JsonDatabaseServiceTest {
             jsonDatabaseService.addNewRecordToTable(thirdStudent);
             assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
 
-            jsonDatabaseService.addNewRecordToTable(new Course("Course2"));
+            jsonDatabaseService.addNewRecordToTable(new Course.Builder()
+                    .withName("Course2")
+                    .build());
+
             assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
         } finally {
             jsonDatabaseService.deleteTable(Course.class);
@@ -269,7 +299,12 @@ class JsonDatabaseServiceTest {
     @Test
     void getByFiltersOxfordStudentTest() {
         Map<String, Object> filters = Map.of("fullName", "N", "averageScore", 4.5, "age", 20);
-        OxfordStudent os = new OxfordStudent("N", 4.5, 20);
+        OxfordStudent os = new OxfordStudent.Builder()
+                .withFullName("N")
+                .withAverageScore(4.5)
+                .withAge(20)
+                .build();
+
         List<OxfordStudent> students = List.of(os);
 
         jsonDatabaseService.createTable(OxfordStudent.class);

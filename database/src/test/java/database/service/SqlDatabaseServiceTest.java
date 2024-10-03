@@ -45,10 +45,22 @@ public class SqlDatabaseServiceTest {
 
     @BeforeEach
     void setUp() {
-        firstStudent = new Student("FirstName1 LastName1", 5.0);
-        secondStudent = new Student("FirstName2 LastName2", 4.5);
-        thirdStudent = new Student("FirstName3 LastName3", 5.0);
-        fourthStudent = new Student("FirstName1 LastName1", 5.0);
+        firstStudent = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+        secondStudent = new Student.Builder()
+                .withFullName("FirstName2 LastName2")
+                .withAverageScore(4.5)
+                .build();
+        thirdStudent = new Student.Builder()
+                .withFullName("FirstName3 LastName3")
+                .withAverageScore(5.0)
+                .build();
+        fourthStudent = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
     }
 
     @AfterEach
@@ -114,7 +126,11 @@ public class SqlDatabaseServiceTest {
     void addNewRecordIdProvidedManually() {
         sqlDatabaseService.createTable(Student.class);
 
-        Student studentWithManuallyProvidedId = new Student("FirstName1 LastName1", 5.0);
+        Student studentWithManuallyProvidedId = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+
         studentWithManuallyProvidedId.setId(7);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
@@ -139,8 +155,17 @@ public class SqlDatabaseServiceTest {
     void updateOxfordStudentTest() {
         try {
             sqlDatabaseService.createTable(OxfordStudent.class);
-            OxfordStudent os = new OxfordStudent("N", 4.5, 20);
-            OxfordStudent os2 = new OxfordStudent("M", 4.2, 21);
+
+            OxfordStudent os = new OxfordStudent.Builder()
+                    .withFullName("N")
+                    .withAverageScore(4.5)
+                    .withAge(20)
+                    .build();
+            OxfordStudent os2 = new OxfordStudent.Builder()
+                    .withFullName("M")
+                    .withAverageScore(4.2)
+                    .withAge(21)
+                    .build();
 
             sqlDatabaseService.addNewRecordToTable(os);
             assertEquals(os2, sqlDatabaseService.updateRecordInTable(os2, 1));
@@ -197,7 +222,9 @@ public class SqlDatabaseServiceTest {
             sqlDatabaseService.addNewRecordToTable(secondStudent);
 
             sqlDatabaseService.createTable(Course.class);
-            sqlDatabaseService.addNewRecordToTable(new Course("Course1"));
+            sqlDatabaseService.addNewRecordToTable(new Course.Builder()
+                    .withName("Course1")
+                    .build());
 
             sqlDatabaseService.removeAllRecordsFromTable(Student.class);
             assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
@@ -205,7 +232,10 @@ public class SqlDatabaseServiceTest {
             sqlDatabaseService.addNewRecordToTable(thirdStudent);
             assertEquals(thirdStudent, sqlDatabaseService.getById(Student.class, 1));
 
-            sqlDatabaseService.addNewRecordToTable(new Course("Course2"));
+            sqlDatabaseService.addNewRecordToTable(new Course.Builder()
+                    .withName("Course2")
+                    .build());
+
             assertEquals(2, sqlDatabaseService.getById(Course.class, 2).getId());
         } finally {
             sqlDatabaseService.deleteTable(Course.class);

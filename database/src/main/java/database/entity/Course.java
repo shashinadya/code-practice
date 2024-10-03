@@ -33,4 +33,26 @@ public class Course extends BaseEntity {
     public int hashCode() {
         return Objects.hashCode(name);
     }
+
+    public static class Builder extends BaseEntity.Builder<Course.Builder> {
+        private String name;
+
+        public Course.Builder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        @Override
+        protected Course.Builder self() {
+            return this;
+        }
+
+        @Override
+        public Course build() {
+            Course course = new Course();
+            setBaseFields(course);
+            course.setName(this.name);
+            return course;
+        }
+    }
 }

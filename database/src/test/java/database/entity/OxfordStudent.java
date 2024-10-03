@@ -34,4 +34,40 @@ public class OxfordStudent extends Student {
     public int hashCode() {
         return Objects.hash(super.hashCode(), age);
     }
+
+    public static class Builder extends BaseEntity.Builder<OxfordStudent.Builder> {
+        private String fullName;
+        private Double averageScore;
+        private Integer age;
+
+        public OxfordStudent.Builder withFullName(String fullName) {
+            this.fullName = fullName;
+            return this;
+        }
+
+        public OxfordStudent.Builder withAverageScore(Double averageScore) {
+            this.averageScore = averageScore;
+            return this;
+        }
+
+        public OxfordStudent.Builder withAge(Integer age) {
+            this.age = age;
+            return this;
+        }
+
+        @Override
+        protected OxfordStudent.Builder self() {
+            return this;
+        }
+
+        @Override
+        public OxfordStudent build() {
+            OxfordStudent student = new OxfordStudent();
+            setBaseFields(student);
+            student.setFullName(this.fullName);
+            student.setAverageScore(this.averageScore);
+            student.setAge(this.age);
+            return student;
+        }
+    }
 }

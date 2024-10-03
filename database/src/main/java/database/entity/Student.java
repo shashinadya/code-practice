@@ -43,4 +43,33 @@ public class Student extends BaseEntity {
     public int hashCode() {
         return Objects.hash(fullName, averageScore);
     }
+
+    public static class Builder extends BaseEntity.Builder<Builder> {
+        private String fullName;
+        private Double averageScore;
+
+        public Builder withFullName(String fullName) {
+            this.fullName = fullName;
+            return this;
+        }
+
+        public Builder withAverageScore(Double averageScore) {
+            this.averageScore = averageScore;
+            return this;
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+
+        @Override
+        public Student build() {
+            Student student = new Student();
+            setBaseFields(student);
+            student.setFullName(this.fullName);
+            student.setAverageScore(this.averageScore);
+            return student;
+        }
+    }
 }
