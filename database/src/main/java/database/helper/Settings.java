@@ -108,7 +108,7 @@ public class Settings {
             return;
         }
 
-        try (var input = Settings.class.getClassLoader().getResourceAsStream(propertyFileName)) {
+        try (var input = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertyFileName)) {
             if (input == null) {
                 setDefaultProperties();
                 return;
