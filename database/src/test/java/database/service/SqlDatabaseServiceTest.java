@@ -37,9 +37,6 @@ public class SqlDatabaseServiceTest {
     private Student thirdStudent;
     private Student fourthStudent;
 
-    public SqlDatabaseServiceTest() {
-    }
-
     @BeforeEach
     void setUp() {
         firstStudent = new Student("FirstName1 LastName1", 5.0);

@@ -33,11 +33,6 @@ public class Settings {
     static final String DEFAULT_DB_BASE_URL_VALUE = "jdbc:mysql://localhost:3306/";
     static final String DEFAULT_DB_NAME_VALUE = "entities";
 
-    public Settings() throws CreationDatabaseException {
-        defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
-        loadProperties();
-    }
-
     public Settings(String propertyFileName) throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
         this.propertyFileName = propertyFileName;
