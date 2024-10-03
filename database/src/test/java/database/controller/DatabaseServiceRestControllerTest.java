@@ -1,6 +1,8 @@
 package database.controller;
 
 import database.entity.BaseEntity;
+import database.entity.Course;
+import database.entity.OxfordStudent;
 import database.entity.Student;
 import database.exception.BadRequestException;
 import database.service.DatabaseService;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static database.controller.DatabaseServiceRestController.ID_PARAMETER_NAME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,13 +26,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class DatabaseServiceRestControllerTest {
-    private final DatabaseServiceRestController controller = new DatabaseServiceRestController();
-    private final Context ctx = mock(Context.class);
     private final DatabaseService databaseService = mock(DatabaseService.class);
+    private final Context ctx = mock(Context.class);
+    private final DatabaseServiceRestController controller = new DatabaseServiceRestController(databaseService,
+            Set.of(Student.class, OxfordStudent.class, Course.class));
 
-    public DatabaseServiceRestControllerTest() {
-        controller.setDatabaseService(databaseService);
-    }
 
     @Test
     void POST_to_create_table_returns_true() {
