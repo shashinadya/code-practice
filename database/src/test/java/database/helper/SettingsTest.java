@@ -3,7 +3,12 @@ package database.helper;
 import org.junit.jupiter.api.Test;
 
 import static database.helper.Settings.DEFAULT_DATABASE_STORAGE_PATH;
+import static database.helper.Settings.DEFAULT_DB_BASE_URL_VALUE;
+import static database.helper.Settings.DEFAULT_DB_NAME_VALUE;
+import static database.helper.Settings.DEFAULT_DB_PASSWORD_VALUE;
+import static database.helper.Settings.DEFAULT_DB_USERNAME_VALUE;
 import static database.helper.Settings.DEFAULT_LIMIT_VALUE;
+import static database.helper.Settings.DEFAULT_PORT_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SettingsTest {
@@ -16,7 +21,7 @@ class SettingsTest {
     }
 
     @Test
-    void getDatabasePathDefaultPathReturnedTest() {
+    void getDatabasePathDefaultValueReturnedTest() {
         settings = new Settings("applicationFileNotExist.properties");
         String testDefaultPath = settings.getFilePath(DEFAULT_DATABASE_STORAGE_PATH).toString();
 
@@ -26,13 +31,73 @@ class SettingsTest {
 
     @Test
     void getLimitTest() {
-        settings = new Settings("Db_app_properties_files/applicationFileExist.properties");
-        assertEquals(10, settings.getLimit());
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals(100, settings.getLimit());
     }
 
     @Test
-    void getLimitDefaultPathReturnedTest() {
+    void getLimitDefaultValueReturnedTest() {
         settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
         assertEquals(DEFAULT_LIMIT_VALUE, settings.getLimit());
+    }
+
+    @Test
+    void getPortTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals(80, settings.getPort());
+    }
+
+    @Test
+    void getPortDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_PORT_VALUE, settings.getPort());
+    }
+
+    @Test
+    void getDatabaseUsernameTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals("test_user", settings.getDatabaseUsername());
+    }
+
+    @Test
+    void getDatabaseUsernameDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_DB_USERNAME_VALUE, settings.getDatabaseUsername());
+    }
+
+    @Test
+    void getDatabasePasswordTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals("Qwerty!1", settings.getDatabasePassword());
+    }
+
+    @Test
+    void getDatabasePasswordDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_DB_PASSWORD_VALUE, settings.getDatabasePassword());
+    }
+
+    @Test
+    void getDatabaseBaseUrlTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals("jdbc:mysql://localhost:3306/", settings.getDatabaseBaseUrl());
+    }
+
+    @Test
+    void getDatabaseBaseUrlDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_DB_BASE_URL_VALUE, settings.getDatabaseBaseUrl());
+    }
+
+    @Test
+    void getDatabaseNameTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals("test_entities", settings.getDatabaseName());
+    }
+
+    @Test
+    void getDatabaseNameDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_DB_NAME_VALUE, settings.getDatabaseName());
     }
 }
