@@ -123,6 +123,9 @@ Request Body:
 **Delete record**:
 ``DELETE localhost:8080/api/v1/database/Student/1``
 
+Check out Swagger UI docs at
+``http://localhost:8080/swagger``
+
 ## Testing
 To run the unit and integration tests, use the following command:
 ```bash
