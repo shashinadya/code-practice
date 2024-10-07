@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -30,11 +29,9 @@ import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
 public class SqlDatabaseService implements DatabaseService {
-    private final String dbUserName;
-    private final String dbPassword;
-    private final String databaseName;
-    private final String databaseURL;
+    private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
+    private final String databaseName;
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
@@ -45,12 +42,10 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
     static final String ID_PARAMETER_NAME = "id";
 
-    public SqlDatabaseService(Settings settings) {
-        this.dbUserName = settings.getDatabaseUsername();
-        this.dbPassword = settings.getDatabasePassword();
-        this.databaseName = settings.getDatabaseName();
-        this.databaseURL = settings.getDatabaseBaseUrl() + databaseName;
+    public SqlDatabaseService(Settings settings) throws SQLException {
         this.maxLimitValue = settings.getLimit();
+        this.databaseName = settings.getDatabaseName();
+        this.connectionPool = new MySQLConnectionPool(settings, 5, 10);
     }
 
     @Override
@@ -76,7 +71,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", createTableSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(createTableSQL.toString());
             return checkTableExists(databaseName, tableName);
@@ -93,7 +88,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", dropTableSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(dropTableSQL);
             return !checkTableExists(databaseName, tableName);
@@ -112,7 +107,7 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
 
             if (checkTableExists(databaseName, tableName)) {
@@ -158,7 +153,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", updateSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
 
             int affectedRows = statement.executeUpdate(updateSQL);
@@ -181,7 +176,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteRecordSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(deleteRecordSQL);
             return true;
@@ -198,7 +193,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteAllRecordsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(deleteAllRecordsSQL);
         } catch (SQLException e) {
@@ -214,7 +209,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordByIdSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectRecordByIdSQL)) {
             if (resultSet.next()) {
@@ -238,7 +233,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
             while (resultSet.next()) {
@@ -268,7 +263,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsWithParamsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
 
@@ -304,7 +299,7 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(selectRecordsByFiltersSQL)) {
 
@@ -319,11 +314,19 @@ public class SqlDatabaseService implements DatabaseService {
         }
     }
 
+    public void closeService() {
+        try {
+            connectionPool.closePool();
+        } catch (SQLException e) {
+            LOG.error("Failed to close the connection pool: ", e);
+        }
+    }
+
     boolean checkTableExists(String databaseName, String tableName) throws SQLException {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
                 "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
+        try (Connection connection = connectionPool.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
             return resultSet.next() && resultSet.getInt(1) == 1;

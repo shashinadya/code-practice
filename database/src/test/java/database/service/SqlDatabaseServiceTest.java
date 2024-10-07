@@ -37,6 +37,9 @@ public class SqlDatabaseServiceTest {
     private Student thirdStudent;
     private Student fourthStudent;
 
+    public SqlDatabaseServiceTest() throws SQLException {
+    }
+
     @BeforeEach
     void setUp() {
         firstStudent = new Student.Builder()

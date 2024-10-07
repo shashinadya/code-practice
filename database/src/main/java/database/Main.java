@@ -10,13 +10,16 @@ import io.javalin.Javalin;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
+import java.sql.SQLException;
+
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         final Settings settings = new Settings("application.properties");
         final int port = settings.getPort();
         final var entities = Utils.getSubclassesOfBaseEntity();
 
+        final var databaseService = new SqlDatabaseService(settings);
         var app = Javalin.create(config -> {
             config.registerPlugin(new OpenApiPlugin(pluginConfig ->
                     pluginConfig.withDefinitionConfiguration((version, definition) ->
@@ -26,10 +29,16 @@ public class Main {
                             }))));
             config.registerPlugin(new SwaggerPlugin());
 
-            final var databaseService = new SqlDatabaseService(settings);
             final var dbServiceRestController = new DatabaseServiceRestController(databaseService, entities);
             dbServiceRestController.configureRouter(config);
         }).start(port);
+
+        app.events(event -> {
+            event.serverStopping(() -> {
+                databaseService.closeService();
+                System.out.println("Database connection pool closed successfully.");
+            });
+        });
 
         var databaseControllerExceptionHandler = new DatabaseControllerExceptionHandler();
         databaseControllerExceptionHandler.register(app);
