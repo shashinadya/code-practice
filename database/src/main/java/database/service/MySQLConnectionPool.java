@@ -1,6 +1,7 @@
 package database.service;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import database.exception.UnableCreateConnectionException;
 import database.helper.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +13,13 @@ import java.util.Queue;
 
 public class MySQLConnectionPool {
     private static final Logger LOG = LoggerFactory.getLogger(MySQLConnectionPool.class);
+    private static final String UNABLE_CREATE_CONNECTION = "Unable to create new database connection.";
     private final MysqlDataSource dataSource;
-    private final Queue<PooledConnection> connectionPool;
+    private final Queue<Connection> connectionPool;
     private final int MAX_POOL_SIZE;
     private int currentConnections;
 
-    public MySQLConnectionPool(Settings settings, int initialPoolSize, int maxPoolSize) throws SQLException {
+    public MySQLConnectionPool(Settings settings, int initialPoolSize, int maxPoolSize) {
         dataSource = new MysqlDataSource();
         dataSource.setURL(settings.getDatabaseBaseUrl() + settings.getDatabaseName());
         dataSource.setUser(settings.getDatabaseUsername());
@@ -27,12 +29,12 @@ public class MySQLConnectionPool {
         MAX_POOL_SIZE = maxPoolSize;
 
         for (int i = 0; i < initialPoolSize; i++) {
-            connectionPool.add(new PooledConnection(createNewConnection(), this));
+            try {
+                connectionPool.add(createNewConnection());
+            } catch (SQLException e) {
+                throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION);
+            }
         }
-    }
-
-    Connection createNewConnection() throws SQLException {
-        return dataSource.getConnection();
     }
 
     public synchronized Connection getConnection() {
@@ -40,9 +42,9 @@ public class MySQLConnectionPool {
             if (currentConnections < MAX_POOL_SIZE) {
                 try {
                     currentConnections++;
-                    return new PooledConnection(createNewConnection(), this);
+                    return createNewConnection();
                 } catch (SQLException e) {
-                    throw new RuntimeException("Unable to create new database connection.", e);
+                    throw new RuntimeException(UNABLE_CREATE_CONNECTION, e);
                 }
             } else {
                 LOG.warn("All connections are in use. Please try again later.");
@@ -53,26 +55,36 @@ public class MySQLConnectionPool {
         }
     }
 
-    public synchronized void releaseConnection(PooledConnection connection) {
-        if (connectionPool.size() < MAX_POOL_SIZE) {
-            connectionPool.offer(connection);
-        } else {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException("Unable to close the database connection.", e);
+    public synchronized void releaseConnection(Connection connection) {
+        if (connection != null) {
+            if (connectionPool.size() < MAX_POOL_SIZE) {
+                connectionPool.offer(connection);
+            } else {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    LOG.error("Unable to close the database connection.", e);
+                }
             }
         }
     }
 
-    public synchronized void closePool() throws SQLException {
-        for (PooledConnection connection : connectionPool) {
-            connection.connection.close();
+    public synchronized void closePool() {
+        while (!connectionPool.isEmpty()) {
+            try {
+                connectionPool.poll().close();
+            } catch (SQLException e) {
+                LOG.error("Unable to close the database connection from the pool.", e);
+            }
         }
-        connectionPool.clear();
+        currentConnections = 0;
     }
 
     public int size() {
         return connectionPool.size();
+    }
+
+    private Connection createNewConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 }

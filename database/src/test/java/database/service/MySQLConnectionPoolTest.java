@@ -31,7 +31,7 @@ class MySQLConnectionPoolTest {
     @Test
     void testReleaseConnection() {
         Connection connection = connectionPool.getConnection();
-        connectionPool.releaseConnection((PooledConnection) connection);
+        connectionPool.releaseConnection(connection);
 
         assertEquals(5, connectionPool.size());
     }
