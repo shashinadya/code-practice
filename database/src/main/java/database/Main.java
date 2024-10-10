@@ -5,6 +5,7 @@ import database.controller.DatabaseControllerExceptionHandler;
 import database.helper.Swagger;
 import database.helper.Utils;
 import database.helper.Settings;
+import database.service.DatabaseService;
 import database.service.SqlDatabaseService;
 import io.javalin.Javalin;
 import io.javalin.openapi.plugin.OpenApiPlugin;
@@ -17,6 +18,7 @@ public class Main {
         final int port = settings.getPort();
         final var entities = Utils.getSubclassesOfBaseEntity();
 
+        final DatabaseService databaseService = new SqlDatabaseService(settings);
         var app = Javalin.create(config -> {
             config.registerPlugin(new OpenApiPlugin(pluginConfig ->
                     pluginConfig.withDefinitionConfiguration((version, definition) ->
@@ -26,13 +28,19 @@ public class Main {
                             }))));
             config.registerPlugin(new SwaggerPlugin());
 
-            final var databaseService = new SqlDatabaseService(settings);
             final var dbServiceRestController = new DatabaseServiceRestController(databaseService, entities);
             dbServiceRestController.configureRouter(config);
         }).start(port);
 
+        app.events(event -> event.serverStopping(databaseService::shutdown));
+
         var databaseControllerExceptionHandler = new DatabaseControllerExceptionHandler();
         databaseControllerExceptionHandler.register(app);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown hook triggered. Stopping Javalin...");
+            app.stop();
+        }));
 
         System.out.println("Check out Swagger UI docs at http://localhost:" + port + "/swagger");
     }

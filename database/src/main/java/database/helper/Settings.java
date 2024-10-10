@@ -24,6 +24,8 @@ public class Settings {
     private static final String DB_BASE_URL_PROPERTY_NAME = "database.base.url";
     private static final String DB_NAME_PROPERTY_NAME = "database.name";
     private static final String DATABASE_STORAGE_PATH_PROPERTY_NAME = "database.storage.path";
+    private static final String INITIAL_POOL_SIZE_PROPERTY_NAME = "initial.pool.size";
+    private static final String MAX_POOL_SIZE_PROPERTY_NAME = "max.pool.size";
     private static final Logger LOG = LoggerFactory.getLogger(Settings.class);
     static final String DEFAULT_DATABASE_STORAGE_PATH = "database";
     static final int DEFAULT_LIMIT_VALUE = 100;
@@ -32,6 +34,8 @@ public class Settings {
     static final String DEFAULT_DB_PASSWORD_VALUE = "Qwerty!1";
     static final String DEFAULT_DB_BASE_URL_VALUE = "jdbc:mysql://localhost:3306/";
     static final String DEFAULT_DB_NAME_VALUE = "entities";
+    static final int DEFAULT_INITIAL_POOL_SIZE_VALUE = 5;
+    static final int DEFAULT_MAX_POOL_SIZE_VALUE = 10;
 
     public Settings(String propertyFileName) throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
@@ -74,6 +78,16 @@ public class Settings {
 
     public String getDatabaseName() {
         return properties.getProperty(DB_NAME_PROPERTY_NAME, DEFAULT_DB_NAME_VALUE);
+    }
+
+    public int getInitialPoolSize() {
+        return Integer.parseInt(properties.getProperty(INITIAL_POOL_SIZE_PROPERTY_NAME,
+                String.valueOf(DEFAULT_INITIAL_POOL_SIZE_VALUE)));
+    }
+
+    public int getMaxPoolSize() {
+        return Integer.parseInt(properties.getProperty(MAX_POOL_SIZE_PROPERTY_NAME,
+                String.valueOf(DEFAULT_MAX_POOL_SIZE_VALUE)));
     }
 
     Path getFilePath(String directoryName) throws CreationDatabaseException {

@@ -243,6 +243,11 @@ public class JsonDatabaseService implements DatabaseService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void shutdown() {
+        LOG.info("Service is stopped");
+    }
+
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {
         return databasePath + File.separator + entityClass.getSimpleName() + "Table" + ".json";
     }

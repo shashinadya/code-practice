@@ -26,4 +26,6 @@ public interface DatabaseService {
                                                               int limit, int offset);
 
     <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass, Map<String, V> filters);
+
+    void shutdown();
 }

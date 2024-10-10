@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -30,11 +29,9 @@ import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
 public class SqlDatabaseService implements DatabaseService {
-    private final String dbUserName;
-    private final String dbPassword;
-    private final String databaseName;
-    private final String databaseURL;
+    private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
+    private final String databaseName;
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
@@ -46,11 +43,9 @@ public class SqlDatabaseService implements DatabaseService {
     static final String ID_PARAMETER_NAME = "id";
 
     public SqlDatabaseService(Settings settings) {
-        this.dbUserName = settings.getDatabaseUsername();
-        this.dbPassword = settings.getDatabasePassword();
-        this.databaseName = settings.getDatabaseName();
-        this.databaseURL = settings.getDatabaseBaseUrl() + databaseName;
         this.maxLimitValue = settings.getLimit();
+        this.databaseName = settings.getDatabaseName();
+        this.connectionPool = new MySQLConnectionPool(settings);
     }
 
     @Override
@@ -76,13 +71,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", createTableSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
             statement.executeUpdate(createTableSQL.toString());
-            return checkTableExists(databaseName, tableName);
+            return checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to create new table: {}", e.getMessage());
             throw new CreationDatabaseException(UNABLE_CREATE_TABLE + ": " + e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
     }
 
@@ -93,13 +94,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", dropTableSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
             statement.executeUpdate(dropTableSQL);
-            return !checkTableExists(databaseName, tableName);
+            return !checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to delete table: {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_TABLE + ": " + tableName + ", " + e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
     }
 
@@ -112,10 +119,14 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
 
-            if (checkTableExists(databaseName, tableName)) {
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
+
+            if (checkTableExists(databaseName, tableName, connection)) {
                 if (isTableEmpty(tableName, connection)) {
                     String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
                     statement.executeUpdate(resetAutoIncrementSQL);
@@ -145,6 +156,8 @@ public class SqlDatabaseService implements DatabaseService {
         } catch (SQLException e) {
             LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
         return entity;
     }
@@ -158,8 +171,12 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", updateSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
 
             int affectedRows = statement.executeUpdate(updateSQL);
             if (affectedRows == 0) {
@@ -170,6 +187,8 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error("Unable to update record in table {}: {}", tableName, e.getMessage());
             throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName + ", " +
                     e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
         return entity;
     }
@@ -181,13 +200,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteRecordSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
             statement.executeUpdate(deleteRecordSQL);
             return true;
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
     }
 
@@ -198,12 +223,18 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteAllRecordsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement()) {
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
             statement.executeUpdate(deleteAllRecordsSQL);
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_ALL_RECORDS + ": {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_ALL_RECORDS + ": " + tableName + ", " + e.getMessage());
+        } finally {
+            closeConnectionStatementResources(connection, statement);
         }
     }
 
@@ -214,9 +245,15 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordByIdSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectRecordByIdSQL)) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(selectRecordByIdSQL);
+
             if (resultSet.next()) {
                 return createAndFillEntity(entityClass, resultSet);
             } else {
@@ -226,6 +263,8 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error(ENTITY_IS_NOT_FOUND + ": {}, {}, {}", id, tableName, e.getMessage());
             throw new DatabaseOperationException("Error retrieving record by id " + id + ", " + tableName + ", " +
                     e.getMessage());
+        } finally {
+            closeConnectionStatementResultSetResources(connection, statement, resultSet);
         }
     }
 
@@ -238,9 +277,15 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(selectAllRecordsSQL);
+
             while (resultSet.next()) {
                 entities.add(createAndFillEntity(entityClass, resultSet));
             }
@@ -248,6 +293,8 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error("Error retrieving all records from table: {}, {}", tableName, e.getMessage());
             throw new DatabaseOperationException("Error retrieving all records from table" + tableName + ", " +
                     e.getMessage());
+        } finally {
+            closeConnectionStatementResultSetResources(connection, statement, resultSet);
         }
         return entities;
     }
@@ -268,9 +315,14 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsWithParamsSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL);
 
             while (resultSet.next()) {
                 entities.add(createAndFillEntity(entityClass, resultSet));
@@ -278,6 +330,8 @@ public class SqlDatabaseService implements DatabaseService {
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records from table: {}", tableName, e);
             throw new DatabaseOperationException("Error retrieving records from table");
+        } finally {
+            closeConnectionStatementResultSetResources(connection, statement, resultSet);
         }
         return entities;
     }
@@ -304,9 +358,14 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectRecordsByFiltersSQL)) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = connectionPool.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(selectRecordsByFiltersSQL);
 
             List<T> entities = new ArrayList<>();
             while (resultSet.next()) {
@@ -316,17 +375,30 @@ public class SqlDatabaseService implements DatabaseService {
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records by filters: {}", e.getMessage());
             throw new DatabaseOperationException("Error retrieving records by filters");
+        } finally {
+            closeConnectionStatementResultSetResources(connection, statement, resultSet);
         }
     }
 
-    boolean checkTableExists(String databaseName, String tableName) throws SQLException {
+    @Override
+    public void shutdown() {
+        connectionPool.closePool();
+        LOG.info("Service is stopped");
+    }
+
+    boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
                 "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
 
-        try (Connection connection = DriverManager.getConnection(databaseURL, dbUserName, dbPassword);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(checkTableSQL);
             return resultSet.next() && resultSet.getInt(1) == 1;
+        } finally {
+            closeConnectionStatementResultSetResources(null, statement, resultSet);
         }
     }
 
@@ -439,5 +511,32 @@ public class SqlDatabaseService implements DatabaseService {
             field.set(entity, value);
         }
         return entity;
+    }
+
+    private void closeConnectionStatementResources(Connection connection, Statement statement) {
+        if (statement != null) {
+            try {
+                statement.close();
+            } catch (SQLException e) {
+                LOG.warn("Unable to close Statement: {}", e.getMessage());
+            }
+        }
+        if (connection != null) {
+            connectionPool.releaseConnection(connection);
+        }
+    }
+
+    private void closeConnectionStatementResultSetResources(Connection connection, Statement statement,
+                                                            ResultSet resultSet) {
+
+        closeConnectionStatementResources(connection, statement);
+
+        if (resultSet != null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                LOG.warn("Unable to close ResultSet: {}", e.getMessage());
+            }
+        }
     }
 }
