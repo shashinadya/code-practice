@@ -1,13 +1,15 @@
 package database.service;
 
+import database.exception.NoFreeDatabaseConnectionException;
 import database.helper.Settings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
+import static database.service.MySQLConnectionPool.NO_FREE_DATABASE_CONNECTION;
+import static database.service.MySQLConnectionPool.UNABLE_CREATE_CONNECTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,8 +20,8 @@ class MySQLConnectionPoolTest {
     private MySQLConnectionPool connectionPool;
 
     @BeforeEach
-    void setUp() throws SQLException {
-        connectionPool = new MySQLConnectionPool(settings, 5, 10);
+    void setUp() {
+        connectionPool = new MySQLConnectionPool(settings);
     }
 
     @Test
@@ -40,11 +42,11 @@ class MySQLConnectionPoolTest {
     void testGetConnectionHandlesSQLException() {
         MySQLConnectionPool mockPool = Mockito.mock(MySQLConnectionPool.class);
 
-        when(mockPool.getConnection()).thenThrow(new RuntimeException("Unable to create new database connection."));
+        when(mockPool.getConnection()).thenThrow(new RuntimeException(UNABLE_CREATE_CONNECTION));
 
         Exception exception = assertThrows(RuntimeException.class, mockPool::getConnection);
 
-        assertEquals("Unable to create new database connection.", exception.getMessage());
+        assertEquals(UNABLE_CREATE_CONNECTION, exception.getMessage());
     }
 
     @Test
@@ -53,7 +55,9 @@ class MySQLConnectionPoolTest {
             connectionPool.getConnection();
         }
 
-        Connection connection = connectionPool.getConnection();
-        assertNotNull(connection);
+        NoFreeDatabaseConnectionException exception = assertThrows(NoFreeDatabaseConnectionException.class, () ->
+                connectionPool.getConnection());
+
+        assertEquals(NO_FREE_DATABASE_CONNECTION, exception.getMessage());
     }
 }

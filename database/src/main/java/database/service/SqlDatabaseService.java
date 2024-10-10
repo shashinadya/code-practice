@@ -41,14 +41,11 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
     static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
     static final String ID_PARAMETER_NAME = "id";
-    private Connection connection = null;
-    private Statement statement = null;
-    private ResultSet resultSet = null;
 
     public SqlDatabaseService(Settings settings) {
         this.maxLimitValue = settings.getLimit();
         this.databaseName = settings.getDatabaseName();
-        this.connectionPool = new MySQLConnectionPool(settings, 5, 10);
+        this.connectionPool = new MySQLConnectionPool(settings);
     }
 
     @Override
@@ -74,11 +71,14 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", createTableSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
             statement.executeUpdate(createTableSQL.toString());
-            return checkTableExists(databaseName, tableName);
+            return checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to create new table: {}", e.getMessage());
             throw new CreationDatabaseException(UNABLE_CREATE_TABLE + ": " + e.getMessage());
@@ -94,11 +94,14 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", dropTableSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
-            Statement statement = connection.createStatement();
+            statement = connection.createStatement();
             statement.executeUpdate(dropTableSQL);
-            return !checkTableExists(databaseName, tableName);
+            return !checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to delete table: {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_TABLE + ": " + tableName + ", " + e.getMessage());
@@ -116,11 +119,14 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
 
-            if (checkTableExists(databaseName, tableName)) {
+            if (checkTableExists(databaseName, tableName, connection)) {
                 if (isTableEmpty(tableName, connection)) {
                     String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
                     statement.executeUpdate(resetAutoIncrementSQL);
@@ -165,6 +171,9 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", updateSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
@@ -191,6 +200,9 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteRecordSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
@@ -211,6 +223,9 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteAllRecordsSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
@@ -229,6 +244,10 @@ public class SqlDatabaseService implements DatabaseService {
         String selectRecordByIdSQL = "SELECT * FROM " + tableName + " WHERE id = " + id;
 
         LOG.info("Executing SQL: {}", selectRecordByIdSQL);
+
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
 
         try {
             connection = connectionPool.getConnection();
@@ -257,6 +276,10 @@ public class SqlDatabaseService implements DatabaseService {
         List<T> entities = new ArrayList<>();
 
         LOG.info("Executing SQL: {}", selectAllRecordsSQL);
+
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
 
         try {
             connection = connectionPool.getConnection();
@@ -291,6 +314,10 @@ public class SqlDatabaseService implements DatabaseService {
         List<T> entities = new ArrayList<>();
 
         LOG.info("Executing SQL: {}", selectAllRecordsWithParamsSQL);
+
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
 
         try {
             connection = connectionPool.getConnection();
@@ -331,6 +358,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
         try {
             connection = connectionPool.getConnection();
             statement = connection.createStatement();
@@ -355,17 +386,19 @@ public class SqlDatabaseService implements DatabaseService {
         LOG.info("Service is stopped");
     }
 
-    boolean checkTableExists(String databaseName, String tableName) throws SQLException {
+    boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
                 "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
 
+        Statement statement = null;
+        ResultSet resultSet = null;
+
         try {
-            connection = connectionPool.getConnection();
             statement = connection.createStatement();
             resultSet = statement.executeQuery(checkTableSQL);
             return resultSet.next() && resultSet.getInt(1) == 1;
         } finally {
-            closeConnectionStatementResultSetResources(connection, statement, resultSet);
+            closeConnectionStatementResultSetResources(null, statement, resultSet);
         }
     }
 
@@ -489,30 +522,15 @@ public class SqlDatabaseService implements DatabaseService {
             }
         }
         if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                LOG.warn("Unable to close Connection: {}", e.getMessage());
-            }
+            connectionPool.releaseConnection(connection);
         }
     }
 
     private void closeConnectionStatementResultSetResources(Connection connection, Statement statement,
                                                             ResultSet resultSet) {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException e) {
-                LOG.warn("Unable to close Statement: {}", e.getMessage());
-            }
-        }
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                LOG.warn("Unable to close Connection: {}", e.getMessage());
-            }
-        }
+
+        closeConnectionStatementResources(connection, statement);
+
         if (resultSet != null) {
             try {
                 resultSet.close();

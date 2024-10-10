@@ -14,7 +14,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
@@ -23,7 +22,6 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static database.service.SqlDatabaseService.TABLE_NOT_EXIST;
 import static database.service.SqlDatabaseService.UNABLE_CREATE_TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,14 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SqlDatabaseServiceTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
     private final SqlDatabaseService sqlDatabaseService = new SqlDatabaseService(settings);
-    private static final String DATABASE_NAME = "test_entities";
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
     private Student fourthStudent;
-
-    public SqlDatabaseServiceTest() throws SQLException {
-    }
 
     @BeforeEach
     void setUp() {
@@ -70,11 +64,10 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void createTableTest() throws SQLException {
+    void createTableTest() {
         Class<? extends BaseEntity> entityClass = Student.class;
 
         assertTrue(sqlDatabaseService.createTable(entityClass));
-        assertTrue(sqlDatabaseService.checkTableExists(DATABASE_NAME, "Student"));
     }
 
     @Test
@@ -88,12 +81,11 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void deleteTableTest() throws SQLException {
+    void deleteTableTest() {
         Class<? extends BaseEntity> entityClass = Student.class;
-        sqlDatabaseService.createTable(entityClass);
 
+        sqlDatabaseService.createTable(entityClass);
         assertTrue(sqlDatabaseService.deleteTable(entityClass));
-        assertFalse(sqlDatabaseService.checkTableExists(DATABASE_NAME, "Student"));
     }
 
     @Test

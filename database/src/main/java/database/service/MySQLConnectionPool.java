@@ -1,6 +1,7 @@
 package database.service;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import database.exception.NoFreeDatabaseConnectionException;
 import database.exception.UnableCreateConnectionException;
 import database.helper.Settings;
 import org.slf4j.Logger;
@@ -8,68 +9,49 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class MySQLConnectionPool {
     private static final Logger LOG = LoggerFactory.getLogger(MySQLConnectionPool.class);
-    private static final String UNABLE_CREATE_CONNECTION = "Unable to create new database connection.";
     private final MysqlDataSource dataSource;
-    private final Queue<Connection> connectionPool;
-    private final int MAX_POOL_SIZE;
+    private final Deque<Connection> connectionPool;
+    private final int initialPoolSize;
+    private final int maxPoolSize;
     private int currentConnections;
+    static final String UNABLE_CREATE_CONNECTION = "Unable to create new database connection.";
+    static final String NO_FREE_DATABASE_CONNECTION = "All connections are in use. Please try again later.";
 
-    public MySQLConnectionPool(Settings settings, int initialPoolSize, int maxPoolSize) {
-        dataSource = new MysqlDataSource();
-        dataSource.setURL(settings.getDatabaseBaseUrl() + settings.getDatabaseName());
-        dataSource.setUser(settings.getDatabaseUsername());
-        dataSource.setPassword(settings.getDatabasePassword());
-
-        connectionPool = new LinkedList<>();
-        MAX_POOL_SIZE = maxPoolSize;
-
-        for (int i = 0; i < initialPoolSize; i++) {
-            try {
-                connectionPool.add(createNewConnection());
-            } catch (SQLException e) {
-                throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION);
-            }
-        }
+    public MySQLConnectionPool(Settings settings) {
+        dataSource = createDataSource(settings);
+        this.initialPoolSize = settings.getInitialPoolSize();
+        this.maxPoolSize = settings.getMaxPoolSize();
+        this.connectionPool = new ArrayDeque<>();
+        initializePool();
     }
 
-    public synchronized Connection getConnection() {
+    public Connection getConnection() {
         if (connectionPool.isEmpty()) {
-            if (currentConnections < MAX_POOL_SIZE) {
-                try {
-                    currentConnections++;
-                    return createNewConnection();
-                } catch (SQLException e) {
-                    throw new RuntimeException(UNABLE_CREATE_CONNECTION, e);
-                }
+            if (currentConnections < maxPoolSize) {
+                return createConnectionOrThrow();
             } else {
-                LOG.warn("All connections are in use. Please try again later.");
-                return null;
+                LOG.warn(NO_FREE_DATABASE_CONNECTION);
+                throw new NoFreeDatabaseConnectionException(NO_FREE_DATABASE_CONNECTION);
             }
         } else {
             return connectionPool.poll();
         }
     }
 
-    public synchronized void releaseConnection(Connection connection) {
-        if (connection != null) {
-            if (connectionPool.size() < MAX_POOL_SIZE) {
-                connectionPool.offer(connection);
-            } else {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    LOG.error("Unable to close the database connection.", e);
-                }
-            }
+    public void releaseConnection(Connection connection) {
+        if (connection != null && connectionPool.size() < maxPoolSize) {
+            connectionPool.offer(connection);
+        } else if (connection != null) {
+            closeConnection(connection);
         }
     }
 
-    public synchronized void closePool() {
+    public void closePool() {
         while (!connectionPool.isEmpty()) {
             try {
                 connectionPool.poll().close();
@@ -86,5 +68,42 @@ public class MySQLConnectionPool {
 
     private Connection createNewConnection() throws SQLException {
         return dataSource.getConnection();
+    }
+
+    private MysqlDataSource createDataSource(Settings settings) {
+        MysqlDataSource ds = new MysqlDataSource();
+        ds.setURL(settings.getDatabaseBaseUrl() + settings.getDatabaseName());
+        ds.setUser(settings.getDatabaseUsername());
+        ds.setPassword(settings.getDatabasePassword());
+        return ds;
+    }
+
+    private void initializePool() {
+        for (int i = 0; i < initialPoolSize; i++) {
+            try {
+                connectionPool.add(createNewConnection());
+                currentConnections++;
+            } catch (SQLException e) {
+                throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION);
+            }
+        }
+    }
+
+    private Connection createConnectionOrThrow() {
+        try {
+            currentConnections++;
+            return createNewConnection();
+        } catch (SQLException e) {
+            LOG.error(UNABLE_CREATE_CONNECTION);
+            throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION + ": " + e.getMessage());
+        }
+    }
+
+    private void closeConnection(Connection connection) {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOG.error("Unable to close the database connection.", e);
+        }
     }
 }

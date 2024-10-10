@@ -37,6 +37,11 @@ public class Main {
         var databaseControllerExceptionHandler = new DatabaseControllerExceptionHandler();
         databaseControllerExceptionHandler.register(app);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown hook triggered. Stopping Javalin...");
+            app.stop();
+        }));
+
         System.out.println("Check out Swagger UI docs at http://localhost:" + port + "/swagger");
     }
 }
