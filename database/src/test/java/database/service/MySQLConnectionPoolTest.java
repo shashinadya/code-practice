@@ -26,13 +26,13 @@ class MySQLConnectionPoolTest {
     }
 
     @Test
-    void testGetConnection() {
+    void getConnectionTest() {
         Connection connection = connectionPool.getConnection();
         assertNotNull(connection);
     }
 
     @Test
-    void testReleaseConnection() {
+    void releaseConnectionTest() {
         Connection connection = connectionPool.getConnection();
         connectionPool.releaseConnection(connection);
 
@@ -40,7 +40,7 @@ class MySQLConnectionPoolTest {
     }
 
     @Test
-    void testGetConnectionHandlesSQLException() {
+    void getConnectionHandlesSQLExceptionTest() {
         MySQLConnectionPool mockPool = Mockito.mock(MySQLConnectionPool.class);
 
         when(mockPool.getConnection()).thenThrow(new RuntimeException(UNABLE_CREATE_CONNECTION));
@@ -51,7 +51,7 @@ class MySQLConnectionPoolTest {
     }
 
     @Test
-    void testPoolMaxSize() {
+    void maxPoolSizeTest() {
         for (int i = 0; i < 14; i++) {
             connectionPool.getConnection();
         }
@@ -62,7 +62,7 @@ class MySQLConnectionPoolTest {
     }
 
     @Test
-    public void testClosePoolTest() throws SQLException {
+    public void closePoolTest() throws SQLException {
         connectionPool.closePool();
 
         assertEquals(0, connectionPool.size());
