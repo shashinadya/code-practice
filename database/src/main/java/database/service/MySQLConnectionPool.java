@@ -1,6 +1,7 @@
 package database.service;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import database.exception.InvalidParameterValueException;
 import database.exception.NoFreeDatabaseConnectionException;
 import database.exception.UnableCreateConnectionException;
 import database.helper.Settings;
@@ -33,7 +34,7 @@ public class MySQLConnectionPool {
 
         if (initialPoolSize > maxPoolSize) {
             LOG.warn(INIT_POOL_SIZE_MORE_THAN_MAX);
-            throw new IllegalArgumentException(INIT_POOL_SIZE_MORE_THAN_MAX);
+            throw new InvalidParameterValueException(INIT_POOL_SIZE_MORE_THAN_MAX);
         }
         connectionPool = new ArrayDeque<>();
         initializePool();
