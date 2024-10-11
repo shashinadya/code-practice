@@ -29,10 +29,10 @@ import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
 public class SqlDatabaseService implements DatabaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
     private final String databaseName;
-    private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
     static final String TABLE_NOT_EXIST = "Table does not exist";
