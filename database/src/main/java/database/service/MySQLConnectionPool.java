@@ -19,9 +19,9 @@ public class MySQLConnectionPool {
             "Initial pool size cannot be greater than maximum pool size.";
     private final MysqlDataSource dataSource;
     private final Deque<Connection> connectionPool;
-    private int currentConnections;
     private final int initialPoolSize;
     private final int maxPoolSize;
+    private int currentConnections;
     static final String UNABLE_CREATE_CONNECTION = "Unable to create new database connection.";
     static final String NO_FREE_DATABASE_CONNECTION = "All connections are in use. Please try again later.";
     static final String UNABLE_CLOSE_CONNECTION =
