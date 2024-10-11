@@ -7,7 +7,9 @@ import static database.helper.Settings.DEFAULT_DB_BASE_URL_VALUE;
 import static database.helper.Settings.DEFAULT_DB_NAME_VALUE;
 import static database.helper.Settings.DEFAULT_DB_PASSWORD_VALUE;
 import static database.helper.Settings.DEFAULT_DB_USERNAME_VALUE;
+import static database.helper.Settings.DEFAULT_INITIAL_POOL_SIZE_VALUE;
 import static database.helper.Settings.DEFAULT_LIMIT_VALUE;
+import static database.helper.Settings.DEFAULT_MAX_POOL_SIZE_VALUE;
 import static database.helper.Settings.DEFAULT_PORT_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -99,5 +101,29 @@ class SettingsTest {
     void getDatabaseNameDefaultValueReturnedTest() {
         settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
         assertEquals(DEFAULT_DB_NAME_VALUE, settings.getDatabaseName());
+    }
+
+    @Test
+    void getInitialPoolSizeTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals(4, settings.getInitialPoolSize());
+    }
+
+    @Test
+    void getInitialPoolSizeDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_INITIAL_POOL_SIZE_VALUE, settings.getInitialPoolSize());
+    }
+
+    @Test
+    void getMaxPoolSizeTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals(14, settings.getMaxPoolSize());
+    }
+
+    @Test
+    void getMaxPoolSizeDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_MAX_POOL_SIZE_VALUE, settings.getMaxPoolSize());
     }
 }

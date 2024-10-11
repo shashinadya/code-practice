@@ -71,19 +71,16 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", createTableSQL);
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(createTableSQL.toString());
             return checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to create new table: {}", e.getMessage());
             throw new CreationDatabaseException(UNABLE_CREATE_TABLE + ": " + e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -94,19 +91,16 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", dropTableSQL);
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(dropTableSQL);
             return !checkTableExists(databaseName, tableName, connection);
         } catch (SQLException e) {
             LOG.error("Unable to delete table: {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_TABLE + ": " + tableName + ", " + e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -119,13 +113,9 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-
+        try (Statement statement = connection.createStatement()) {
             if (checkTableExists(databaseName, tableName, connection)) {
                 if (isTableEmpty(tableName, connection)) {
                     String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
@@ -157,7 +147,7 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
         return entity;
     }
@@ -171,13 +161,9 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", updateSQL);
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-
+        try (Statement statement = connection.createStatement()) {
             int affectedRows = statement.executeUpdate(updateSQL);
             if (affectedRows == 0) {
                 LOG.error("Updating record failed in table {}: {}", tableName, updateSQL);
@@ -188,7 +174,7 @@ public class SqlDatabaseService implements DatabaseService {
             throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName + ", " +
                     e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
         return entity;
     }
@@ -200,19 +186,16 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteRecordSQL);
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(deleteRecordSQL);
             return true;
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -223,18 +206,15 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", deleteAllRecordsSQL);
 
-        Connection connection = null;
-        Statement statement = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
+        try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(deleteAllRecordsSQL);
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_ALL_RECORDS + ": {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_ALL_RECORDS + ": " + tableName + ", " + e.getMessage());
         } finally {
-            closeConnectionStatementResources(connection, statement);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -245,15 +225,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordByIdSQL);
 
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(selectRecordByIdSQL);
-
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(selectRecordByIdSQL)) {
             if (resultSet.next()) {
                 return createAndFillEntity(entityClass, resultSet);
             } else {
@@ -264,7 +239,7 @@ public class SqlDatabaseService implements DatabaseService {
             throw new DatabaseOperationException("Error retrieving record by id " + id + ", " + tableName + ", " +
                     e.getMessage());
         } finally {
-            closeConnectionStatementResultSetResources(connection, statement, resultSet);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -277,15 +252,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsSQL);
 
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(selectAllRecordsSQL);
-
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
             while (resultSet.next()) {
                 entities.add(createAndFillEntity(entityClass, resultSet));
             }
@@ -294,7 +264,7 @@ public class SqlDatabaseService implements DatabaseService {
             throw new DatabaseOperationException("Error retrieving all records from table" + tableName + ", " +
                     e.getMessage());
         } finally {
-            closeConnectionStatementResultSetResources(connection, statement, resultSet);
+            connectionPool.releaseConnection(connection);
         }
         return entities;
     }
@@ -315,15 +285,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectAllRecordsWithParamsSQL);
 
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL);
-
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
             while (resultSet.next()) {
                 entities.add(createAndFillEntity(entityClass, resultSet));
             }
@@ -331,7 +296,7 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error("Error retrieving records from table: {}", tableName, e);
             throw new DatabaseOperationException("Error retrieving records from table");
         } finally {
-            closeConnectionStatementResultSetResources(connection, statement, resultSet);
+            connectionPool.releaseConnection(connection);
         }
         return entities;
     }
@@ -358,15 +323,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
+        Connection connection = connectionPool.getConnection();
 
-        try {
-            connection = connectionPool.getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(selectRecordsByFiltersSQL);
-
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(selectRecordsByFiltersSQL)) {
             List<T> entities = new ArrayList<>();
             while (resultSet.next()) {
                 entities.add(createAndFillEntity(entityClass, resultSet));
@@ -376,7 +336,7 @@ public class SqlDatabaseService implements DatabaseService {
             LOG.error("Error retrieving records by filters: {}", e.getMessage());
             throw new DatabaseOperationException("Error retrieving records by filters");
         } finally {
-            closeConnectionStatementResultSetResources(connection, statement, resultSet);
+            connectionPool.releaseConnection(connection);
         }
     }
 
@@ -390,15 +350,9 @@ public class SqlDatabaseService implements DatabaseService {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
                 "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
 
-        Statement statement = null;
-        ResultSet resultSet = null;
-
-        try {
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(checkTableSQL);
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
             return resultSet.next() && resultSet.getInt(1) == 1;
-        } finally {
-            closeConnectionStatementResultSetResources(null, statement, resultSet);
         }
     }
 
@@ -511,32 +465,5 @@ public class SqlDatabaseService implements DatabaseService {
             field.set(entity, value);
         }
         return entity;
-    }
-
-    private void closeConnectionStatementResources(Connection connection, Statement statement) {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException e) {
-                LOG.warn("Unable to close Statement: {}", e.getMessage());
-            }
-        }
-        if (connection != null) {
-            connectionPool.releaseConnection(connection);
-        }
-    }
-
-    private void closeConnectionStatementResultSetResources(Connection connection, Statement statement,
-                                                            ResultSet resultSet) {
-
-        closeConnectionStatementResources(connection, statement);
-
-        if (resultSet != null) {
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                LOG.warn("Unable to close ResultSet: {}", e.getMessage());
-            }
-        }
     }
 }
