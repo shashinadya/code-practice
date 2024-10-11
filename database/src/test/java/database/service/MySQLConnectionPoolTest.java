@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 import static database.service.MySQLConnectionPool.NO_FREE_DATABASE_CONNECTION;
 import static database.service.MySQLConnectionPool.UNABLE_CREATE_CONNECTION;
@@ -62,7 +61,7 @@ class MySQLConnectionPoolTest {
     }
 
     @Test
-    public void closePoolTest() throws SQLException {
+    public void closePoolTest() {
         connectionPool.closePool();
 
         assertEquals(0, connectionPool.size());
