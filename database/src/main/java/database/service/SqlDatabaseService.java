@@ -127,7 +127,7 @@ public class SqlDatabaseService implements DatabaseService {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
                         Statement.RETURN_GENERATED_KEYS)) {
 
-                    setPreparedStatementValues(preparedStatement, entity);
+                    setPreparedStatementValuesForInsert(preparedStatement, entity);
 
                     LOG.info("Executing SQL: {}", insertSQL);
 
@@ -366,11 +366,15 @@ public class SqlDatabaseService implements DatabaseService {
 
     boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
-                "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
+                "WHERE table_schema = ? AND table_name = ?";
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
-            return resultSet.next() && resultSet.getInt(1) == 1;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(checkTableSQL)) {
+            preparedStatement.setString(1, databaseName);
+            preparedStatement.setString(2, tableName);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next() && resultSet.getInt(1) == 1;
+            }
         }
     }
 
@@ -400,8 +404,18 @@ public class SqlDatabaseService implements DatabaseService {
         return "VARCHAR(255)";
     }
 
-    private void setPreparedStatementValuesCommon(PreparedStatement preparedStatement, BaseEntity entity,
-                                                  boolean includeId, Integer id) throws SQLException {
+    private void setPreparedStatementValuesForInsert(PreparedStatement preparedStatement, BaseEntity entity)
+            throws SQLException {
+        setPreparedStatementValues(preparedStatement, entity, false, null);
+    }
+
+    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity, Integer id)
+            throws SQLException {
+        setPreparedStatementValues(preparedStatement, entity, true, id);
+    }
+
+    private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity,
+                                            boolean includeId, Integer id) throws SQLException {
         List<Field> entityFields = getAllFields(entity.getClass());
         int parameterIndex = 1;
 
@@ -440,16 +454,6 @@ public class SqlDatabaseService implements DatabaseService {
         if (includeId && id != null) {
             preparedStatement.setInt(parameterIndex, id);
         }
-    }
-
-    private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity)
-            throws SQLException {
-        setPreparedStatementValuesCommon(preparedStatement, entity, false, null);
-    }
-
-    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity, Integer id)
-            throws SQLException {
-        setPreparedStatementValuesCommon(preparedStatement, entity, true, id);
     }
 
     private String generateInsertSQL(BaseEntity entity, String tableName) {
