@@ -39,7 +39,6 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_ADD_NEW_RECORD = "Unable to add new record to table";
     static final String UNABLE_DELETE_RECORD = "Unable to delete record from table";
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
-    static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
     static final String ID_PARAMETER_NAME = "id";
 
     public SqlDatabaseService(Settings settings) {
