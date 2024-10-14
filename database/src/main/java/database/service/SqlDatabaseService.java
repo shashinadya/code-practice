@@ -402,8 +402,7 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     private void setPreparedStatementValuesCommon(PreparedStatement preparedStatement, BaseEntity entity,
-                                                  boolean includeId, Integer id)
-            throws SQLException {
+                                                  boolean includeId, Integer id) throws SQLException {
         List<Field> entityFields = getAllFields(entity.getClass());
         int parameterIndex = 1;
 
