@@ -8,6 +8,7 @@ import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,9 +199,8 @@ public class SqlDatabaseService implements DatabaseService {
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(deleteRecordSQL)) {
             preparedStatement.setInt(1, id);
-
-            int affectedRows = preparedStatement.executeUpdate();
-            return affectedRows > 0;
+            preparedStatement.executeUpdate();
+            return true;
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
             throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
@@ -259,7 +259,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT " + maxLimitValue;
+        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT ?";
 
         List<T> entities = new ArrayList<>();
 
@@ -267,10 +267,12 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
-            while (resultSet.next()) {
-                entities.add(createAndFillEntity(entityClass, resultSet));
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectAllRecordsSQL)) {
+            preparedStatement.setInt(1, maxLimitValue);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    entities.add(createAndFillEntity(entityClass, resultSet));
+                }
             }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving all records from table: {}, {}", tableName, e.getMessage());
@@ -292,7 +294,7 @@ public class SqlDatabaseService implements DatabaseService {
         }
 
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsWithParamsSQL = "SELECT * FROM " + tableName + " LIMIT " + limit + " OFFSET " + offset;
+        String selectAllRecordsWithParamsSQL = "SELECT * FROM " + tableName + " LIMIT ? OFFSET ?";
 
         List<T> entities = new ArrayList<>();
 
@@ -300,14 +302,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
-            while (resultSet.next()) {
-                entities.add(createAndFillEntity(entityClass, resultSet));
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectAllRecordsWithParamsSQL)) {
+            preparedStatement.setInt(1, limit);
+            preparedStatement.setInt(2, offset);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    entities.add(createAndFillEntity(entityClass, resultSet));
+                }
             }
         } catch (SQLException | ReflectiveOperationException e) {
-            LOG.error("Error retrieving records from table: {}", tableName, e);
-            throw new DatabaseOperationException("Error retrieving records from table");
+            LOG.error("Error retrieving records from table: {}, {}", tableName, e.getMessage());
+            throw new DatabaseOperationException("Error retrieving records from table: " + tableName + ", "
+                    + e.getMessage());
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -409,22 +416,26 @@ public class SqlDatabaseService implements DatabaseService {
         setPreparedStatementValues(preparedStatement, entity, false, null);
     }
 
-    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity, Integer id)
+    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity
+            entity, Integer id)
             throws SQLException {
         setPreparedStatementValues(preparedStatement, entity, true, id);
     }
 
     private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity,
-                                            boolean includeId, Integer id) throws SQLException {
+                                            boolean includeId, Integer id) {
         List<Field> entityFields = getAllFields(entity.getClass());
         int parameterIndex = 1;
+        String currentFieldName = "";
 
-        for (Field field : entityFields) {
-            if (field.getName().equals(ID_PARAMETER_NAME)) {
-                continue;
-            }
-            field.setAccessible(true);
-            try {
+        try {
+            for (Field field : entityFields) {
+                currentFieldName = field.getName();
+                if (field.getName().equals(ID_PARAMETER_NAME)) {
+                    continue;
+                }
+                field.setAccessible(true);
+
                 Object value = field.get(entity);
 
                 if (value != null) {
@@ -445,14 +456,15 @@ public class SqlDatabaseService implements DatabaseService {
                     preparedStatement.setNull(parameterIndex, java.sql.Types.NULL);
                 }
                 parameterIndex++;
-            } catch (IllegalAccessException | SQLException e) {
-                LOG.error("Failed to set prepared statement values for field: {}", field.getName(), e);
-                throw new RuntimeException("Error setting prepared statement values", e);
             }
-        }
 
-        if (includeId && id != null) {
-            preparedStatement.setInt(parameterIndex, id);
+            if (includeId && id != null) {
+                preparedStatement.setInt(parameterIndex, id);
+            }
+        } catch (IllegalAccessException | SQLException e) {
+            LOG.error("Failed to set prepared statement values for field: {}, {}", currentFieldName, e.getMessage());
+            throw new SetPreparedStatementValueException("Error setting prepared statement values: "
+                    + e.getMessage());
         }
     }
 
@@ -489,7 +501,7 @@ public class SqlDatabaseService implements DatabaseService {
             sql.append(field.getName()).append(" = ?, ");
         }
 
-        sql.setLength(sql.length() - 2); // Remove last comma and space
+        sql.setLength(sql.length() - 2);
         sql.append(" WHERE ").append(ID_PARAMETER_NAME).append(" = ?");
 
         return sql.toString();
@@ -504,7 +516,8 @@ public class SqlDatabaseService implements DatabaseService {
         }
     }
 
-    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet resultSet)
+    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet
+            resultSet)
             throws ReflectiveOperationException, SQLException {
         T entity = (T) entityClass.getDeclaredConstructor().newInstance();
         List<Field> entityFields = getAllFields(entityClass);
