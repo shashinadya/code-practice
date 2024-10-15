@@ -208,7 +208,7 @@ class JsonDatabaseServiceTest {
             assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
 
             jsonDatabaseService.addNewRecordToTable(thirdStudent);
-            assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 0));
+            assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 2));
 
             jsonDatabaseService.addNewRecordToTable(new Course.Builder()
                     .withName("Course2")
