@@ -411,19 +411,17 @@ public class SqlDatabaseService implements DatabaseService {
         return "VARCHAR(255)";
     }
 
-    private void setPreparedStatementValuesForInsert(PreparedStatement preparedStatement, BaseEntity entity)
-            throws SQLException {
+    private void setPreparedStatementValuesForInsert(PreparedStatement preparedStatement, BaseEntity entity) {
         setPreparedStatementValues(preparedStatement, entity, false, null);
     }
 
-    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity
-            entity, Integer id)
-            throws SQLException {
+    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity,
+                                                     Integer id) {
         setPreparedStatementValues(preparedStatement, entity, true, id);
     }
 
-    private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity,
-                                            boolean includeId, Integer id) {
+    private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity, boolean includeId,
+                                            Integer id) {
         List<Field> entityFields = getAllFields(entity.getClass());
         int parameterIndex = 1;
         String currentFieldName = "";
