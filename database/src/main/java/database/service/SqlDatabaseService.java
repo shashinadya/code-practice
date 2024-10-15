@@ -5,16 +5,17 @@ import database.exception.CreationDatabaseException;
 import database.exception.DatabaseDoesNotExistException;
 import database.exception.DatabaseOperationException;
 import database.exception.DeletionDatabaseException;
-import database.exception.FailedAccessFieldValueException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -39,7 +40,6 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_ADD_NEW_RECORD = "Unable to add new record to table";
     static final String UNABLE_DELETE_RECORD = "Unable to delete record from table";
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
-    static final String UNABLE_ACCESS_FIELD_VALUE = "Unable to access field value";
     static final String ID_PARAMETER_NAME = "id";
 
     public SqlDatabaseService(Settings settings) {
@@ -115,29 +115,36 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement()) {
+        try {
             if (checkTableExists(databaseName, tableName, connection)) {
                 if (isTableEmpty(tableName, connection)) {
                     String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
-                    statement.executeUpdate(resetAutoIncrementSQL);
+                    try (Statement statement = connection.createStatement()) {
+                        statement.executeUpdate(resetAutoIncrementSQL);
+                    }
                 }
 
                 String insertSQL = generateInsertSQL(entity, tableName);
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
+                        Statement.RETURN_GENERATED_KEYS)) {
 
-                LOG.info("Executing SQL: {}", insertSQL);
+                    setPreparedStatementValuesForInsert(preparedStatement, entity);
 
-                int affectedRows = statement.executeUpdate(insertSQL, Statement.RETURN_GENERATED_KEYS);
-                if (affectedRows == 0) {
-                    LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
-                    throw new SQLException("Creating record failed, no rows affected.");
-                }
+                    LOG.info("Executing SQL: {}", insertSQL);
 
-                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        entity.setId(generatedKeys.getInt(1));
-                    } else {
+                    int affectedRows = preparedStatement.executeUpdate();
+                    if (affectedRows == 0) {
                         LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
-                        throw new SQLException("Creating record failed, no ID obtained.");
+                        throw new SQLException("Creating record failed, no rows affected.");
+                    }
+
+                    try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            entity.setId(generatedKeys.getInt(1));
+                        } else {
+                            LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
+                            throw new SQLException("Creating record failed, no ID obtained.");
+                        }
                     }
                 }
             } else {
@@ -157,22 +164,24 @@ public class SqlDatabaseService implements DatabaseService {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
 
-        String updateSQL = generateUpdateSQL(entity, tableName, id);
+        String updateSQL = generateUpdateSQL(entity, tableName);
 
         LOG.info("Executing SQL: {}", updateSQL);
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement()) {
-            int affectedRows = statement.executeUpdate(updateSQL);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
+            setPreparedStatementValuesForUpdate(preparedStatement, entity, id);
+
+            int affectedRows = preparedStatement.executeUpdate();
             if (affectedRows == 0) {
                 LOG.error("Updating record failed in table {}: {}", tableName, updateSQL);
                 throw new IdDoesNotExistException(ENTITY_IS_NOT_FOUND);
             }
         } catch (SQLException e) {
             LOG.error("Unable to update record in table {}: {}", tableName, e.getMessage());
-            throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName + ", " +
-                    e.getMessage());
+            throw new DatabaseOperationException("Unable to update record in table " + ": " + tableName +
+                    ", " + e.getMessage());
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -182,14 +191,15 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id) {
         String tableName = entityClass.getSimpleName();
-        String deleteRecordSQL = "DELETE FROM " + tableName + " WHERE id = " + id;
+        String deleteRecordSQL = "DELETE FROM " + tableName + " WHERE id = ?";
 
         LOG.info("Executing SQL: {}", deleteRecordSQL);
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate(deleteRecordSQL);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(deleteRecordSQL)) {
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
             return true;
         } catch (SQLException e) {
             LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
@@ -221,23 +231,26 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> T getById(Class<? extends BaseEntity> entityClass, Integer id) {
         String tableName = entityClass.getSimpleName();
-        String selectRecordByIdSQL = "SELECT * FROM " + tableName + " WHERE id = " + id;
+        String selectRecordByIdSQL = "SELECT * FROM " + tableName + " WHERE id = ?";
 
         LOG.info("Executing SQL: {}", selectRecordByIdSQL);
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectRecordByIdSQL)) {
-            if (resultSet.next()) {
-                return createAndFillEntity(entityClass, resultSet);
-            } else {
-                return null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectRecordByIdSQL)) {
+            preparedStatement.setInt(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return createAndFillEntity(entityClass, resultSet);
+                } else {
+                    return null;
+                }
             }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error(ENTITY_IS_NOT_FOUND + ": {}, {}, {}", id, tableName, e.getMessage());
-            throw new DatabaseOperationException("Error retrieving record by id " + id + ", " + tableName + ", " +
-                    e.getMessage());
+            throw new DatabaseOperationException("Error retrieving record by id " + id + ", " + tableName +
+                    ", " + e.getMessage());
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -246,7 +259,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT " + maxLimitValue;
+        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT ?";
 
         List<T> entities = new ArrayList<>();
 
@@ -254,10 +267,12 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsSQL)) {
-            while (resultSet.next()) {
-                entities.add(createAndFillEntity(entityClass, resultSet));
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectAllRecordsSQL)) {
+            preparedStatement.setInt(1, maxLimitValue);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    entities.add(createAndFillEntity(entityClass, resultSet));
+                }
             }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving all records from table: {}, {}", tableName, e.getMessage());
@@ -279,7 +294,7 @@ public class SqlDatabaseService implements DatabaseService {
         }
 
         String tableName = entityClass.getSimpleName();
-        String selectAllRecordsWithParamsSQL = "SELECT * FROM " + tableName + " LIMIT " + limit + " OFFSET " + offset;
+        String selectAllRecordsWithParamsSQL = "SELECT * FROM " + tableName + " LIMIT ? OFFSET ?";
 
         List<T> entities = new ArrayList<>();
 
@@ -287,14 +302,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectAllRecordsWithParamsSQL)) {
-            while (resultSet.next()) {
-                entities.add(createAndFillEntity(entityClass, resultSet));
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectAllRecordsWithParamsSQL)) {
+            preparedStatement.setInt(1, limit);
+            preparedStatement.setInt(2, offset);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    entities.add(createAndFillEntity(entityClass, resultSet));
+                }
             }
         } catch (SQLException | ReflectiveOperationException e) {
-            LOG.error("Error retrieving records from table: {}", tableName, e);
-            throw new DatabaseOperationException("Error retrieving records from table");
+            LOG.error("Error retrieving records from table: {}, {}", tableName, e.getMessage());
+            throw new DatabaseOperationException("Error retrieving records from table: " + tableName + ", "
+                    + e.getMessage());
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -312,10 +332,9 @@ public class SqlDatabaseService implements DatabaseService {
             List<String> conditions = new ArrayList<>();
 
             for (Map.Entry<String, V> filter : filters.entrySet()) {
-                String fieldName = filter.getKey();
-                V expectedValue = filter.getValue();
-                conditions.add(fieldName + " = '" + expectedValue + "'"); // Вставляем значение напрямую
+                conditions.add(filter.getKey() + " = ?");
             }
+
             sqlBuilder.append(String.join(" AND ", conditions));
         }
 
@@ -325,13 +344,19 @@ public class SqlDatabaseService implements DatabaseService {
 
         Connection connection = connectionPool.getConnection();
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(selectRecordsByFiltersSQL)) {
-            List<T> entities = new ArrayList<>();
-            while (resultSet.next()) {
-                entities.add(createAndFillEntity(entityClass, resultSet));
+        try (PreparedStatement preparedStatement = connection.prepareStatement(selectRecordsByFiltersSQL)) {
+            int index = 1;
+            for (Map.Entry<String, V> filter : filters.entrySet()) {
+                preparedStatement.setObject(index++, filter.getValue());
             }
-            return entities;
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                List<T> entities = new ArrayList<>();
+                while (resultSet.next()) {
+                    entities.add(createAndFillEntity(entityClass, resultSet));
+                }
+                return entities;
+            }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records by filters: {}", e.getMessage());
             throw new DatabaseOperationException("Error retrieving records by filters");
@@ -348,11 +373,15 @@ public class SqlDatabaseService implements DatabaseService {
 
     boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {
         String checkTableSQL = "SELECT COUNT(*) FROM information_schema.tables " +
-                "WHERE table_schema = '" + databaseName + "' AND table_name = '" + tableName + "'";
+                "WHERE table_schema = ? AND table_name = ?";
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(checkTableSQL)) {
-            return resultSet.next() && resultSet.getInt(1) == 1;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(checkTableSQL)) {
+            preparedStatement.setString(1, databaseName);
+            preparedStatement.setString(2, tableName);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next() && resultSet.getInt(1) == 1;
+            }
         }
     }
 
@@ -382,9 +411,64 @@ public class SqlDatabaseService implements DatabaseService {
         return "VARCHAR(255)";
     }
 
+    private void setPreparedStatementValuesForInsert(PreparedStatement preparedStatement, BaseEntity entity) {
+        setPreparedStatementValues(preparedStatement, entity, false, null);
+    }
+
+    private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity,
+                                                     Integer id) {
+        setPreparedStatementValues(preparedStatement, entity, true, id);
+    }
+
+    private void setPreparedStatementValues(PreparedStatement preparedStatement, BaseEntity entity, boolean includeId,
+                                            Integer id) {
+        List<Field> entityFields = getAllFields(entity.getClass());
+        int parameterIndex = 1;
+        String currentFieldName = "";
+
+        try {
+            for (Field field : entityFields) {
+                currentFieldName = field.getName();
+                if (field.getName().equals(ID_PARAMETER_NAME)) {
+                    continue;
+                }
+                field.setAccessible(true);
+
+                Object value = field.get(entity);
+
+                if (value != null) {
+                    if (value instanceof String) {
+                        preparedStatement.setString(parameterIndex, (String) value);
+                    } else if (value instanceof Integer) {
+                        preparedStatement.setInt(parameterIndex, (Integer) value);
+                    } else if (value instanceof Long) {
+                        preparedStatement.setLong(parameterIndex, (Long) value);
+                    } else if (value instanceof Date) {
+                        preparedStatement.setDate(parameterIndex, new java.sql.Date(((Date) value).getTime()));
+                    } else if (value instanceof Boolean) {
+                        preparedStatement.setBoolean(parameterIndex, (Boolean) value);
+                    } else {
+                        preparedStatement.setObject(parameterIndex, value);
+                    }
+                } else {
+                    preparedStatement.setNull(parameterIndex, java.sql.Types.NULL);
+                }
+                parameterIndex++;
+            }
+
+            if (includeId && id != null) {
+                preparedStatement.setInt(parameterIndex, id);
+            }
+        } catch (IllegalAccessException | SQLException e) {
+            LOG.error("Failed to set prepared statement values for field: {}, {}", currentFieldName, e.getMessage());
+            throw new SetPreparedStatementValueException("Error setting prepared statement values: "
+                    + e.getMessage());
+        }
+    }
+
     private String generateInsertSQL(BaseEntity entity, String tableName) {
         StringBuilder fields = new StringBuilder();
-        StringBuilder values = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
 
         List<Field> entityFields = getAllFields(entity.getClass());
         for (Field field : entityFields) {
@@ -395,26 +479,16 @@ public class SqlDatabaseService implements DatabaseService {
             }
 
             fields.append(field.getName()).append(", ");
-            try {
-                Object value = field.get(entity);
-
-                if (value instanceof String || value instanceof Date) {
-                    values.append("'").append(value).append("', ");
-                } else {
-                    values.append(value).append(", ");
-                }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Error accessing field value", e);
-            }
+            placeholders.append("?, ");
         }
 
         fields.setLength(fields.length() - 2);
-        values.setLength(values.length() - 2);
+        placeholders.setLength(placeholders.length() - 2);
 
-        return "INSERT INTO " + tableName + " (" + fields + ") VALUES (" + values + ")";
+        return "INSERT INTO " + tableName + " (" + fields + ") VALUES (" + placeholders + ")";
     }
 
-    private <T extends BaseEntity> String generateUpdateSQL(T entity, String tableName, Integer id) {
+    private <T extends BaseEntity> String generateUpdateSQL(T entity, String tableName) {
         StringBuilder sql = new StringBuilder("UPDATE ").append(tableName).append(" SET ");
 
         List<Field> entityFields = getAllFields(entity.getClass());
@@ -422,24 +496,11 @@ public class SqlDatabaseService implements DatabaseService {
             if (field.getName().equals(ID_PARAMETER_NAME)) {
                 continue;
             }
-            field.setAccessible(true);
-            try {
-                Object value = field.get(entity);
-                if (value != null) {
-                    if (value instanceof String || value instanceof Date) {
-                        sql.append(field.getName()).append(" = '").append(value).append("', ");
-                    } else {
-                        sql.append(field.getName()).append(" = ").append(value).append(", ");
-                    }
-                }
-            } catch (IllegalAccessException e) {
-                LOG.error("Failed to access field value for SQL generation", e);
-                throw new FailedAccessFieldValueException(UNABLE_ACCESS_FIELD_VALUE);
-            }
+            sql.append(field.getName()).append(" = ?, ");
         }
 
         sql.setLength(sql.length() - 2);
-        sql.append(" WHERE id = ").append(id);
+        sql.append(" WHERE ").append(ID_PARAMETER_NAME).append(" = ?");
 
         return sql.toString();
     }
@@ -453,7 +514,8 @@ public class SqlDatabaseService implements DatabaseService {
         }
     }
 
-    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet resultSet)
+    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet
+            resultSet)
             throws ReflectiveOperationException, SQLException {
         T entity = (T) entityClass.getDeclaredConstructor().newInstance();
         List<Field> entityFields = getAllFields(entityClass);
