@@ -202,7 +202,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void removeAllRecordsResetIdCounterCheckTest() {
+    void removeAllRecordsIdCounterCheckTest() {
         try {
             List<Student> studentsAfterDeletion = List.of();
 

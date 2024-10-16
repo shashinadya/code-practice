@@ -66,6 +66,7 @@ public class JsonDatabaseService implements DatabaseService {
             if (!jsonDatabaseFile.createNewFile()) {
                 throw new CreationDatabaseException(UNABLE_CREATE_DB_FILE);
             }
+            entityIds.put(entityClass.getName(), ID_COUNTER_INITIAL_VALUE);
             return Files.writeString(jsonDatabaseFile.toPath(), EMPTY_BRACKETS_TO_JSON).toFile().exists();
         } catch (IOException e) {
             LOG.error(UNABLE_CREATE_DB_FILE + ": {}", jsonDatabaseFile.toPath());
@@ -105,13 +106,6 @@ public class JsonDatabaseService implements DatabaseService {
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
         String entityClassName = entityClass.getName();
-        entityIds.computeIfAbsent(entityClassName, className -> {
-            if (entities.isEmpty()) {
-                return ID_COUNTER_INITIAL_VALUE;
-            } else {
-                return entities.get(entities.size() - 1).getId();
-            }
-        });
 
         entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
         entities.add(entity);

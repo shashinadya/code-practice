@@ -192,7 +192,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void removeAllRecordsResetIdCounterCheckTest() {
+    void removeAllRecordsIdCounterCheckTest() {
         try {
             jsonDatabaseService.createTable(Student.class);
             jsonDatabaseService.addNewRecordToTable(firstStudent);
