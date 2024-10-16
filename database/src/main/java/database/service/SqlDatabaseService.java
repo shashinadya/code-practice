@@ -258,30 +258,7 @@ public class SqlDatabaseService implements DatabaseService {
 
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
-        String tableName = entityClass.getSimpleName();
-        String selectAllRecordsSQL = "SELECT * FROM " + tableName + " LIMIT ?";
-
-        List<T> entities = new ArrayList<>();
-
-        LOG.info("Executing SQL: {}", selectAllRecordsSQL);
-
-        Connection connection = connectionPool.getConnection();
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(selectAllRecordsSQL)) {
-            preparedStatement.setInt(1, maxLimitValue);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    entities.add(createAndFillEntity(entityClass, resultSet));
-                }
-            }
-        } catch (SQLException | ReflectiveOperationException e) {
-            LOG.error("Error retrieving all records from table: {}, {}", tableName, e.getMessage());
-            throw new DatabaseOperationException("Error retrieving all records from table" + tableName + ", " +
-                    e.getMessage());
-        } finally {
-            connectionPool.releaseConnection(connection);
-        }
-        return entities;
+        return getAllRecordsFromTable(entityClass, maxLimitValue, 0);
     }
 
     @Override

@@ -180,13 +180,7 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public <T extends BaseEntity> Iterable<T> getAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
-        Path databasePath = Path.of(getDatabasePath(entityClass));
-
-        List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
-
-        return entities.stream()
-                .limit(maxLimitValue)
-                .collect(Collectors.toList());
+        return getAllRecordsFromTable(entityClass, maxLimitValue, 0);
     }
 
     @Override
