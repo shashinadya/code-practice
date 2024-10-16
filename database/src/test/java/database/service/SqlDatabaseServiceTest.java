@@ -202,7 +202,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void removeAllRecordsResetIdCounterCheckTest() {
+    void removeAllRecordsIdCounterCheckTest() {
         try {
             List<Student> studentsAfterDeletion = List.of();
 
@@ -219,7 +219,7 @@ public class SqlDatabaseServiceTest {
             assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
 
             sqlDatabaseService.addNewRecordToTable(thirdStudent);
-            assertEquals(thirdStudent, sqlDatabaseService.getById(Student.class, 1));
+            assertEquals(thirdStudent, sqlDatabaseService.getById(Student.class, 3));
 
             sqlDatabaseService.addNewRecordToTable(new Course.Builder()
                     .withName("Course2")

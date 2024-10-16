@@ -117,13 +117,6 @@ public class SqlDatabaseService implements DatabaseService {
 
         try {
             if (checkTableExists(databaseName, tableName, connection)) {
-                if (isTableEmpty(tableName, connection)) {
-                    String resetAutoIncrementSQL = "ALTER TABLE " + tableName + " AUTO_INCREMENT = 1";
-                    try (Statement statement = connection.createStatement()) {
-                        statement.executeUpdate(resetAutoIncrementSQL);
-                    }
-                }
-
                 String insertSQL = generateInsertSQL(entity, tableName);
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
                         Statement.RETURN_GENERATED_KEYS)) {
@@ -480,15 +473,6 @@ public class SqlDatabaseService implements DatabaseService {
         sql.append(" WHERE ").append(ID_PARAMETER_NAME).append(" = ?");
 
         return sql.toString();
-    }
-
-    private boolean isTableEmpty(String tableName, Connection connection) throws SQLException {
-        String checkEmptyTableSQL = "SELECT COUNT(*) FROM " + tableName;
-
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(checkEmptyTableSQL)) {
-            return resultSet.next() && resultSet.getInt(1) == 0;
-        }
     }
 
     private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet
