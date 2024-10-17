@@ -10,6 +10,7 @@ import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
+import database.helper.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
@@ -292,8 +294,11 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
-                                                              Map<String, V> filters) {
+    public <T extends BaseEntity> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
+                                                           Map<String, List<String>> filters) {
+        List<Field> fields = getAllFields(entityClass);
+        Validator.validateDatabaseFilters(fields, filters);
+
         String tableName = entityClass.getSimpleName();
         StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM " + tableName);
 
@@ -301,8 +306,15 @@ public class SqlDatabaseService implements DatabaseService {
             sqlBuilder.append(" WHERE ");
             List<String> conditions = new ArrayList<>();
 
-            for (Map.Entry<String, V> filter : filters.entrySet()) {
-                conditions.add(filter.getKey() + " = ?");
+            for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
+                if (filter.getValue().size() > 1) {
+                    String placeholders = filter.getValue().stream()
+                            .map(v -> "?")
+                            .collect(Collectors.joining(", "));
+                    conditions.add(filter.getKey() + " IN (" + placeholders + ")");
+                } else {
+                    conditions.add(filter.getKey() + " = ?");
+                }
             }
 
             sqlBuilder.append(String.join(" AND ", conditions));
@@ -316,8 +328,10 @@ public class SqlDatabaseService implements DatabaseService {
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(selectRecordsByFiltersSQL)) {
             int index = 1;
-            for (Map.Entry<String, V> filter : filters.entrySet()) {
-                preparedStatement.setObject(index++, filter.getValue());
+            for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
+                for (String value : filter.getValue()) {
+                    preparedStatement.setObject(index++, value);
+                }
             }
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
