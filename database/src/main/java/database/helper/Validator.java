@@ -29,7 +29,8 @@ public class Validator {
             declaredFields.stream()
                     .filter(field -> field.getName().equals(propertyName))
                     .findAny()
-                    .orElseThrow(() -> new IncorrectPropertyNameException(INCORRECT_FILTER_NAME_MESSAGE + ": " + propertyName));
+                    .orElseThrow(() -> new IncorrectPropertyNameException(INCORRECT_FILTER_NAME_MESSAGE +
+                            ": " + propertyName));
         }
     }
 }

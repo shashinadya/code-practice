@@ -133,8 +133,7 @@ public class DatabaseServiceRestController {
             queryParams = {
                     @OpenApiParam(name = "Format: fieldName=value, separated by &",
                             description = "Filters by entity's fields. Multiple values for one field can be provided " +
-                                    "using the following pattern: filter1=value1&filter1=value2"),
-                    @OpenApiParam(name = "offset", description = "Offset value from the first record")
+                                    "using the following pattern: filter1=value1&filter1=value2")
             },
             responses = {
                     @OpenApiResponse(status = "200", description = "List of all records satisfied by given filters",
