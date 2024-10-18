@@ -122,7 +122,27 @@ public class DatabaseServiceRestController {
         ctx.json(databaseService.addNewRecordToTable(entity));
     }
 
-    //TODO: do not use this method since database.service method will be reworked
+    @OpenApi(
+            summary = "Get records by filters",
+            operationId = "getByFilters",
+            path = "/api/v1/database/{entityClass}/filter",
+            methods = HttpMethod.GET,
+            pathParams = {
+                    @OpenApiParam(name = "entityClass", description = "Class of the entity", required = true)
+            },
+            queryParams = {
+                    @OpenApiParam(name = "Format: fieldName=value, separated by &",
+                            description = "Filters by entity's fields. Multiple values for one field can be provided " +
+                                    "using the following pattern: filter1=value1&filter1=value2")
+            },
+            responses = {
+                    @OpenApiResponse(status = "200", description = "List of all records satisfied by given filters",
+                            content = @OpenApiContent(from = BaseEntity[].class)),
+                    @OpenApiResponse(status = "400", description = "Invalid entity class"),
+                    @OpenApiResponse(status = "400", description = "Invalid filters"),
+                    @OpenApiResponse(status = "500", description = "Unable to retrieve records")
+            }
+    )
     void handleGetByFilters(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         Map<String, List<String>> queryParameters = ctx.queryParamMap();

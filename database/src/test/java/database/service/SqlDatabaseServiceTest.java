@@ -292,4 +292,6 @@ public class SqlDatabaseServiceTest {
         assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
     }
+
+    //TODO: write tests for getByFilters method. Will be added by Nadya as port of another ticket
 }

@@ -8,7 +8,6 @@ import database.exception.IdDoesNotExistException;
 import database.entity.Student;
 import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
-import database.exception.IncorrectValueTypeException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullPropertyNameOrValueException;
 import database.helper.Settings;
@@ -21,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
+import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
+import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
@@ -286,7 +288,27 @@ class JsonDatabaseServiceTest {
     void getByFiltersAllFiltersMatchTest() {
         List<Student> students = List.of(firstStudent, fourthStudent);
 
-        Map<String, Object> filters = Map.of("fullName", "FirstName1 LastName1", "averageScore", 5.0);
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1"),
+                "averageScore", List.of("5.0")
+        );
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+
+        assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersSingleFilterWithListOfValuesMatchTest() {
+        List<Student> students = List.of(firstStudent, secondStudent, fourthStudent);
+
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1", "FirstName2 LastName2")
+        );
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -299,7 +321,11 @@ class JsonDatabaseServiceTest {
 
     @Test
     void getByFiltersOxfordStudentTest() {
-        Map<String, Object> filters = Map.of("fullName", "N", "averageScore", 4.5, "age", 20);
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("N"),
+                "averageScore", List.of("4.5"),
+                "age", List.of("20")
+        );
         OxfordStudent os = new OxfordStudent.Builder()
                 .withFullName("N")
                 .withAverageScore(4.5)
@@ -320,7 +346,10 @@ class JsonDatabaseServiceTest {
     void getByFiltersOnlyOneFilterMatchesTest() {
         List<Student> students = List.of();
 
-        Map<String, Object> filters = Map.of("fullName", "Harry Potter", "averageScore", 5.0);
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("Harry Potter"),
+                "averageScore", List.of("5.0")
+        );
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -335,7 +364,10 @@ class JsonDatabaseServiceTest {
     void getByFiltersNoFilterMatchesTest() {
         List<Student> students = List.of();
 
-        Map<String, Object> filters = Map.of("fullName", "FirstName1 LastName1", "averageScore", 3.0);
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1"),
+                "averageScore", List.of("3.0")
+        );
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
@@ -347,8 +379,8 @@ class JsonDatabaseServiceTest {
 
     @Test
     void getByFiltersPropertyNameIsNullTest() {
-        Map<String, Object> filters = new HashMap<>() {{
-            put(null, 0);
+        Map<String, List<String>> filters = new HashMap<>() {{
+            put(null, List.of("0"));
         }};
 
         jsonDatabaseService.createTable(Student.class);
@@ -356,12 +388,12 @@ class JsonDatabaseServiceTest {
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
-        assertEquals("Property name and value cannot be null.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
     @Test
     void getByFiltersValueIsNullTest() {
-        Map<String, Object> filters = new HashMap<>() {{
+        Map<String, List<String>> filters = new HashMap<>() {{
             put("averageScore", null);
         }};
 
@@ -370,42 +402,30 @@ class JsonDatabaseServiceTest {
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
-        assertEquals("Property name and value cannot be null.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
     @Test
     void getByFiltersValueIsEmptyTest() {
-        Map<String, Object> filters = Map.of("fullName", "");
+        Map<String, List<String>> filters = Map.of("fullName", List.of());
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
-        assertEquals("Value cannot be empty.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
     }
 
     @Test
     void getByFiltersIncorrectPropertyNameTest() {
-        Map<String, Object> filters = Map.of("firstName", "FirstName1");
+        Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1"));
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
                 jsonDatabaseService.getByFilters(Student.class, filters));
-        assertEquals("Incorrect property name: firstName", exception.getMessage());
-    }
-
-    @Test
-    void getByFiltersIncorrectValueTypeTest() {
-        Map<String, Object> filters = Map.of("fullName", 100);
-
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-
-        IncorrectValueTypeException exception = assertThrows(IncorrectValueTypeException.class, () ->
-                jsonDatabaseService.getByFilters(Student.class, filters));
-        assertTrue(exception.getMessage().contains("Incorrect value type for filter: fullName"));
+        assertEquals(INCORRECT_FILTER_NAME_MESSAGE + ": firstName", exception.getMessage());
     }
 }
