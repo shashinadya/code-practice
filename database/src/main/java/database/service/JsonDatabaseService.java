@@ -191,8 +191,8 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public <T extends BaseEntity, V> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
-                                                              Map<String, V> filters) {
+    public <T extends BaseEntity> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
+                                                           Map<String, List<String>> filters) {
         Path databasePath = Path.of(getDatabasePath(entityClass));
         List<Field> fields = getAllFields(entityClass);
         Validator.validateDatabaseFilters(fields, filters);
@@ -201,9 +201,9 @@ public class JsonDatabaseService implements DatabaseService {
 
         return entities.stream()
                 .filter(entity -> {
-                    for (Map.Entry<String, V> filter : filters.entrySet()) {
+                    for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
                         String fieldName = filter.getKey();
-                        V expectedValue = filter.getValue();
+                        List<String> expectedValues = filter.getValue();
                         Field field = fields.stream()
                                 .filter(e -> e.getName().equals(fieldName))
                                 .findFirst()
@@ -214,7 +214,7 @@ public class JsonDatabaseService implements DatabaseService {
                             Method getterMethod = entityClass.getMethod(getterName);
                             Object actualValue = getterMethod.invoke(entity);
 
-                            if (!expectedValue.equals(actualValue)) {
+                            if (!expectedValues.contains(actualValue.toString())) {
                                 return false;
                             }
                         } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {

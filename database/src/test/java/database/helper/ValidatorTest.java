@@ -3,7 +3,6 @@ package database.helper;
 import database.entity.Student;
 import database.exception.EmptyValueException;
 import database.exception.IncorrectPropertyNameException;
-import database.exception.IncorrectValueTypeException;
 import database.exception.NullPropertyNameOrValueException;
 import org.junit.jupiter.api.Test;
 
@@ -12,9 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
+import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
+import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ValidatorTest {
     private final Field fullNameField = Student.class.getDeclaredField("fullName");
@@ -26,48 +27,48 @@ class ValidatorTest {
 
     @Test
     void validateDatabaseFiltersPropertyNameIsNullTest() {
-        Map<String, Object> filters = new HashMap<>();
-        filters.put(null, 0);
+        Map<String, List<String>> filters = new HashMap<>();
+        filters.put(null, List.of("0"));
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 Validator.validateDatabaseFilters(declaredFields, filters));
-        assertEquals("Property name and value cannot be null.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
     @Test
     void validateDatabaseFiltersValueIsNullTest() {
-        Map<String, Object> filters = new HashMap<>();
+        Map<String, List<String>> filters = new HashMap<>();
         filters.put("averageScore", null);
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
                 Validator.validateDatabaseFilters(declaredFields, filters));
-        assertEquals("Property name and value cannot be null.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
     @Test
     void validateDatabaseFiltersValueIsEmptyTest() {
-        Map<String, Object> filters = Map.of("fullName", "");
+        Map<String, List<String>> filters = Map.of("fullName", List.of());
 
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
                 Validator.validateDatabaseFilters(declaredFields, filters));
-        assertEquals("Value cannot be empty.", exception.getMessage());
+        assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
+    }
+
+    @Test
+    void validateDatabaseFiltersValuesContainOnlyEmptyStringTest() {
+        Map<String, List<String>> filters = Map.of("fullName", List.of(""));
+
+        EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
+                Validator.validateDatabaseFilters(declaredFields, filters));
+        assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
     }
 
     @Test
     void validateDatabaseFiltersIncorrectPropertyNameTest() {
-        Map<String, Object> filters = Map.of("firstName", "FirstName1");
+        Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1"));
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
                 Validator.validateDatabaseFilters(declaredFields, filters));
-        assertEquals("Incorrect property name: firstName", exception.getMessage());
-    }
-
-    @Test
-    void validateDatabaseFiltersIncorrectValueTypeTest() {
-        Map<String, Object> filters = Map.of("fullName", 100);
-
-        IncorrectValueTypeException exception = assertThrows(IncorrectValueTypeException.class, () ->
-                Validator.validateDatabaseFilters(declaredFields, filters));
-        assertTrue(exception.getMessage().contains("Incorrect value type for filter: fullName"));
+        assertEquals(INCORRECT_FILTER_NAME_MESSAGE + ": firstName", exception.getMessage());
     }
 }
