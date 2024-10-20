@@ -5,16 +5,24 @@ import database.entity.OxfordStudent;
 import database.entity.Student;
 import database.exception.CreationDatabaseException;
 import database.exception.DatabaseDoesNotExistException;
+import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
+import database.exception.IncorrectPropertyNameException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullPropertyNameOrValueException;
 import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
+import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
+import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
@@ -357,5 +365,148 @@ public class SqlDatabaseServiceTest {
                 exception.getMessage());
     }
 
-    //TODO: write tests for getByFilters method. Will be added by Nadya as port of another ticket
+    @Test
+    void getByFiltersAllFiltersMatchTest() {
+        List<Student> students = List.of(firstStudent, fourthStudent);
+
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1"),
+                "averageScore", List.of("5.0")
+        );
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+
+        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersSingleFilterWithListOfValuesMatchTest() {
+        List<Student> students = List.of(firstStudent, secondStudent, fourthStudent);
+
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1", "FirstName2 LastName2")
+        );
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+
+        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersOxfordStudentTest() {
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("N"),
+                "averageScore", List.of("4.5"),
+                "age", List.of("20")
+        );
+        OxfordStudent os = new OxfordStudent.Builder()
+                .withFullName("N")
+                .withAverageScore(4.5)
+                .withAge(20)
+                .build();
+
+        List<OxfordStudent> students = List.of(os);
+
+        sqlDatabaseService.createTable(OxfordStudent.class);
+        sqlDatabaseService.addNewRecordToTable(os);
+
+        assertEquals(students, sqlDatabaseService.getByFilters(OxfordStudent.class, filters));
+
+        sqlDatabaseService.deleteTable(OxfordStudent.class);
+    }
+
+    @Test
+    void getByFiltersOnlyOneFilterMatchesTest() {
+        List<Student> students = List.of();
+
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("Harry Potter"),
+                "averageScore", List.of("5.0")
+        );
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+
+        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersNoFilterMatchesTest() {
+        List<Student> students = List.of();
+
+        Map<String, List<String>> filters = Map.of(
+                "fullName", List.of("FirstName1 LastName1"),
+                "averageScore", List.of("3.0")
+        );
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+
+        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+    }
+
+    @Test
+    void getByFiltersPropertyNameIsNullTest() {
+        Map<String, List<String>> filters = new HashMap<>() {{
+            put(null, List.of("0"));
+        }};
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+
+        NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
+                sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
+    }
+
+    @Test
+    void getByFiltersValueIsNullTest() {
+        Map<String, List<String>> filters = new HashMap<>() {{
+            put("averageScore", null);
+        }};
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+
+        NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
+                sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
+    }
+
+    @Test
+    void getByFiltersValueIsEmptyTest() {
+        Map<String, List<String>> filters = Map.of("fullName", List.of());
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+
+        EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
+                sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
+    }
+
+    @Test
+    void getByFiltersIncorrectPropertyNameTest() {
+        Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1 LastName1"));
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordToTable(firstStudent);
+
+        IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
+                sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(INCORRECT_FILTER_NAME_MESSAGE + ": firstName", exception.getMessage());
+    }
 }
