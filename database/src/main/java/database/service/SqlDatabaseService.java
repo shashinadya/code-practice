@@ -40,7 +40,7 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
     static final String TABLE_NOT_EXIST = "Table does not exist";
     static final String UNABLE_ADD_NEW_RECORD = "Unable to add new record to table";
-    static final String UNABLE_DELETE_RECORD = "Unable to delete record from table";
+    static final String UNABLE_DELETE_RECORD = "Unable to delete record or specific records from table";
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
     static final String ID_PARAMETER_NAME = "id";
 
@@ -155,6 +155,58 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     @Override
+    public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
+                                                                   List<T> entities) {
+        for (T t : entities) {
+            if (t.getId() != null) {
+                throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
+            }
+        }
+
+        String tableName = entityClass.getSimpleName();
+
+        Connection connection = connectionPool.getConnection();
+
+        try {
+            if (checkTableExists(databaseName, tableName, connection)) {
+                String insertSQL = generateInsertMultipleLinesSQL(entities, tableName);
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
+                        Statement.RETURN_GENERATED_KEYS)) {
+
+                    setPreparedStatementValuesForMultipleInsert(preparedStatement, entities);
+
+                    LOG.info("Executing SQL: {}", insertSQL);
+
+                    int affectedRows = preparedStatement.executeUpdate();
+                    if (affectedRows == 0) {
+                        LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
+                        throw new SQLException("Creating record failed, no rows affected.");
+                    }
+
+                    try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                        for (T entity : entities) {
+                            if (generatedKeys.next()) {
+                                entity.setId(generatedKeys.getInt(1));
+                            } else {
+                                LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
+                                throw new SQLException("Creating record failed, no ID obtained.");
+                            }
+                        }
+                    }
+                }
+            } else {
+                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+            }
+        } catch (SQLException e) {
+            LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
+            throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + e.getMessage());
+        } finally {
+            connectionPool.releaseConnection(connection);
+        }
+        return entities;
+    }
+
+    @Override
     public <T extends BaseEntity> T updateRecordInTable(T entity, Integer id) {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
@@ -194,6 +246,36 @@ public class SqlDatabaseService implements DatabaseService {
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(deleteRecordSQL)) {
             preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
+            throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
+        } finally {
+            connectionPool.releaseConnection(connection);
+        }
+    }
+
+    @Override
+    public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("IDs list cannot be null or empty");
+        }
+
+        String tableName = entityClass.getSimpleName();
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+        String deleteRecordSQL = "DELETE FROM " + tableName + " WHERE id IN (" + placeholders + ")";
+
+        LOG.info("Executing SQL: {}", deleteRecordSQL);
+
+        Connection connection = connectionPool.getConnection();
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(deleteRecordSQL)) {
+            for (int i = 0; i < ids.size(); i++) {
+                preparedStatement.setInt(i + 1, ids.get(i));
+            }
             preparedStatement.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -399,6 +481,11 @@ public class SqlDatabaseService implements DatabaseService {
         setPreparedStatementValues(preparedStatement, entity, false, null);
     }
 
+    private <T extends BaseEntity> void setPreparedStatementValuesForMultipleInsert(PreparedStatement preparedStatement,
+                                                                                    List<T> entities) {
+        setPreparedStatementValues(preparedStatement, entities, false, null);
+    }
+
     private void setPreparedStatementValuesForUpdate(PreparedStatement preparedStatement, BaseEntity entity,
                                                      Integer id) {
         setPreparedStatementValues(preparedStatement, entity, true, id);
@@ -450,6 +537,56 @@ public class SqlDatabaseService implements DatabaseService {
         }
     }
 
+    private <T extends BaseEntity> void setPreparedStatementValues(PreparedStatement preparedStatement,
+                                                                   List<T> entities, boolean includeId,
+                                                                   List<Integer> ids) {
+        int parameterIndex = 1;
+
+        try {
+            for (int entityIndex = 0; entityIndex < entities.size(); entityIndex++) {
+                T entity = entities.get(entityIndex);
+                List<Field> entityFields = getAllFields(entity.getClass());
+
+                for (Field field : entityFields) {
+                    if (field.getName().equals(ID_PARAMETER_NAME)) {
+                        continue;
+                    }
+
+                    field.setAccessible(true);
+                    Object value = field.get(entity);
+
+                    if (value != null) {
+                        if (value instanceof String) {
+                            preparedStatement.setString(parameterIndex, (String) value);
+                        } else if (value instanceof Integer) {
+                            preparedStatement.setInt(parameterIndex, (Integer) value);
+                        } else if (value instanceof Long) {
+                            preparedStatement.setLong(parameterIndex, (Long) value);
+                        } else if (value instanceof Date) {
+                            preparedStatement.setDate(parameterIndex, new java.sql.Date(((Date) value).getTime()));
+                        } else if (value instanceof Boolean) {
+                            preparedStatement.setBoolean(parameterIndex, (Boolean) value);
+                        } else {
+                            preparedStatement.setObject(parameterIndex, value);
+                        }
+                    } else {
+                        preparedStatement.setNull(parameterIndex, java.sql.Types.NULL);
+                    }
+
+                    parameterIndex++;
+                }
+
+                if (includeId && ids != null && entityIndex < ids.size()) {
+                    preparedStatement.setInt(parameterIndex, ids.get(entityIndex));
+                    parameterIndex++;
+                }
+            }
+        } catch (IllegalAccessException | SQLException e) {
+            LOG.error("Failed to set prepared statement values for field: {}, {}", e.getMessage());
+            throw new SetPreparedStatementValueException("Error setting prepared statement values: " + e.getMessage());
+        }
+    }
+
     private String generateInsertSQL(BaseEntity entity, String tableName) {
         StringBuilder fields = new StringBuilder();
         StringBuilder placeholders = new StringBuilder();
@@ -470,6 +607,44 @@ public class SqlDatabaseService implements DatabaseService {
         placeholders.setLength(placeholders.length() - 2);
 
         return "INSERT INTO " + tableName + " (" + fields + ") VALUES (" + placeholders + ")";
+    }
+
+    private <T extends BaseEntity> String generateInsertMultipleLinesSQL(List<T> entities, String tableName) {
+        if (entities.isEmpty()) {
+            throw new IllegalArgumentException("Entities list cannot be empty");
+        }
+
+        StringBuilder fields = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+
+        List<Field> entityFields = getAllFields(entities.get(0).getClass());
+        for (Field field : entityFields) {
+            field.setAccessible(true);
+
+            if (field.getName().equals(ID_PARAMETER_NAME)) {
+                continue;
+            }
+
+            fields.append(field.getName()).append(", ");
+        }
+
+        fields.setLength(fields.length() - 2);
+
+        for (int i = 0; i < entities.size(); i++) {
+            placeholders.append("(");
+            for (Field field : entityFields) {
+                if (field.getName().equals(ID_PARAMETER_NAME)) {
+                    continue;
+                }
+                placeholders.append("?, ");
+            }
+            placeholders.setLength(placeholders.length() - 2);
+            placeholders.append("), ");
+        }
+
+        placeholders.setLength(placeholders.length() - 2);
+
+        return "INSERT INTO " + tableName + " (" + fields + ") VALUES " + placeholders;
     }
 
     private <T extends BaseEntity> String generateUpdateSQL(T entity, String tableName) {

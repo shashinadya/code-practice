@@ -115,6 +115,36 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
+    public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
+                                                                   List<T> entities) {
+        if (entities == null || entities.isEmpty()) {
+            throw new IllegalArgumentException("Entities list cannot be null or empty");
+        }
+
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        if (!Files.exists(databasePath)) {
+            LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
+            throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
+        }
+
+        List<T> existingEntities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
+        String entityClassName = entityClass.getName();
+
+        for (T entity : entities) {
+            if (entity.getId() != null) {
+                throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
+            }
+            entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
+            existingEntities.add(entity);
+        }
+
+        saveEntitiesToDatabase(existingEntities, databasePath);
+
+        return entities;
+    }
+
+    @Override
     public <T extends BaseEntity> T updateRecordInTable(T entity, Integer id) {
         Class<? extends BaseEntity> entityClass = entity.getClass();
         Path databasePath = Path.of(getDatabasePath(entityClass));
@@ -143,6 +173,30 @@ public class JsonDatabaseService implements DatabaseService {
             saveEntitiesToDatabase(entities, databasePath);
         }
         return true;
+    }
+
+    @Override
+    public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException("IDs list cannot be null or empty");
+        }
+
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+
+        if (!Files.exists(databasePath)) {
+            LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
+            throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
+        }
+
+        List<? extends BaseEntity> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
+
+        boolean isAnyEntityRemoved = entities.removeIf(e -> ids.contains(e.getId()));
+
+        if (isAnyEntityRemoved) {
+            saveEntitiesToDatabase(entities, databasePath);
+        }
+
+        return isAnyEntityRemoved;
     }
 
     @Override

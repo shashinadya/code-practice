@@ -108,7 +108,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordIdProvidedManually() {
+    void addNewRecordIdProvidedManuallyTest() {
         jsonDatabaseService.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
@@ -122,6 +122,66 @@ class JsonDatabaseServiceTest {
                 jsonDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsToTablePositiveTest() {
+        List<Student> students = List.of(firstStudent, secondStudent);
+        jsonDatabaseService.createTable(Student.class);
+
+        assertEquals(students, jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+    }
+
+    @Test
+    void addNewRecordsWhenDatabaseDoesNotExistTest() {
+        List<Student> students = List.of(firstStudent, secondStudent);
+
+        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+
+        assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsIdProvidedManuallyTest() {
+        jsonDatabaseService.createTable(Student.class);
+
+        Student studentWithManuallyProvidedId = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+
+        studentWithManuallyProvidedId.setId(7);
+        List<Student> students = List.of(firstStudent, studentWithManuallyProvidedId);
+
+        IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+
+        assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsEmptyTest() {
+        List<Student> newStudents = List.of();
+
+        jsonDatabaseService.createTable(Student.class);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+
+        assertEquals("Entities list cannot be null or empty", exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsNullTest() {
+        List<Student> newStudents = null;
+
+        jsonDatabaseService.createTable(Student.class);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+
+        assertEquals("Entities list cannot be null or empty", exception.getMessage());
     }
 
     @Test
@@ -180,6 +240,29 @@ class JsonDatabaseServiceTest {
         assertEquals(studentsBeforeDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
         assertTrue(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
         assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsFromTablePositiveTest() {
+        List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent, thirdStudent);
+        List<Student> studentsAfterDeletion = List.of(firstStudent);
+        List<Integer> idsForDeletion = List.of(1, 2);
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
+
+        assertTrue(jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+        assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsIdsListIsEmptyTest() {
+        List<Integer> idsForDeletion = List.of();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+
+        assertEquals("IDs list cannot be null or empty", exception.getMessage());
     }
 
     @Test
