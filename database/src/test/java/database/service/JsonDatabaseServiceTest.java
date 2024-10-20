@@ -419,7 +419,7 @@ class JsonDatabaseServiceTest {
 
     @Test
     void getByFiltersIncorrectPropertyNameTest() {
-        Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1"));
+        Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1 LastName1"));
 
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
