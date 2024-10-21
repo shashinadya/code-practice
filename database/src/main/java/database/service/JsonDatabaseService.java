@@ -77,7 +77,9 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public boolean deleteTable(Class<? extends BaseEntity> entityClass) {
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
+
         try {
             Files.delete(databasePath);
             entityIds.remove(entityClass.getName());
@@ -94,7 +96,8 @@ public class JsonDatabaseService implements DatabaseService {
         validateIdNotProvidedManually(entity);
 
         Class<? extends BaseEntity> entityClass = entity.getClass();
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
         String entityClassName = entityClass.getName();
@@ -113,7 +116,8 @@ public class JsonDatabaseService implements DatabaseService {
             throw new IllegalArgumentException(ENTITIES_LIST_NULL_OR_EMPTY);
         }
 
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<T> existingEntities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
         String entityClassName = entityClass.getName();
@@ -131,7 +135,8 @@ public class JsonDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> T updateRecordInTable(T entity, Integer id) {
         Class<? extends BaseEntity> entityClass = entity.getClass();
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
@@ -148,7 +153,8 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id) {
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<? extends BaseEntity> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
@@ -165,7 +171,8 @@ public class JsonDatabaseService implements DatabaseService {
             throw new IllegalArgumentException(IDS_LIST_NULL_OR_EMPTY);
         }
 
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<? extends BaseEntity> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
@@ -179,7 +186,9 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass) {
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
+
         try {
             Files.writeString(databasePath, EMPTY_BRACKETS_TO_JSON);
         } catch (IOException e) {
@@ -190,7 +199,8 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public <T extends BaseEntity> T getById(Class<? extends BaseEntity> entityClass, Integer id) {
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
@@ -214,7 +224,9 @@ public class JsonDatabaseService implements DatabaseService {
                     .replace("{MAX_LIMIT_VALUE}", String.valueOf(maxLimitValue)));
         }
 
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
+
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
         return entities.stream()
                 .skip(offset)
@@ -225,7 +237,9 @@ public class JsonDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                            Map<String, List<String>> filters) {
-        Path databasePath = verifyDatabaseExists(entityClass);
+        Path databasePath = Path.of(getDatabasePath(entityClass));
+        verifyDatabaseExists(databasePath);
+
         List<Field> fields = getAllFields(entityClass);
         Validator.validateDatabaseFilters(fields, filters);
 
@@ -338,13 +352,11 @@ public class JsonDatabaseService implements DatabaseService {
         }
     }
 
-    private Path verifyDatabaseExists(Class<? extends BaseEntity> entityClass) {
-        Path databasePath = Path.of(getDatabasePath(entityClass));
+    private void verifyDatabaseExists(Path databasePath) {
         if (!Files.exists(databasePath)) {
             LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
             throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
         }
-        return databasePath;
     }
 
     private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
