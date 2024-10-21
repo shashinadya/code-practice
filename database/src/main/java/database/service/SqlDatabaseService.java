@@ -8,6 +8,7 @@ import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
 import database.helper.Validator;
@@ -27,7 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
@@ -35,17 +38,19 @@ public class SqlDatabaseService implements DatabaseService {
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
+    private final int batchSize;
     private final String databaseName;
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
     static final String TABLE_NOT_EXIST = "Table does not exist";
     static final String UNABLE_ADD_NEW_RECORD = "Unable to add new record to table";
-    static final String UNABLE_DELETE_RECORD = "Unable to delete record from table";
+    static final String UNABLE_DELETE_RECORD = "Unable to delete record or specific records from table";
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
     static final String ID_PARAMETER_NAME = "id";
 
     public SqlDatabaseService(Settings settings) {
         this.maxLimitValue = settings.getLimit();
+        this.batchSize = settings.getBatchSize();
         this.databaseName = settings.getDatabaseName();
         this.connectionPool = new MySQLConnectionPool(settings);
     }
@@ -108,18 +113,15 @@ public class SqlDatabaseService implements DatabaseService {
 
     @Override
     public <T extends BaseEntity> T addNewRecordToTable(T entity) {
-        if (entity.getId() != null) {
-            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
-        }
+        validateIdNotProvidedManually(entity);
 
         Class<? extends BaseEntity> entityClass = entity.getClass();
         String tableName = entityClass.getSimpleName();
-
         Connection connection = connectionPool.getConnection();
 
         try {
             if (checkTableExists(databaseName, tableName, connection)) {
-                String insertSQL = generateInsertSQL(entity, tableName);
+                String insertSQL = generateInsertSQL(entityClass, tableName);
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
                         Statement.RETURN_GENERATED_KEYS)) {
 
@@ -134,12 +136,7 @@ public class SqlDatabaseService implements DatabaseService {
                     }
 
                     try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
-                        if (generatedKeys.next()) {
-                            entity.setId(generatedKeys.getInt(1));
-                        } else {
-                            LOG.error("Creating record failed in table: {}, {}", tableName, insertSQL);
-                            throw new SQLException("Creating record failed, no ID obtained.");
-                        }
+                        assignGeneratedKeys(generatedKeys, entity, tableName);
                     }
                 }
             } else {
@@ -152,6 +149,43 @@ public class SqlDatabaseService implements DatabaseService {
             connectionPool.releaseConnection(connection);
         }
         return entity;
+    }
+
+    @Override
+    public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
+                                                                   List<T> entities) {
+        validateEntities(entities);
+
+        String tableName = entityClass.getSimpleName();
+        Connection connection = connectionPool.getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+
+            if (checkTableExists(databaseName, tableName, connection)) {
+                String insertSQL = generateInsertSQL(entityClass, tableName);
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    executeBatchInsert(preparedStatement, entities, batchSize, insertSQL);
+
+                    try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                        for (T entity : entities) {
+                            assignGeneratedKeys(generatedKeys, entity, tableName);
+                        }
+                    }
+                }
+                connection.commit();
+            } else {
+                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+            }
+        } catch (SQLException e) {
+            rollbackTransaction(connection, tableName, e);
+            throw new DatabaseOperationException(UNABLE_ADD_NEW_RECORD + ": " + e.getMessage());
+        } finally {
+            resetConnection(connection);
+        }
+        return entities;
     }
 
     @Override
@@ -186,13 +220,13 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id) {
         String tableName = entityClass.getSimpleName();
-        String deleteRecordSQL = "DELETE FROM " + tableName + " WHERE id = ?";
+        String deleteSQL = generateDeleteSQL(tableName);
 
-        LOG.info("Executing SQL: {}", deleteRecordSQL);
+        LOG.info("Executing SQL: {}", deleteSQL);
 
         Connection connection = connectionPool.getConnection();
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(deleteRecordSQL)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSQL)) {
             preparedStatement.setInt(1, id);
             preparedStatement.executeUpdate();
             return true;
@@ -202,6 +236,38 @@ public class SqlDatabaseService implements DatabaseService {
         } finally {
             connectionPool.releaseConnection(connection);
         }
+    }
+
+    @Override
+    public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new NullOrEmptyListException(IDS_LIST_NULL_OR_EMPTY);
+        }
+
+        String tableName = entityClass.getSimpleName();
+        Connection connection = connectionPool.getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+
+            if (checkTableExists(databaseName, tableName, connection)) {
+                String deleteSQL = generateDeleteSQL(tableName);
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSQL)) {
+                    executeBatchDelete(preparedStatement, ids, batchSize, deleteSQL);
+                }
+                connection.commit();
+            } else {
+                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+            }
+        } catch (SQLException e) {
+            rollbackTransaction(connection, tableName, e);
+            LOG.error(UNABLE_DELETE_RECORD + ": {}, {}", tableName, e.getMessage());
+            throw new DeletionDatabaseException(UNABLE_DELETE_RECORD + ": " + tableName + ", " + e.getMessage());
+        } finally {
+            resetConnection(connection);
+        }
+        return true;
     }
 
     @Override
@@ -300,46 +366,17 @@ public class SqlDatabaseService implements DatabaseService {
         Validator.validateDatabaseFilters(fields, filters);
 
         String tableName = entityClass.getSimpleName();
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM " + tableName);
-
-        if (!filters.isEmpty()) {
-            sqlBuilder.append(" WHERE ");
-            List<String> conditions = new ArrayList<>();
-
-            for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
-                if (filter.getValue().size() > 1) {
-                    String placeholders = filter.getValue().stream()
-                            .map(v -> "?")
-                            .collect(Collectors.joining(", "));
-                    conditions.add(filter.getKey() + " IN (" + placeholders + ")");
-                } else {
-                    conditions.add(filter.getKey() + " = ?");
-                }
-            }
-
-            sqlBuilder.append(String.join(" AND ", conditions));
-        }
-
-        String selectRecordsByFiltersSQL = sqlBuilder.toString();
+        String selectRecordsByFiltersSQL = "SELECT * FROM " + tableName + buildWhereClause(filters);
 
         LOG.info("Executing SQL: {}", selectRecordsByFiltersSQL);
 
         Connection connection = connectionPool.getConnection();
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(selectRecordsByFiltersSQL)) {
-            int index = 1;
-            for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
-                for (String value : filter.getValue()) {
-                    preparedStatement.setObject(index++, value);
-                }
-            }
+            setPreparedStatementParametersForFilters(preparedStatement, filters);
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                List<T> entities = new ArrayList<>();
-                while (resultSet.next()) {
-                    entities.add(createAndFillEntity(entityClass, resultSet));
-                }
-                return entities;
+                return createAndFillEntities(entityClass, resultSet);
             }
         } catch (SQLException | ReflectiveOperationException e) {
             LOG.error("Error retrieving records by filters: {}", e.getMessage());
@@ -416,27 +453,11 @@ public class SqlDatabaseService implements DatabaseService {
                 if (field.getName().equals(ID_PARAMETER_NAME)) {
                     continue;
                 }
-                field.setAccessible(true);
 
+                field.setAccessible(true);
                 Object value = field.get(entity);
 
-                if (value != null) {
-                    if (value instanceof String) {
-                        preparedStatement.setString(parameterIndex, (String) value);
-                    } else if (value instanceof Integer) {
-                        preparedStatement.setInt(parameterIndex, (Integer) value);
-                    } else if (value instanceof Long) {
-                        preparedStatement.setLong(parameterIndex, (Long) value);
-                    } else if (value instanceof Date) {
-                        preparedStatement.setDate(parameterIndex, new java.sql.Date(((Date) value).getTime()));
-                    } else if (value instanceof Boolean) {
-                        preparedStatement.setBoolean(parameterIndex, (Boolean) value);
-                    } else {
-                        preparedStatement.setObject(parameterIndex, value);
-                    }
-                } else {
-                    preparedStatement.setNull(parameterIndex, java.sql.Types.NULL);
-                }
+                setPreparedStatementValue(preparedStatement, parameterIndex, value);
                 parameterIndex++;
             }
 
@@ -450,24 +471,61 @@ public class SqlDatabaseService implements DatabaseService {
         }
     }
 
-    private String generateInsertSQL(BaseEntity entity, String tableName) {
-        StringBuilder fields = new StringBuilder();
-        StringBuilder placeholders = new StringBuilder();
-
-        List<Field> entityFields = getAllFields(entity.getClass());
-        for (Field field : entityFields) {
-            field.setAccessible(true);
-
-            if (field.getName().equals(ID_PARAMETER_NAME)) {
-                continue;
+    private void setPreparedStatementValue(PreparedStatement preparedStatement, int parameterIndex, Object value)
+            throws SQLException {
+        if (value != null) {
+            if (value instanceof String) {
+                preparedStatement.setString(parameterIndex, (String) value);
+            } else if (value instanceof Integer) {
+                preparedStatement.setInt(parameterIndex, (Integer) value);
+            } else if (value instanceof Long) {
+                preparedStatement.setLong(parameterIndex, (Long) value);
+            } else if (value instanceof Date) {
+                preparedStatement.setDate(parameterIndex, new java.sql.Date(((Date) value).getTime()));
+            } else if (value instanceof Boolean) {
+                preparedStatement.setBoolean(parameterIndex, (Boolean) value);
+            } else {
+                preparedStatement.setObject(parameterIndex, value);
             }
+        } else {
+            preparedStatement.setNull(parameterIndex, java.sql.Types.NULL);
+        }
+    }
 
-            fields.append(field.getName()).append(", ");
-            placeholders.append("?, ");
+    private void setPreparedStatementParametersForFilters(PreparedStatement preparedStatement,
+                                                          Map<String, List<String>> filters) throws SQLException {
+        int index = 1;
+        for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
+            for (String value : filter.getValue()) {
+                preparedStatement.setObject(index++, value);
+            }
+        }
+    }
+
+    private String buildWhereClause(Map<String, List<String>> filters) {
+        if (filters.isEmpty()) {
+            return "";
         }
 
-        fields.setLength(fields.length() - 2);
-        placeholders.setLength(placeholders.length() - 2);
+        List<String> conditions = new ArrayList<>();
+        for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
+            if (filter.getValue().size() > 1) {
+                String placeholders = filter.getValue().stream()
+                        .map(v -> "?")
+                        .collect(Collectors.joining(", "));
+                conditions.add(filter.getKey() + " IN (" + placeholders + ")");
+            } else {
+                conditions.add(filter.getKey() + " = ?");
+            }
+        }
+
+        return " WHERE " + String.join(" AND ", conditions);
+    }
+
+    private String generateInsertSQL(Class<? extends BaseEntity> entityClass, String tableName) {
+        List<String> fieldsAndPlaceholders = generateFieldsAndPlaceholders(entityClass);
+        String fields = fieldsAndPlaceholders.get(0);
+        String placeholders = fieldsAndPlaceholders.get(1);
 
         return "INSERT INTO " + tableName + " (" + fields + ") VALUES (" + placeholders + ")";
     }
@@ -489,8 +547,37 @@ public class SqlDatabaseService implements DatabaseService {
         return sql.toString();
     }
 
-    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet
-            resultSet)
+    private String generateDeleteSQL(String tableName) {
+        return "DELETE FROM " + tableName + " WHERE id = ?";
+    }
+
+    private List<String> generateFieldsAndPlaceholders(Class<? extends BaseEntity> entityClass) {
+        StringBuilder fields = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+
+        List<Field> entityFields = getAllFields(entityClass);
+        for (Field field : entityFields) {
+            field.setAccessible(true);
+
+            if (field.getName().equals(ID_PARAMETER_NAME)) {
+                continue;
+            }
+
+            fields.append(field.getName()).append(", ");
+            placeholders.append("?, ");
+        }
+
+        if (!fields.isEmpty()) {
+            fields.setLength(fields.length() - 2);
+        }
+        if (!placeholders.isEmpty()) {
+            placeholders.setLength(placeholders.length() - 2);
+        }
+
+        return List.of(fields.toString(), placeholders.toString());
+    }
+
+    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet resultSet)
             throws ReflectiveOperationException, SQLException {
         T entity = (T) entityClass.getDeclaredConstructor().newInstance();
         List<Field> entityFields = getAllFields(entityClass);
@@ -502,5 +589,96 @@ public class SqlDatabaseService implements DatabaseService {
             field.set(entity, value);
         }
         return entity;
+    }
+
+    private <T extends BaseEntity> List<T> createAndFillEntities(Class<? extends BaseEntity> entityClass,
+                                                                 ResultSet resultSet)
+            throws ReflectiveOperationException, SQLException {
+        List<T> entities = new ArrayList<>();
+        while (resultSet.next()) {
+            entities.add(createAndFillEntity(entityClass, resultSet));
+        }
+        return entities;
+    }
+
+    private <T extends BaseEntity> void validateEntities(List<T> entities) {
+        if (entities == null || entities.isEmpty()) {
+            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
+        }
+        for (T entity : entities) {
+            validateIdNotProvidedManually(entity);
+        }
+    }
+
+    private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
+        if (entity.getId() != null) {
+            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
+        }
+    }
+
+    private <T extends BaseEntity> void executeBatchInsert(PreparedStatement preparedStatement, List<T> entities,
+                                                           int batchSize, String insertSQL) throws SQLException {
+        int count = 0;
+
+        for (T entity : entities) {
+            setPreparedStatementValues(preparedStatement, entity, false, null);
+            preparedStatement.addBatch();
+
+            if (++count % batchSize == 0) {
+                preparedStatement.executeBatch();
+            }
+        }
+
+        LOG.info("Executing SQL: {}", insertSQL);
+        preparedStatement.executeBatch();
+    }
+
+    private void executeBatchDelete(PreparedStatement preparedStatement, List<Integer> ids, int batchSize,
+                                    String deleteSQL) throws SQLException {
+        int count = 0;
+
+        for (Integer id : ids) {
+            preparedStatement.setInt(1, id);
+            preparedStatement.addBatch();
+
+            if (++count % batchSize == 0) {
+                preparedStatement.executeBatch();
+            }
+        }
+
+        LOG.info("Executing SQL: {}", deleteSQL);
+        preparedStatement.executeBatch();
+    }
+
+    private <T extends BaseEntity> void assignGeneratedKeys(ResultSet generatedKeys, T entity, String tableName)
+            throws SQLException {
+        if (generatedKeys.next()) {
+            entity.setId(generatedKeys.getInt(1));
+        } else {
+            LOG.error("Creating record failed in table: {}", tableName);
+            throw new SQLException("Creating record failed, no ID obtained.");
+        }
+    }
+
+    private void rollbackTransaction(Connection connection, String tableName, SQLException e) {
+        LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
+        try {
+            if (connection != null) {
+                connection.rollback();
+            }
+        } catch (SQLException rollbackEx) {
+            LOG.error("Rollback failed: {}", rollbackEx.getMessage());
+        }
+    }
+
+    private void resetConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.setAutoCommit(true);
+                connectionPool.releaseConnection(connection);
+            } catch (SQLException e) {
+                LOG.error("Failed to reset auto-commit: {}", e.getMessage());
+            }
+        }
     }
 }

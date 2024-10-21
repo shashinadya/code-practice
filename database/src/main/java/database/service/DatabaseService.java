@@ -13,9 +13,13 @@ public interface DatabaseService {
 
     <T extends BaseEntity> T addNewRecordToTable(T entity);
 
+    <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass, List<T> entities);
+
     <T extends BaseEntity> T updateRecordInTable(T entity, Integer id);
 
     boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id);
+
+    boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids);
 
     void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 
