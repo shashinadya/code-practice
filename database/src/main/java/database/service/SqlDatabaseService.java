@@ -8,6 +8,7 @@ import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
 import database.helper.Validator;
@@ -37,6 +38,7 @@ public class SqlDatabaseService implements DatabaseService {
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
+    private final int batchSize;
     private final String databaseName;
     static final String UNABLE_CREATE_TABLE = "Unable to create table. Please check if it already exists";
     static final String UNABLE_DELETE_TABLE = "Unable to delete table. Please check if table does not exist";
@@ -48,6 +50,7 @@ public class SqlDatabaseService implements DatabaseService {
 
     public SqlDatabaseService(Settings settings) {
         this.maxLimitValue = settings.getLimit();
+        this.batchSize = settings.getBatchSize();
         this.databaseName = settings.getDatabaseName();
         this.connectionPool = new MySQLConnectionPool(settings);
     }
@@ -164,7 +167,7 @@ public class SqlDatabaseService implements DatabaseService {
 
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSQL,
                         Statement.RETURN_GENERATED_KEYS)) {
-                    executeBatchInsert(preparedStatement, entities, 1000, insertSQL);
+                    executeBatchInsert(preparedStatement, entities, batchSize, insertSQL);
 
                     try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                         for (T entity : entities) {
@@ -238,7 +241,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new IllegalArgumentException(IDS_LIST_NULL_OR_EMPTY);
+            throw new NullOrEmptyListException(IDS_LIST_NULL_OR_EMPTY);
         }
 
         String tableName = entityClass.getSimpleName();
@@ -251,7 +254,7 @@ public class SqlDatabaseService implements DatabaseService {
                 String deleteSQL = generateDeleteSQL(tableName);
 
                 try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSQL)) {
-                    executeBatchDelete(preparedStatement, ids, 1000, deleteSQL);
+                    executeBatchDelete(preparedStatement, ids, batchSize, deleteSQL);
                 }
                 connection.commit();
             } else {
@@ -520,9 +523,9 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     private String generateInsertSQL(Class<? extends BaseEntity> entityClass, String tableName) {
-        String[] fieldsAndPlaceholders = generateFieldsAndPlaceholders(entityClass);
-        String fields = fieldsAndPlaceholders[0];
-        String placeholders = fieldsAndPlaceholders[1];
+        List<String> fieldsAndPlaceholders = generateFieldsAndPlaceholders(entityClass);
+        String fields = fieldsAndPlaceholders.get(0);
+        String placeholders = fieldsAndPlaceholders.get(1);
 
         return "INSERT INTO " + tableName + " (" + fields + ") VALUES (" + placeholders + ")";
     }
@@ -548,7 +551,7 @@ public class SqlDatabaseService implements DatabaseService {
         return "DELETE FROM " + tableName + " WHERE id = ?";
     }
 
-    private String[] generateFieldsAndPlaceholders(Class<? extends BaseEntity> entityClass) {
+    private List<String> generateFieldsAndPlaceholders(Class<? extends BaseEntity> entityClass) {
         StringBuilder fields = new StringBuilder();
         StringBuilder placeholders = new StringBuilder();
 
@@ -571,11 +574,10 @@ public class SqlDatabaseService implements DatabaseService {
             placeholders.setLength(placeholders.length() - 2);
         }
 
-        return new String[]{fields.toString(), placeholders.toString()};
+        return List.of(fields.toString(), placeholders.toString());
     }
 
-    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet
-            resultSet)
+    private <T extends BaseEntity> T createAndFillEntity(Class<? extends BaseEntity> entityClass, ResultSet resultSet)
             throws ReflectiveOperationException, SQLException {
         T entity = (T) entityClass.getDeclaredConstructor().newInstance();
         List<Field> entityFields = getAllFields(entityClass);
@@ -601,7 +603,7 @@ public class SqlDatabaseService implements DatabaseService {
 
     private <T extends BaseEntity> void validateEntities(List<T> entities) {
         if (entities == null || entities.isEmpty()) {
-            throw new IllegalArgumentException(ENTITIES_LIST_NULL_OR_EMPTY);
+            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
         }
         for (T entity : entities) {
             validateIdNotProvidedManually(entity);
@@ -615,8 +617,7 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     private <T extends BaseEntity> void executeBatchInsert(PreparedStatement preparedStatement, List<T> entities,
-                                                           int batchSize, String insertSQL)
-            throws SQLException {
+                                                           int batchSize, String insertSQL) throws SQLException {
         int count = 0;
 
         for (T entity : entities) {

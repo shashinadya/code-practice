@@ -9,6 +9,7 @@ import database.entity.Student;
 import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.NullPropertyNameOrValueException;
 import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
@@ -171,7 +172,7 @@ class JsonDatabaseServiceTest {
     void addNewRecordsEntitiesListIsEmptyTest() {
         jsonDatabaseService.createTable(Student.class);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
                 jsonDatabaseService.addNewRecordsToTable(Student.class, List.of()));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
@@ -181,7 +182,7 @@ class JsonDatabaseServiceTest {
     void addNewRecordsEntitiesListIsNullTest() {
         jsonDatabaseService.createTable(Student.class);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
                 jsonDatabaseService.addNewRecordsToTable(Student.class, null));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
@@ -262,7 +263,7 @@ class JsonDatabaseServiceTest {
     void removeSpecificRecordsIdsListIsEmptyTest() {
         List<Integer> idsForDeletion = List.of();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
                 jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
 
         assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());

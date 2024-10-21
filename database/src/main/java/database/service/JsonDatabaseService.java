@@ -7,6 +7,7 @@ import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.ReadFileException;
 import database.exception.SerializeDatabaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -113,7 +114,7 @@ public class JsonDatabaseService implements DatabaseService {
     public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
                                                                    List<T> entities) {
         if (entities == null || entities.isEmpty()) {
-            throw new IllegalArgumentException(ENTITIES_LIST_NULL_OR_EMPTY);
+            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
         }
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
@@ -168,7 +169,7 @@ public class JsonDatabaseService implements DatabaseService {
     @Override
     public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new IllegalArgumentException(IDS_LIST_NULL_OR_EMPTY);
+            throw new NullOrEmptyListException(IDS_LIST_NULL_OR_EMPTY);
         }
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
