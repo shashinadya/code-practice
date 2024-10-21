@@ -9,6 +9,7 @@ import database.entity.Student;
 import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.NullPropertyNameOrValueException;
 import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +26,9 @@ import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
+import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,7 +86,10 @@ class JsonDatabaseServiceTest {
 
     @Test
     void deleteTableWhenTableDoesNotExistTest() {
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+                jsonDatabaseService.deleteTable(Student.class));
+
+        assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
@@ -108,7 +114,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordIdProvidedManually() {
+    void addNewRecordIdProvidedManuallyTest() {
         jsonDatabaseService.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
@@ -125,11 +131,69 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
+    void addNewRecordsToTablePositiveTest() {
+        List<Student> students = List.of(firstStudent, secondStudent);
+        jsonDatabaseService.createTable(Student.class);
+
+        assertEquals(students, jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+        assertEquals(firstStudent, jsonDatabaseService.getById(Student.class, 0));
+        assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
+    }
+
+    @Test
+    void addNewRecordsWhenDatabaseDoesNotExistTest() {
+        List<Student> students = List.of(firstStudent, secondStudent);
+
+        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+
+        assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsIdProvidedManuallyTest() {
+        jsonDatabaseService.createTable(Student.class);
+
+        Student studentWithManuallyProvidedId = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+
+        studentWithManuallyProvidedId.setId(7);
+        List<Student> students = List.of(firstStudent, studentWithManuallyProvidedId);
+
+        IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+
+        assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsEmptyTest() {
+        jsonDatabaseService.createTable(Student.class);
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, List.of()));
+
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsNullTest() {
+        jsonDatabaseService.createTable(Student.class);
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                jsonDatabaseService.addNewRecordsToTable(Student.class, null));
+
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
+    }
+
+    @Test
     void updateRecordInTableWIthCorrectIdTest() {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        //Check that original Id is not changed
+
         secondStudent.setId(5);
 
         assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
@@ -180,6 +244,29 @@ class JsonDatabaseServiceTest {
         assertEquals(studentsBeforeDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
         assertTrue(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
         assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsFromTablePositiveTest() {
+        List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent, thirdStudent);
+        List<Student> studentsAfterDeletion = List.of(firstStudent);
+        List<Integer> idsForDeletion = List.of(1, 2);
+
+        jsonDatabaseService.createTable(Student.class);
+        jsonDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
+
+        assertTrue(jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+        assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsIdsListIsEmptyTest() {
+        List<Integer> idsForDeletion = List.of();
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+
+        assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test

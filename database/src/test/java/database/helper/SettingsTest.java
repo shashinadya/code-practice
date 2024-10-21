@@ -2,6 +2,7 @@ package database.helper;
 
 import org.junit.jupiter.api.Test;
 
+import static database.helper.Settings.DEFAULT_BATCH_SIZE_VALUE;
 import static database.helper.Settings.DEFAULT_DATABASE_STORAGE_PATH;
 import static database.helper.Settings.DEFAULT_DB_BASE_URL_VALUE;
 import static database.helper.Settings.DEFAULT_DB_NAME_VALUE;
@@ -125,5 +126,17 @@ class SettingsTest {
     void getMaxPoolSizeDefaultValueReturnedTest() {
         settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
         assertEquals(DEFAULT_MAX_POOL_SIZE_VALUE, settings.getMaxPoolSize());
+    }
+
+    @Test
+    void getBatchSizeTest() {
+        settings = new Settings("Db_app_properties_files/application.properties");
+        assertEquals(100, settings.getBatchSize());
+    }
+
+    @Test
+    void getBatchSizeDefaultValueReturnedTest() {
+        settings = new Settings("Db_app_properties_files/applicationFileNotExist.properties");
+        assertEquals(DEFAULT_BATCH_SIZE_VALUE, settings.getBatchSize());
     }
 }

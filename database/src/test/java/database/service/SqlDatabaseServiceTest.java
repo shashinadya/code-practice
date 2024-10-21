@@ -1,6 +1,5 @@
 package database.service;
 
-import database.entity.BaseEntity;
 import database.entity.Course;
 import database.entity.OxfordStudent;
 import database.entity.Student;
@@ -11,6 +10,7 @@ import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
 import database.exception.InvalidParameterValueException;
+import database.exception.NullOrEmptyListException;
 import database.exception.NullPropertyNameOrValueException;
 import database.helper.Settings;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +24,9 @@ import java.util.Map;
 import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
 import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
+import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static database.service.SqlDatabaseService.TABLE_NOT_EXIST;
@@ -73,34 +75,27 @@ public class SqlDatabaseServiceTest {
 
     @Test
     void createTableTest() {
-        Class<? extends BaseEntity> entityClass = Student.class;
-
-        assertTrue(sqlDatabaseService.createTable(entityClass));
+        assertTrue(sqlDatabaseService.createTable(Student.class));
     }
 
     @Test
     void createTableFailedTest() {
-        Class<? extends BaseEntity> entityClass = Student.class;
-        sqlDatabaseService.createTable(entityClass);
+        sqlDatabaseService.createTable(Student.class);
 
         CreationDatabaseException exception = assertThrows(CreationDatabaseException.class, () ->
-                sqlDatabaseService.createTable(entityClass));
+                sqlDatabaseService.createTable(Student.class));
         assertTrue(exception.getMessage().startsWith(UNABLE_CREATE_TABLE));
     }
 
     @Test
     void deleteTableTest() {
-        Class<? extends BaseEntity> entityClass = Student.class;
-
-        sqlDatabaseService.createTable(entityClass);
-        assertTrue(sqlDatabaseService.deleteTable(entityClass));
+        sqlDatabaseService.createTable(Student.class);
+        assertTrue(sqlDatabaseService.deleteTable(Student.class));
     }
 
     @Test
     void addNewRecordToTablePositiveTest() {
-        Class<? extends BaseEntity> entityClass = Student.class;
-
-        sqlDatabaseService.createTable(entityClass);
+        sqlDatabaseService.createTable(Student.class);
 
         Student receivedFirstStudent = sqlDatabaseService.addNewRecordToTable(firstStudent);
         assertEquals(firstStudent, receivedFirstStudent);
@@ -120,7 +115,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordIdProvidedManually() {
+    void addNewRecordIdProvidedManuallyTest() {
         sqlDatabaseService.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
@@ -137,11 +132,70 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
+    void addNewRecordsToTablePositiveTest() {
+        List<Student> newStudents = List.of(firstStudent, secondStudent);
+
+        sqlDatabaseService.createTable(Student.class);
+
+        assertEquals(newStudents, sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+        assertEquals(firstStudent, sqlDatabaseService.getById(Student.class, 1));
+        assertEquals(secondStudent, sqlDatabaseService.getById(Student.class, 2));
+    }
+
+    @Test
+    void addNewRecordsWhenDatabaseDoesNotExistTest() {
+        List<Student> newStudents = List.of(firstStudent, secondStudent);
+
+        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+                sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+
+        assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
+    }
+
+    @Test
+    void addNewRecordsIdProvidedManuallyTest() {
+        sqlDatabaseService.createTable(Student.class);
+
+        Student studentWithManuallyProvidedId = new Student.Builder()
+                .withFullName("FirstName1 LastName1")
+                .withAverageScore(5.0)
+                .build();
+
+        studentWithManuallyProvidedId.setId(7);
+        List<Student> newStudents = List.of(firstStudent, studentWithManuallyProvidedId);
+
+        IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
+                sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+
+        assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsEmptyTest() {
+        sqlDatabaseService.createTable(Student.class);
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                sqlDatabaseService.addNewRecordsToTable(Student.class, List.of()));
+
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsNullTest() {
+        sqlDatabaseService.createTable(Student.class);
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                sqlDatabaseService.addNewRecordsToTable(Student.class, null));
+
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
+    }
+
+    @Test
     void updateRecordInTableWIthCorrectIdTest() {
         sqlDatabaseService.createTable(Student.class);
         sqlDatabaseService.addNewRecordToTable(firstStudent);
         sqlDatabaseService.addNewRecordToTable(thirdStudent);
-        //Check that original Id is not changed
+
         secondStudent.setId(5);
 
         assertEquals(secondStudent, sqlDatabaseService.updateRecordInTable(secondStudent, 1));
@@ -194,6 +248,29 @@ public class SqlDatabaseServiceTest {
         assertEquals(studentsBeforeDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
         assertTrue(sqlDatabaseService.removeRecordFromTable(Student.class, 1));
         assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsFromTablePositiveTest() {
+        List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent, thirdStudent);
+        List<Student> studentsAfterDeletion = List.of(firstStudent);
+        List<Integer> idsForDeletion = List.of(2, 3);
+
+        sqlDatabaseService.createTable(Student.class);
+        sqlDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
+
+        assertTrue(sqlDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+        assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+    }
+
+    @Test
+    void removeSpecificRecordsIdsListIsEmptyTest() {
+        List<Integer> idsForDeletion = List.of();
+
+        NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
+                sqlDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+
+        assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
