@@ -23,7 +23,9 @@ import java.util.Map;
 import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
 import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
+import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static database.service.SqlDatabaseService.TABLE_NOT_EXIST;
@@ -135,6 +137,8 @@ public class SqlDatabaseServiceTest {
         sqlDatabaseService.createTable(Student.class);
 
         assertEquals(newStudents, sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+        assertEquals(firstStudent, sqlDatabaseService.getById(Student.class, 1));
+        assertEquals(secondStudent, sqlDatabaseService.getById(Student.class, 2));
     }
 
     @Test
@@ -167,14 +171,22 @@ public class SqlDatabaseServiceTest {
 
     @Test
     void addNewRecordsEntitiesListIsEmptyTest() {
-        List<Student> newStudents = List.of();
-
         sqlDatabaseService.createTable(Student.class);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+                sqlDatabaseService.addNewRecordsToTable(Student.class, List.of()));
 
-        assertEquals("Entities list cannot be empty", exception.getMessage());
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
+    }
+
+    @Test
+    void addNewRecordsEntitiesListIsNullTest() {
+        sqlDatabaseService.createTable(Student.class);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                sqlDatabaseService.addNewRecordsToTable(Student.class, null));
+
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
@@ -257,7 +269,7 @@ public class SqlDatabaseServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 sqlDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
 
-        assertEquals("IDs list cannot be null or empty", exception.getMessage());
+        assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test

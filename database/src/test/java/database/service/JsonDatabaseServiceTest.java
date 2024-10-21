@@ -25,7 +25,9 @@ import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
 import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
+import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
+import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,7 +85,10 @@ class JsonDatabaseServiceTest {
 
     @Test
     void deleteTableWhenTableDoesNotExistTest() {
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+                jsonDatabaseService.deleteTable(Student.class));
+
+        assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
@@ -130,6 +135,8 @@ class JsonDatabaseServiceTest {
         jsonDatabaseService.createTable(Student.class);
 
         assertEquals(students, jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+        assertEquals(firstStudent, jsonDatabaseService.getById(Student.class, 0));
+        assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
     }
 
     @Test
@@ -162,26 +169,22 @@ class JsonDatabaseServiceTest {
 
     @Test
     void addNewRecordsEntitiesListIsEmptyTest() {
-        List<Student> newStudents = List.of();
-
         jsonDatabaseService.createTable(Student.class);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+                jsonDatabaseService.addNewRecordsToTable(Student.class, List.of()));
 
-        assertEquals("Entities list cannot be null or empty", exception.getMessage());
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void addNewRecordsEntitiesListIsNullTest() {
-        List<Student> newStudents = null;
-
         jsonDatabaseService.createTable(Student.class);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+                jsonDatabaseService.addNewRecordsToTable(Student.class, null));
 
-        assertEquals("Entities list cannot be null or empty", exception.getMessage());
+        assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
@@ -189,7 +192,7 @@ class JsonDatabaseServiceTest {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordToTable(firstStudent);
         jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        //Check that original Id is not changed
+
         secondStudent.setId(5);
 
         assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
@@ -262,7 +265,7 @@ class JsonDatabaseServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
 
-        assertEquals("IDs list cannot be null or empty", exception.getMessage());
+        assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
