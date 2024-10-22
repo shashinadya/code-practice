@@ -1,5 +1,7 @@
 package database.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import database.entity.BaseEntity;
 import database.entity.Course;
 import database.entity.OxfordStudent;
@@ -31,7 +33,6 @@ class DatabaseServiceRestControllerTest {
     private final DatabaseServiceRestController controller = new DatabaseServiceRestController(databaseService,
             Set.of(Student.class, OxfordStudent.class, Course.class));
 
-
     @Test
     void POST_to_create_table_returns_true() {
         String entityClass = "Student";
@@ -44,7 +45,7 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void POST_to_create_table_returns_500_when_database_already_exists() {
+    void POST_to_create_table_returns_500_when_table_already_exists() {
         String entityClass = "Student";
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
@@ -65,7 +66,7 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void DELETE_to_delete_table_returns_500_when_database_not_exist() {
+    void DELETE_to_delete_table_returns_500_when_table_not_exist() {
         String entityClass = "Student";
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
@@ -89,7 +90,7 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void POST_to_add_new_record_returns_400_when_database_not_exists() {
+    void POST_to_add_new_record_returns_400_when_table_not_exist() {
         String entityClass = "Student";
         Student entity = new Student();
 
@@ -98,6 +99,35 @@ class DatabaseServiceRestControllerTest {
         when(databaseService.addNewRecordToTable(entity)).thenThrow(BadRequestResponse.class);
 
         assertThrows(BadRequestResponse.class, () -> controller.handleAddNewRecord(ctx));
+    }
+
+    @Test
+    void POST_to_add_new_records_returns_json_with_entities() throws JsonProcessingException {
+        String entityClass = "Student";
+        List<Student> newStudents = List.of(new Student("Iva", 3.5), new Student("Nadya", 4.5));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(newStudents);
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.body()).thenReturn(jsonString);
+        when(databaseService.addNewRecordsToTable(Student.class, newStudents)).thenReturn(newStudents);
+
+        controller.handleAddNewRecords(ctx);
+        verify(ctx).json(newStudents);
+    }
+
+    @Test
+    void POST_to_add_new_records_returns_400_when_table_not_exist() throws JsonProcessingException {
+        String entityClass = "Student";
+        List<Student> newStudents = List.of(new Student("Iva", 3.5), new Student("Nadya", 4.5));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(newStudents);
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.body()).thenReturn(jsonString);
+        when(databaseService.addNewRecordsToTable(Student.class, newStudents)).thenThrow(BadRequestResponse.class);
+
+        assertThrows(BadRequestResponse.class, () -> controller.handleAddNewRecords(ctx));
     }
 
     @Test
@@ -127,7 +157,7 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void GET_to_get_all_records_returns_500_when_database_not_exist() {
+    void GET_to_get_all_records_returns_500_when_table_not_exist() {
         String entityClass = "Student";
 
         when(ctx.pathParam("entityClass")).thenReturn(entityClass);
@@ -216,6 +246,32 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
+    void DELETE_to_remove_specific_records_returns_true() {
+        String entityClass = "Student";
+        List<Integer> ids = List.of(1, 2);
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.bodyAsClass(Integer[].class)).thenReturn(ids.toArray(new Integer[0]));
+        when(databaseService.removeSpecificRecordsFromTable(Student.class, ids)).thenReturn(true);
+
+        controller.handleRemoveSpecificRecords(ctx);
+        verify(ctx).json(true);
+    }
+
+    @Test
+    void DELETE_to_remove_specific_records_returns_false() {
+        String entityClass = "Student";
+        List<Integer> ids = List.of(1, 2);
+
+        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.bodyAsClass(Integer[].class)).thenReturn(ids.toArray(new Integer[0]));
+        when(databaseService.removeSpecificRecordsFromTable(Student.class, ids)).thenReturn(false);
+
+        controller.handleRemoveSpecificRecords(ctx);
+        verify(ctx).json(false);
+    }
+
+    @Test
     void DELETE_to_remove_all_records_returns_true() {
         String entityClass = "Student";
 
@@ -242,7 +298,7 @@ class DatabaseServiceRestControllerTest {
     }
 
     @Test
-    void GET_to_get_record_by_id_returns_404_when_database_not_exist() {
+    void GET_to_get_record_by_id_returns_404_when_table_not_exist() {
         String entityClass = "Student";
         int id = 1;
         Student entity = new Student();

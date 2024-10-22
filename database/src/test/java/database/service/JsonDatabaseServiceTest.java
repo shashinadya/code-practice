@@ -2,7 +2,7 @@ package database.service;
 
 import database.entity.Course;
 import database.entity.OxfordStudent;
-import database.exception.DatabaseDoesNotExistException;
+import database.exception.TableDoesNotExistException;
 import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
 import database.entity.Student;
@@ -86,7 +86,7 @@ class JsonDatabaseServiceTest {
 
     @Test
     void deleteTableWhenTableDoesNotExistTest() {
-        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+        TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
                 jsonDatabaseService.deleteTable(Student.class));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
@@ -106,8 +106,8 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordWhenDatabaseDoesNotExistTest() {
-        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+    void addNewRecordWhenTableDoesNotExistTest() {
+        TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
                 jsonDatabaseService.addNewRecordToTable(firstStudent));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
@@ -141,10 +141,10 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordsWhenDatabaseDoesNotExistTest() {
+    void addNewRecordsWhenTableDoesNotExistTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
 
-        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+        TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
                 jsonDatabaseService.addNewRecordsToTable(Student.class, students));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
@@ -255,7 +255,7 @@ class JsonDatabaseServiceTest {
         jsonDatabaseService.createTable(Student.class);
         jsonDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
 
-        assertTrue(jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+        assertTrue(jsonDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
         assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
     }
 
@@ -264,7 +264,7 @@ class JsonDatabaseServiceTest {
         List<Integer> idsForDeletion = List.of();
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                jsonDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+                jsonDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
 
         assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
@@ -341,7 +341,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithValidLimitOffsetParametersTest() {
+    void getAllRecordsWithValidLimitOffsetParametersTest() {
         List<Student> resultStudents = List.of(secondStudent, thirdStudent);
 
         jsonDatabaseService.createTable(Student.class);
@@ -354,7 +354,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithNegativeLimitOffsetParametersTest() {
+    void getAllRecordsWithNegativeLimitOffsetParametersTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
 
@@ -363,7 +363,7 @@ class JsonDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithOverLimitParameterTest() {
+    void getAllRecordsWithOverLimitParameterTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 jsonDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
 

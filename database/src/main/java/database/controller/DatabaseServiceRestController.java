@@ -1,7 +1,9 @@
 package database.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import database.entity.BaseEntity;
 import database.exception.BadRequestException;
+import database.exception.DeserializeDatabaseException;
 import database.exception.IdMismatchException;
 import database.exception.InvalidParameterValueException;
 import database.service.DatabaseService;
@@ -15,6 +17,8 @@ import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiRequestBody;
 import io.javalin.openapi.OpenApiResponse;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +51,10 @@ public class DatabaseServiceRestController {
                     post(this::handleAddNewRecord);
                     get(this::handleGetAllRecords);
                     delete(this::handleRemoveAllRecords);
+                    path("/batch", () -> {
+                        post(this::handleAddNewRecords);
+                        delete(this::handleRemoveSpecificRecords);
+                    });
                     path("/filter", () -> get(this::handleGetByFilters));
                     path("/{id}", () -> {
                         put(this::handleUpdateRecord);
@@ -120,6 +128,44 @@ public class DatabaseServiceRestController {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         var entity = ctx.bodyAsClass(entityClass);
         ctx.json(databaseService.addNewRecordToTable(entity));
+    }
+
+    @OpenApi(
+            summary = "Add multiple new records to a table",
+            operationId = "addNewRecords",
+            path = "/api/v1/database/{entityClass}/batch",
+            methods = HttpMethod.POST,
+            pathParams = {
+                    @OpenApiParam(name = "entityClass", description = "Class of the entity", required = true)
+            },
+            requestBody = @OpenApiRequestBody(
+                    content = @OpenApiContent(from = BaseEntity[].class),
+                    description = "List of new records to be added",
+                    required = true
+            ),
+            responses = {
+                    @OpenApiResponse(status = "200", description = "Records added successfully",
+                            content = @OpenApiContent(from = BaseEntity[].class)),
+                    @OpenApiResponse(status = "400", description = "Invalid entity data or empty list"),
+                    @OpenApiResponse(status = "400", description = "Table not found"),
+                    @OpenApiResponse(status = "500", description = "Unable to add records")
+            }
+    )
+    void handleAddNewRecords(Context ctx) {
+        Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
+
+        var objectMapper = new ObjectMapper();
+        var typeFactory = objectMapper.getTypeFactory();
+        var genericType = typeFactory.constructType(entityClass);
+        var listType = typeFactory.constructCollectionType(List.class, genericType);
+
+        try {
+            List<? extends BaseEntity> entities = objectMapper.readValue(ctx.body(), listType);
+            Iterable<? extends BaseEntity> addedEntities = databaseService.addNewRecordsToTable(entityClass, entities);
+            ctx.json(addedEntities);
+        } catch (IOException e) {
+            throw new DeserializeDatabaseException("Unable to deserialize request body into target entity list type.");
+        }
     }
 
     @OpenApi(
@@ -251,6 +297,32 @@ public class DatabaseServiceRestController {
         } catch (NumberFormatException e) {
             throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
+    }
+
+    @OpenApi(
+            summary = "Remove specific records from the table",
+            operationId = "removeSpecificRecords",
+            path = "/api/v1/database/{entityClass}/batch",
+            methods = HttpMethod.DELETE,
+            pathParams = {
+                    @OpenApiParam(name = "entityClass", description = "Class of the entity", required = true)
+            },
+            requestBody = @OpenApiRequestBody(
+                    content = @OpenApiContent(from = Integer[].class),
+                    description = "List of IDs to be removed",
+                    required = true
+            ),
+            responses = {
+                    @OpenApiResponse(status = "200", description = "Records deleted successfully"),
+                    @OpenApiResponse(status = "400", description = "Invalid input or empty list of IDs"),
+                    @OpenApiResponse(status = "400", description = "Table not found"),
+                    @OpenApiResponse(status = "500", description = "Unable to delete records")
+            }
+    )
+    void handleRemoveSpecificRecords(Context ctx) {
+        Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
+        List<Integer> ids = Arrays.asList(ctx.bodyAsClass(Integer[].class));
+        ctx.json(databaseService.removeSpecificRecordsFromTable(entityClass, ids));
     }
 
     @OpenApi(
