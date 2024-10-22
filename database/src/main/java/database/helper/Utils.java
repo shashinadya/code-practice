@@ -8,8 +8,29 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The {@code Utils} class provides utility methods for working with the database entities.
+ * This class contains a method for dynamically retrieving all subclasses of {@code BaseEntity}
+ * within a specified package.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class Utils {
 
+    /**
+     * Retrieves all subclasses of {@code BaseEntity} from the {@code database.entity} package.
+     *
+     * <p>This method scans the {@code database.entity} package for all classes that extend
+     * {@code BaseEntity}. It uses the current thread's class loader to locate and load these
+     * classes at runtime, and returns them as a set.
+     *
+     * <p>If the specified package cannot be found, or if any class cannot be loaded, an
+     * {@code IllegalArgumentException} or {@code BadRequestResponse} is thrown, respectively.
+     *
+     * @return a set of classes that extend {@code BaseEntity}, excluding the {@code BaseEntity} class itself
+     * @throws IllegalArgumentException if the package cannot be found
+     * @throws BadRequestResponse       if any of the classes cannot be loaded
+     */
     public static Set<Class<? extends BaseEntity>> getSubclassesOfBaseEntity() {
         Set<Class<? extends BaseEntity>> subclasses = new HashSet<>();
         String packageName = "database.entity";

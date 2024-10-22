@@ -25,6 +25,39 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.apibuilder.ApiBuilder.put;
 
+/**
+ * The {@code DatabaseServiceRestController} class provides REST API endpoints for managing
+ * database operations such as creating, updating, retrieving, and deleting records from
+ * database tables. It interacts with a {@link DatabaseService} to perform CRUD operations on
+ * entities that extend {@link BaseEntity}. Each entity type is associated with a database
+ * table that can be managed through the provided endpoints.
+ *
+ * <p>This controller uses Javalin to configure routes and provides support for the following
+ * operations:
+ * <ul>
+ *   <li>Creating and deleting tables for entity classes.</li>
+ *   <li>Adding new records to the tables.</li>
+ *   <li>Fetching all records or filtered records from the tables.</li>
+ *   <li>Updating, retrieving, or removing records by their ID.</li>
+ * </ul>
+ *
+ * <p>The controller handles HTTP request parameters and ensures proper validation of
+ * input values such as ID, limit, and offset. In case of invalid values, appropriate error
+ * responses are returned to the client.
+ *
+ * <p>Typical usage:
+ * <pre>
+ * {@code
+ * DatabaseService databaseService = new SqlDatabaseService();
+ * Set<Class<? extends BaseEntity>> entities = Set.of(Student.class, Teacher.class);
+ * DatabaseServiceRestController controller = new DatabaseServiceRestController(databaseService, entities);
+ * Javalin app = Javalin.create(config -> controller.configureRouter(config));
+ * app.start(7000);
+ * }
+ * </pre>
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class DatabaseServiceRestController {
     private final DatabaseService databaseService;
     private final Set<Class<? extends BaseEntity>> entities;
@@ -32,11 +65,32 @@ public class DatabaseServiceRestController {
     static final String INVALID_PARAM_VALUE = "Invalid value for limit or offset parameter. They must be integers.";
     static final String INVALID_ID_VALUE = "Invalid value for id parameter. It must be integer.";
 
+    /**
+     * Constructs a {@code DatabaseServiceRestController} with the provided {@code databaseService}
+     * and {@code entities} that the controller will manage.
+     *
+     * @param databaseService the service to perform database operations
+     * @param entities        the set of entity classes (subclasses of {@link BaseEntity}) that will be managed by the service
+     */
     public DatabaseServiceRestController(DatabaseService databaseService, Set<Class<? extends BaseEntity>> entities) {
         this.databaseService = databaseService;
         this.entities = entities;
     }
 
+    /**
+     * Configures the routing for the REST API by defining the API endpoints and mapping them
+     * to the appropriate handler methods.
+     *
+     * <p>This method sets up routes for operations like:
+     * <ul>
+     *   <li>Create or delete a table for a given entity class (POST/DELETE {@code /table}).</li>
+     *   <li>Add new records (POST {@code /}).</li>
+     *   <li>Retrieve all records or filtered records (GET {@code /}, GET {@code /filter}).</li>
+     *   <li>Retrieve, update, or delete a record by ID (GET/PUT/DELETE {@code /{id}}).</li>
+     * </ul>
+     *
+     * @param config the Javalin configuration used to define the routes
+     */
     public void configureRouter(JavalinConfig config) {
         config.router.apiBuilder(() ->
                 path("/api/v1/database/{entityClass}", () -> {

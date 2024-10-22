@@ -2,6 +2,28 @@ package database.entity;
 
 import java.util.Objects;
 
+/**
+ * The {@code Course} class represents a course entity that extends {@link BaseEntity} with
+ * an additional field {@code name}, which stores the name of the course. This class provides
+ * getters and setters for the course name, as well as methods for object comparison and hashing.
+ *
+ * <p>This class also includes a nested {@code Builder} class that follows the builder pattern,
+ * allowing flexible and controlled construction of {@code Course} instances. The builder
+ * supports method chaining for setting fields and ensures that the base entity properties
+ * (like {@code id}) are properly initialized.
+ *
+ * <p>Typical usage:
+ * <pre>
+ * {@code
+ * Course course = new Course.Builder()
+ *                   .withId(1)
+ *                   .withName("Mathematics")
+ *                   .build();
+ * }
+ * </pre>
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class Course extends BaseEntity {
     private String name;
 

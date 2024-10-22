@@ -34,6 +34,46 @@ import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
+/**
+ * SqlDatabaseService is an implementation of the {@link DatabaseService} interface,
+ * which provides operations to manage SQL-based databases for entities that extend
+ * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
+ * records in an SQL database.
+ *
+ * <p>This service interacts with an SQL database using JDBC and provides methods for
+ * basic CRUD (Create, Read, Update, Delete) operations, as well as filtering, batch data
+ * operations, and transaction management. Each entity type is represented as a separate
+ * table in the database, with support for auto-incremented IDs.
+ *
+ * <p>Database connections are managed through a connection pool, ensuring efficient
+ * resource management and scalability for concurrent database operations. The class
+ * ensures that no entity has its ID manually assigned and provides validation mechanisms
+ * for input data.
+ *
+ * <p>Logging is performed using SLF4J, with detailed logging for various error scenarios,
+ * including SQL exceptions, transaction failures, and invalid parameter values.
+ * Consistent error handling is achieved through the use of key constants and exception
+ * messages for database-related issues.
+ *
+ * <p>A {@link Settings} object is used to configure service properties such as the
+ * maximum limit of records retrieved, the batch size for bulk operations, and the
+ * database connection pool settings.
+ *
+ * <p>This class is thread-safe as it manages connections through the connection pool
+ * and does not share mutable state outside of method scope.
+ *
+ * <p>Typical usage:
+ * <pre>
+ * {@code
+ * Settings settings = new Settings();
+ * DatabaseService service = new SqlDatabaseService(settings);
+ * service.createTable(Student.class);
+ * service.addNewRecordToTable(new Student("John", "Doe"));
+ * }
+ * </pre>
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class SqlDatabaseService implements DatabaseService {
     private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
     private final MySQLConnectionPool connectionPool;

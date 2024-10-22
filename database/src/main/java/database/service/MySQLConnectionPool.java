@@ -13,6 +13,39 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * The {@code MySQLConnectionPool} class manages a pool of reusable database connections
+ * to a MySQL database. It optimizes resource usage by reusing connections and limiting
+ * the number of open connections according to the configured pool size.
+ *
+ * <p>The pool is initialized with a configurable number of connections and can grow
+ * up to a maximum limit. If no free connections are available when a request is made,
+ * the pool will attempt to create new ones, or it will throw an exception if the maximum
+ * pool size is reached.
+ *
+ * <p>Connections that are no longer needed can be returned to the pool, or they will
+ * be closed if the pool is already at maximum size. The class is also responsible for
+ * cleaning up the pool by closing all connections when the pool is shut down.
+ *
+ * <p>Logging is performed using SLF4J, with warnings and errors logged in scenarios such
+ * as when the maximum pool size is reached or connection creation/closure fails.
+ *
+ * <p>This class is thread-safe as it uses a synchronized data structure (Deque) to manage
+ * the connection pool.
+ *
+ * <p>Typical usage:
+ * <pre>
+ * {@code
+ * Settings settings = new Settings();
+ * MySQLConnectionPool pool = new MySQLConnectionPool(settings);
+ * Connection connection = pool.getConnection();
+ * pool.releaseConnection(connection);
+ * pool.closePool();
+ * }
+ * </pre>
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class MySQLConnectionPool {
     private static final Logger LOG = LoggerFactory.getLogger(MySQLConnectionPool.class);
     private static final String INIT_POOL_SIZE_MORE_THAN_MAX =
@@ -27,6 +60,15 @@ public class MySQLConnectionPool {
     static final String UNABLE_CLOSE_CONNECTION =
             "Unable to close the database connection or pool of connections";
 
+    /**
+     * Constructs a new {@code MySQLConnectionPool} with the given settings.
+     * The pool is initialized with a configurable number of connections, and
+     * the data source is set up based on the provided {@link Settings}.
+     *
+     * @param settings the configuration object containing the database credentials,
+     *                 initial pool size, maximum pool size, and other parameters
+     * @throws InvalidParameterValueException if the initial pool size is greater than the maximum pool size
+     */
     public MySQLConnectionPool(Settings settings) {
         dataSource = createDataSource(settings);
         initialPoolSize = settings.getInitialPoolSize();
@@ -40,6 +82,14 @@ public class MySQLConnectionPool {
         initializePool();
     }
 
+    /**
+     * Retrieves a connection from the pool. If no connection is available, the pool will
+     * attempt to create a new one, unless the maximum pool size has been reached, in which case
+     * a {@link NoFreeDatabaseConnectionException} is thrown.
+     *
+     * @return a {@link Connection} object from the pool
+     * @throws NoFreeDatabaseConnectionException if all connections are in use and the maximum pool size is reached
+     */
     public Connection getConnection() {
         if (connectionPool.isEmpty()) {
             if (currentConnections < maxPoolSize) {
@@ -53,6 +103,11 @@ public class MySQLConnectionPool {
         }
     }
 
+    /**
+     * Releases a connection back into the pool. If the pool is full, the connection is closed.
+     *
+     * @param connection the {@link Connection} to be released
+     */
     public void releaseConnection(Connection connection) {
         if (connection != null && connectionPool.size() < maxPoolSize) {
             connectionPool.add(connection);
@@ -61,6 +116,11 @@ public class MySQLConnectionPool {
         }
     }
 
+    /**
+     * Closes all connections in the pool and resets the current connection count.
+     * This method should be called when the pool is no longer needed, for example
+     * during application shutdown, to release resources.
+     */
     public void closePool() {
         while (!connectionPool.isEmpty()) {
             try {
@@ -72,6 +132,11 @@ public class MySQLConnectionPool {
         currentConnections = 0;
     }
 
+    /**
+     * Returns the number of available connections in the pool.
+     *
+     * @return the number of free connections currently in the pool
+     */
     public int size() {
         return connectionPool.size();
     }
