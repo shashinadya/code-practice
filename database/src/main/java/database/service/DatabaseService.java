@@ -19,7 +19,7 @@ public interface DatabaseService {
 
     boolean removeRecordFromTable(Class<? extends BaseEntity> entityClass, Integer id);
 
-    boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids);
+    boolean removeSpecificRecordsFromTable(Class<? extends BaseEntity> entityClass, List<Integer> ids);
 
     void removeAllRecordsFromTable(Class<? extends BaseEntity> entityClass);
 

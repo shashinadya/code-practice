@@ -2,7 +2,7 @@ package database.service;
 
 import database.entity.BaseEntity;
 import database.exception.CreationDatabaseException;
-import database.exception.DatabaseDoesNotExistException;
+import database.exception.TableDoesNotExistException;
 import database.exception.DatabaseOperationException;
 import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
@@ -140,7 +140,7 @@ public class SqlDatabaseService implements DatabaseService {
                     }
                 }
             } else {
-                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+                throw new TableDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
             }
         } catch (SQLException e) {
             LOG.error(UNABLE_ADD_NEW_RECORD + ": {}, {}", tableName, e.getMessage());
@@ -177,7 +177,7 @@ public class SqlDatabaseService implements DatabaseService {
                 }
                 connection.commit();
             } else {
-                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+                throw new TableDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
             }
         } catch (SQLException e) {
             rollbackTransaction(connection, tableName, e);
@@ -239,7 +239,7 @@ public class SqlDatabaseService implements DatabaseService {
     }
 
     @Override
-    public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
+    public boolean removeSpecificRecordsFromTable(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new NullOrEmptyListException(IDS_LIST_NULL_OR_EMPTY);
         }
@@ -258,7 +258,7 @@ public class SqlDatabaseService implements DatabaseService {
                 }
                 connection.commit();
             } else {
-                throw new DatabaseDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
+                throw new TableDoesNotExistException(TABLE_NOT_EXIST + ": " + tableName);
             }
         } catch (SQLException e) {
             rollbackTransaction(connection, tableName, e);
