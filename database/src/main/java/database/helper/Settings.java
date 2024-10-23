@@ -19,9 +19,6 @@ import org.slf4j.LoggerFactory;
  * specified properties file and provides default values for settings if the file is not found or
  * values are missing.
  *
- * <p>This class also supports dynamic loading of properties and automatic creation of
- * directories for JSON-based storage.
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class Settings {

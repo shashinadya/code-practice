@@ -63,19 +63,6 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  * to configure service properties such as the maximum limit of records retrieved
  * and the base path for storing database files.
  *
- * <p>This class is thread-safe as it does not share mutable state outside of method scope
- * and relies on synchronized data structures (like HashMap) for maintaining internal state.
- *
- * <p>Typical usage:
- * <pre>
- * {@code
- * Settings settings = new Settings();
- * DatabaseService service = new JsonDatabaseService(settings);
- * service.createTable(Student.class);
- * service.addNewRecordToTable(new Student("John", "Doe"));
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class JsonDatabaseService implements DatabaseService {

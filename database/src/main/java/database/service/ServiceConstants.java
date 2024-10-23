@@ -15,13 +15,6 @@ package database.service;
  * The private constructor prevents instantiation and enforces the utility nature of
  * the class.
  *
- * <p>Usage examples:
- * <pre>
- * {@code
- * throw new IllegalArgumentException(ServiceConstants.ENTITY_IS_NOT_FOUND);
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class ServiceConstants {

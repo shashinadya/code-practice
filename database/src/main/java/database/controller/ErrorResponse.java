@@ -11,13 +11,6 @@ import java.util.Objects;
  * to the client. It provides getter and setter methods for the response fields and also overrides
  * {@code equals()} and {@code hashCode()} for proper comparison and usage in collections.
  *
- * <p>Typical usage:
- * <pre>
- * {@code
- * ErrorResponse errorResponse = new ErrorResponse(404, "Not Found", "The requested resource was not found");
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class ErrorResponse {
@@ -38,56 +31,26 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    /**
-     * Gets the HTTP status code of the error response.
-     *
-     * @return the HTTP status code
-     */
     public int getStatus() {
         return status;
     }
 
-    /**
-     * Sets the HTTP status code of the error response.
-     *
-     * @param status the HTTP status code to set
-     */
     public void setStatus(int status) {
         this.status = status;
     }
 
-    /**
-     * Gets the short description of the error.
-     *
-     * @return the error description
-     */
     public String getError() {
         return error;
     }
 
-    /**
-     * Sets the short description of the error.
-     *
-     * @param error the error description to set
-     */
     public void setError(String error) {
         this.error = error;
     }
 
-    /**
-     * Gets the detailed error message providing additional context.
-     *
-     * @return the detailed error message
-     */
     public String getMessage() {
         return message;
     }
 
-    /**
-     * Sets the detailed error message providing additional context.
-     *
-     * @param message the detailed error message to set
-     */
     public void setMessage(String message) {
         this.message = message;
     }

@@ -9,8 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The {@code Validator} class provides utility methods for validating database filters.
- * This class ensures that the provided filter names and values adhere to certain validation rules.
+ * The {@code Validator} class provides a set of utility methods for performing various validation tasks.
+ * <p>
+ * This class is designed to validate input data, such as property names, values, and other entities.
+ * It offers general-purpose validation methods that ensure inputs meet specific criteria, such as
+ * non-null values, non-empty strings, or matching declared fields of a class.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */

@@ -45,17 +45,6 @@ import static io.javalin.apibuilder.ApiBuilder.put;
  * input values such as ID, limit, and offset. In case of invalid values, appropriate error
  * responses are returned to the client.
  *
- * <p>Typical usage:
- * <pre>
- * {@code
- * DatabaseService databaseService = new SqlDatabaseService();
- * Set<Class<? extends BaseEntity>> entities = Set.of(Student.class, Teacher.class);
- * DatabaseServiceRestController controller = new DatabaseServiceRestController(databaseService, entities);
- * Javalin app = Javalin.create(config -> controller.configureRouter(config));
- * app.start(7000);
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DatabaseServiceRestController {
@@ -80,14 +69,6 @@ public class DatabaseServiceRestController {
     /**
      * Configures the routing for the REST API by defining the API endpoints and mapping them
      * to the appropriate handler methods.
-     *
-     * <p>This method sets up routes for operations like:
-     * <ul>
-     *   <li>Create or delete a table for a given entity class (POST/DELETE {@code /table}).</li>
-     *   <li>Add new records (POST {@code /}).</li>
-     *   <li>Retrieve all records or filtered records (GET {@code /}, GET {@code /filter}).</li>
-     *   <li>Retrieve, update, or delete a record by ID (GET/PUT/DELETE {@code /{id}}).</li>
-     * </ul>
      *
      * @param config the Javalin configuration used to define the routes
      */

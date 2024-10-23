@@ -12,16 +12,6 @@ import java.util.Objects;
  * supports method chaining for setting fields and ensures that the base entity properties
  * (like {@code id}) are properly initialized.
  *
- * <p>Typical usage:
- * <pre>
- * {@code
- * Course course = new Course.Builder()
- *                   .withId(1)
- *                   .withName("Mathematics")
- *                   .build();
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class Course extends BaseEntity {

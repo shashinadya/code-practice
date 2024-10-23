@@ -27,15 +27,6 @@ import static io.javalin.http.HttpStatus.NOT_FOUND;
  * The error responses are encapsulated using the {@link ErrorResponse} class, which includes details
  * about the error that occurred.
  *
- * <p>Typical usage:
- * <pre>
- * {@code
- * Javalin app = Javalin.create();
- * new DatabaseControllerExceptionHandler().register(app);
- * app.start(7000);
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DatabaseControllerExceptionHandler {

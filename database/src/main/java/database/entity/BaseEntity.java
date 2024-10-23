@@ -9,13 +9,6 @@ package database.entity;
  * instances of {@code BaseEntity} or its subclasses. The builder pattern is used to ensure that
  * entity fields are initialized in a controlled and flexible manner, supporting method chaining.
  *
- * <p>Typical usage:
- * <pre>
- * {@code
- * BaseEntity entity = new SomeEntity.Builder().withId(1).build();
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public abstract class BaseEntity {

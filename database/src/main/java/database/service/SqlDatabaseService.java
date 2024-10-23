@@ -59,19 +59,6 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  * maximum limit of records retrieved, the batch size for bulk operations, and the
  * database connection pool settings.
  *
- * <p>This class is thread-safe as it manages connections through the connection pool
- * and does not share mutable state outside of method scope.
- *
- * <p>Typical usage:
- * <pre>
- * {@code
- * Settings settings = new Settings();
- * DatabaseService service = new SqlDatabaseService(settings);
- * service.createTable(Student.class);
- * service.addNewRecordToTable(new Student("John", "Doe"));
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class SqlDatabaseService implements DatabaseService {

@@ -30,20 +30,6 @@ import java.util.Deque;
  * <p>Logging is performed using SLF4J, with warnings and errors logged in scenarios such
  * as when the maximum pool size is reached or connection creation/closure fails.
  *
- * <p>This class is thread-safe as it uses a synchronized data structure (Deque) to manage
- * the connection pool.
- *
- * <p>Typical usage:
- * <pre>
- * {@code
- * Settings settings = new Settings();
- * MySQLConnectionPool pool = new MySQLConnectionPool(settings);
- * Connection connection = pool.getConnection();
- * pool.releaseConnection(connection);
- * pool.closePool();
- * }
- * </pre>
- *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class MySQLConnectionPool {

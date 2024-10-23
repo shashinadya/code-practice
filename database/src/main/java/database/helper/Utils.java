@@ -9,7 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The {@code Utils} class provides utility methods for working with the database entities.
+ * The {@code Utils} class provides general-purpose utility methods for use throughout the application.
+ * <p>
  * This class contains a method for dynamically retrieving all subclasses of {@code BaseEntity}
  * within a specified package.
  *
