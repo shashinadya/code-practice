@@ -14,6 +14,8 @@ package database.exception;
  * that the requested operation could not be completed due to an ID mismatch,
  * thereby enhancing the integrity and reliability of the application's data
  * handling processes.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class IdMismatchException extends BadRequestException {
 

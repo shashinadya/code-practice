@@ -14,6 +14,8 @@ package database.exception;
  * <p>By using this exception, developers can distinguish file reading errors
  * from other types of exceptions, enabling more granular error handling in
  * applications that depend on file input.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class ReadFileException extends RuntimeException {
 

@@ -15,6 +15,8 @@ package database.exception;
  * <p>By throwing this exception, developers can clearly communicate to users
  * or clients that the operation has failed due to an improper ID provision,
  * thus preventing potential conflicts and errors in entity management.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class IdProvidedManuallyException extends BadRequestException {
 

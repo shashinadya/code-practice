@@ -13,6 +13,8 @@ package database.exception;
  * <p>By throwing this exception, the application can provide clear feedback
  * to the user or client about the nature of the error, enabling them to
  * correct the parameter value before retrying the operation.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class InvalidParameterValueException extends BadRequestException {
 

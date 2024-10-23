@@ -14,6 +14,8 @@ package database.exception;
  * <p>By using this exception, developers can enforce constraints on list
  * parameters, ensuring that they are validated before proceeding with
  * operations that depend on having valid data.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class NullOrEmptyListException extends BadRequestException {
 

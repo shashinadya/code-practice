@@ -15,6 +15,8 @@ package database.exception;
  * management, allowing developers to implement logic to retry acquiring
  * connections or to provide informative feedback to users or systems
  * about the unavailability of database resources.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class NoFreeDatabaseConnectionException extends RuntimeException {
 

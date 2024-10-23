@@ -16,6 +16,8 @@ package database.exception;
  * <p>By using this exception, developers can clearly communicate issues specific
  * to serialization, allowing for more robust error handling in applications that
  * rely on database operations and data persistence.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class SerializeDatabaseException extends RuntimeException {
 

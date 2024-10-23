@@ -16,6 +16,8 @@ package database.exception;
  * <p>Using this exception helps developers pinpoint errors related to
  * setting parameters in prepared statements, enabling more effective error
  * handling and debugging in applications that interact with databases.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class SetPreparedStatementValueException extends RuntimeException {
 

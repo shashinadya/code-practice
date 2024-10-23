@@ -14,6 +14,21 @@ import static database.helper.Settings.DEFAULT_MAX_POOL_SIZE_VALUE;
 import static database.helper.Settings.DEFAULT_PORT_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Unit tests for the {@code Settings} class.
+ * <p>
+ * This test class verifies the behavior of the {@code Settings} class methods responsible
+ * for loading configuration values from a properties file.
+ * <p>
+ * The tests ensure that if a valid properties file exists, the expected values are retrieved,
+ * and when the file or specific properties are missing, default values are returned.
+ * <p>
+ * Each test initializes the {@code Settings} object with a path to a properties file
+ * and asserts that the values returned match the expected values or the default values.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see Settings
+ */
 class SettingsTest {
     private Settings settings;
 

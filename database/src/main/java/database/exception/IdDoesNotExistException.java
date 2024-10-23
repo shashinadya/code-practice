@@ -14,6 +14,8 @@ package database.exception;
  * <p>By throwing this exception, developers can provide clear feedback to
  * users or clients about invalid operations related to non-existent entities,
  * thus improving the robustness of the application.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class IdDoesNotExistException extends BadRequestException {
 

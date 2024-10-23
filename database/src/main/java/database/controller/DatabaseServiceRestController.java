@@ -63,7 +63,8 @@ public class DatabaseServiceRestController {
      * and {@code entities} that the controller will manage.
      *
      * @param databaseService the service to perform database operations
-     * @param entities        the set of entity classes (subclasses of {@link BaseEntity}) that will be managed by the service
+     * @param entities        the set of entity classes (subclasses of {@link BaseEntity}) that will be managed
+     *                        by the service
      */
     public DatabaseServiceRestController(DatabaseService databaseService, Set<Class<? extends BaseEntity>> entities) {
         this.databaseService = databaseService;

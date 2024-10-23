@@ -16,6 +16,8 @@ package database.exception;
  * or client that the operation has failed due to an incorrect or invalid
  * property name, thus prompting them to correct their input before retrying
  * the operation.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class IncorrectPropertyNameException extends BadRequestException {
 

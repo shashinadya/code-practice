@@ -17,6 +17,8 @@ package database.exception;
  * <p>This exception serves as a clear indicator of file
  * writing failures, enabling better error handling in
  * applications that perform file I/O operations.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class WriteFileException extends RuntimeException {
 

@@ -13,6 +13,8 @@ package database.exception;
  * <p>By using this specific exception, developers can more easily identify and
  * handle errors associated with database creation operations, improving the
  * clarity and maintainability of the code.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class CreationDatabaseException extends RuntimeException {
 

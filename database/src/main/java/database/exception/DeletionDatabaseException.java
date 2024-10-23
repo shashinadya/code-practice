@@ -14,6 +14,8 @@ package database.exception;
  * handling logic to manage situations where deletion requests cannot be
  * completed, enhancing the overall robustness and reliability of the
  * application.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DeletionDatabaseException extends RuntimeException {
 

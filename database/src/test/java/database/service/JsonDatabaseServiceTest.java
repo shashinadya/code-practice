@@ -36,6 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * The {@code JsonDatabaseServiceTest} class contains unit tests for the {@code JsonDatabaseService} class.
+ *
+ * <p>This class tests the core functionality of the {@code JsonDatabaseService}, which is responsible for
+ * managing database operations such as creating tables, deleting tables, and adding new records using JSON files.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see JsonDatabaseService
+ */
 class JsonDatabaseServiceTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
     private final JsonDatabaseService jsonDatabaseService = new JsonDatabaseService(settings);

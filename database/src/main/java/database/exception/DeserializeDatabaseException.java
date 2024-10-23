@@ -13,6 +13,8 @@ package database.exception;
  * <p>By using this exception, developers can effectively manage and respond
  * to deserialization failures, providing better error handling and user
  * feedback in scenarios where data integrity is compromised.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DeserializeDatabaseException extends RuntimeException {
 

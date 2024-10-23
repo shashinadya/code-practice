@@ -16,6 +16,8 @@ package database.exception;
  * <p>Using this exception allows for a more granular approach to managing
  * connection-related errors, facilitating the implementation of retries or
  * fallback mechanisms in database connectivity logic.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class UnableCreateConnectionException extends RuntimeException {
 

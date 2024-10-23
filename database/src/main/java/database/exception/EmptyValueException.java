@@ -13,6 +13,8 @@ package database.exception;
  * <p>By using this exception, developers can effectively handle scenarios
  * where required data is missing, ensuring that appropriate feedback is
  * provided to users or clients regarding their input.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class EmptyValueException extends BadRequestException {
 

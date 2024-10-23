@@ -27,6 +27,27 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for the {@code DatabaseServiceRestController} class.
+ * <p>
+ * This test class verifies the behavior of the {@code DatabaseServiceRestController} methods
+ * related to creating, deleting tables, and adding new records.
+ * <p>
+ * The tests use mocked instances of {@code DatabaseService} and {@code Context} to simulate
+ * the behavior of the controller in various scenarios, ensuring that appropriate responses are
+ * returned or exceptions are thrown based on the service's outcome.
+ * <p>
+ * Each test focuses on a specific REST endpoint (GET, POST, PUT or DELETE) and tests both successful
+ * and failure cases.
+ *
+ * <p>Mocking frameworks such as {@code Mockito} are used to mock the dependencies and control the behavior
+ * of the service and context, allowing the tests to focus on the controller logic.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see DatabaseServiceRestController
+ * @see DatabaseService
+ * @see Context
+ */
 class DatabaseServiceRestControllerTest {
     private final DatabaseService databaseService = mock(DatabaseService.class);
     private final Context ctx = mock(Context.class);

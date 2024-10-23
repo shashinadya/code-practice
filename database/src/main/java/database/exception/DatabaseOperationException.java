@@ -16,6 +16,8 @@ package database.exception;
  * <p>By using this exception, developers can implement error handling
  * mechanisms that specifically address issues related to database
  * operations, thereby enhancing the robustness of the application.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DatabaseOperationException extends BadRequestException {
 

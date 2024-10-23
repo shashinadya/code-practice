@@ -14,6 +14,8 @@ package database.exception;
  * <p>By using this exception, developers can enforce constraints on property names
  * and values, ensuring that they are validated before proceeding with operations
  * that rely on valid properties.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class NullPropertyNameOrValueException extends BadRequestException {
 

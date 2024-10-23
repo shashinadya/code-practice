@@ -12,6 +12,8 @@ package database.exception;
  * <p>Usage of this exception helps in distinguishing client-side errors
  * from other types of exceptions in the application, promoting better
  * error handling and clearer response messages.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class BadRequestException extends RuntimeException {
 
