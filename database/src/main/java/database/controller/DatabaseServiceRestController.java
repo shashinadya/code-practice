@@ -131,7 +131,7 @@ public class DatabaseServiceRestController {
     }
 
     @OpenApi(
-            summary = "Add multiple new records to a table",
+            summary = "Add multiple records to table",
             operationId = "addNewRecords",
             path = "/api/v1/database/{entityClass}/batch",
             methods = HttpMethod.POST,
@@ -146,8 +146,8 @@ public class DatabaseServiceRestController {
             responses = {
                     @OpenApiResponse(status = "200", description = "Records added successfully",
                             content = @OpenApiContent(from = BaseEntity[].class)),
-                    @OpenApiResponse(status = "400", description = "Invalid entity data or empty list"),
-                    @OpenApiResponse(status = "400", description = "Table not found"),
+                    @OpenApiResponse(status = "400", description = "Null or empty list of entities"),
+                    @OpenApiResponse(status = "400", description = "Invalid entity class"),
                     @OpenApiResponse(status = "500", description = "Unable to add records")
             }
     )
@@ -314,8 +314,8 @@ public class DatabaseServiceRestController {
             ),
             responses = {
                     @OpenApiResponse(status = "200", description = "Records deleted successfully"),
-                    @OpenApiResponse(status = "400", description = "Invalid input or empty list of IDs"),
-                    @OpenApiResponse(status = "400", description = "Table not found"),
+                    @OpenApiResponse(status = "400", description = "Null or empty list of IDs"),
+                    @OpenApiResponse(status = "400", description = "Invalid entity class"),
                     @OpenApiResponse(status = "500", description = "Unable to delete records")
             }
     )

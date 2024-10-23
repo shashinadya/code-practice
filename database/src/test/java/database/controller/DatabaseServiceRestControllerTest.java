@@ -32,12 +32,12 @@ class DatabaseServiceRestControllerTest {
     private final Context ctx = mock(Context.class);
     private final DatabaseServiceRestController controller = new DatabaseServiceRestController(databaseService,
             Set.of(Student.class, OxfordStudent.class, Course.class));
+    private final String ENTITY_CLASS_NAME = "Student";
+    private final String ENTITY_CLASS_PARAMETER_NAME = "entityClass";
 
     @Test
     void POST_to_create_table_returns_true() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.createTable(any())).thenReturn(true);
 
         controller.handleCreateTable(ctx);
@@ -46,9 +46,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void POST_to_create_table_returns_500_when_table_already_exists() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.createTable(any())).thenThrow(InternalServerErrorResponse.class);
 
         assertThrows(InternalServerErrorResponse.class, () -> controller.handleCreateTable(ctx));
@@ -56,9 +54,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_delete_table_returns_true() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.deleteTable(any())).thenReturn(true);
 
         controller.handleDeleteTable(ctx);
@@ -67,9 +63,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_delete_table_returns_500_when_table_not_exist() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.deleteTable(any())).thenThrow(InternalServerErrorResponse.class);
 
         assertThrows(InternalServerErrorResponse.class, () -> controller.handleDeleteTable(ctx));
@@ -77,11 +71,10 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void POST_to_add_new_record_returns_json_with_entity() {
-        String entityClass = "Student";
         Student entity = new Student();
         Student newEntity = new Student();
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
         when(databaseService.addNewRecordToTable(entity)).thenReturn(newEntity);
 
@@ -91,10 +84,9 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void POST_to_add_new_record_returns_400_when_table_not_exist() {
-        String entityClass = "Student";
         Student entity = new Student();
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
         when(databaseService.addNewRecordToTable(entity)).thenThrow(BadRequestResponse.class);
 
@@ -103,12 +95,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void POST_to_add_new_records_returns_json_with_entities() throws JsonProcessingException {
-        String entityClass = "Student";
         List<Student> newStudents = List.of(new Student("Iva", 3.5), new Student("Nadya", 4.5));
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(newStudents);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.body()).thenReturn(jsonString);
         when(databaseService.addNewRecordsToTable(Student.class, newStudents)).thenReturn(newStudents);
 
@@ -118,12 +109,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void POST_to_add_new_records_returns_400_when_table_not_exist() throws JsonProcessingException {
-        String entityClass = "Student";
         List<Student> newStudents = List.of(new Student("Iva", 3.5), new Student("Nadya", 4.5));
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(newStudents);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.body()).thenReturn(jsonString);
         when(databaseService.addNewRecordsToTable(Student.class, newStudents)).thenThrow(BadRequestResponse.class);
 
@@ -132,10 +122,9 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_all_records_returns_json_with_entities() {
-        String entityClass = "Student";
         Iterable<BaseEntity> entities = List.of(new Student());
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.getAllRecordsFromTable(Student.class)).thenReturn(entities);
 
         controller.handleGetAllRecords(ctx);
@@ -144,10 +133,9 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_all_records_with_limit_offset_returns_json_with_entities() {
-        String entityClass = "Student";
         Iterable<BaseEntity> entities = List.of(new Student());
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.queryParam("limit")).thenReturn("1");
         when(ctx.queryParam("offset")).thenReturn("1");
         when(databaseService.getAllRecordsFromTable(Student.class, 1, 1)).thenReturn(entities);
@@ -158,9 +146,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_all_records_returns_500_when_table_not_exist() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(databaseService.getAllRecordsFromTable(Student.class)).thenThrow(InternalServerErrorResponse.class);
 
         assertThrows(InternalServerErrorResponse.class, () -> controller.handleGetAllRecords(ctx));
@@ -168,14 +154,13 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void PUT_to_update_record_returns_json_with_entity() {
-        String entityClass = "Student";
         Student entity = new Student();
         entity.setId(1);
         Student updatedEntity = new Student();
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
-        when(ctx.pathParam("id")).thenReturn("1");
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("1");
         when(databaseService.updateRecordInTable(entity, 1)).thenReturn(updatedEntity);
 
         controller.handleUpdateRecord(ctx);
@@ -184,12 +169,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void PUT_to_update_record_never_called_when_id_not_match() {
-        String entityClass = "Student";
         Student entity = new Student();
         entity.setId(1);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
-        when(ctx.pathParam("id")).thenReturn("2");
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
+        when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("2");
         when(ctx.bodyAsClass(Student.class)).thenReturn(entity);
 
         verify(databaseService, never()).updateRecordInTable(any(), any());
@@ -197,9 +181,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void PUT_to_update_record_returns_400_when_invalid_id() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
 
         assertThrows(BadRequestException.class, () -> controller.handleUpdateRecord(ctx));
@@ -207,12 +189,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_record_returns_true() {
-        String entityClass = "Student";
         int id = 1;
         Student entity = new Student();
         entity.setId(id);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.removeRecordFromTable(Student.class, 1)).thenReturn(true);
 
@@ -222,12 +203,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_record_returns_false() {
-        String entityClass = "Student";
         int id = 1;
         Student entity = new Student();
         entity.setId(id);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.removeRecordFromTable(Student.class, 10)).thenReturn(false);
 
@@ -237,9 +217,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_record_returns_400_when_invalid_id() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
 
         assertThrows(BadRequestException.class, () -> controller.handleRemoveRecord(ctx));
@@ -247,10 +225,9 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_specific_records_returns_true() {
-        String entityClass = "Student";
         List<Integer> ids = List.of(1, 2);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.bodyAsClass(Integer[].class)).thenReturn(ids.toArray(new Integer[0]));
         when(databaseService.removeSpecificRecordsFromTable(Student.class, ids)).thenReturn(true);
 
@@ -260,10 +237,9 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_specific_records_returns_false() {
-        String entityClass = "Student";
         List<Integer> ids = List.of(1, 2);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.bodyAsClass(Integer[].class)).thenReturn(ids.toArray(new Integer[0]));
         when(databaseService.removeSpecificRecordsFromTable(Student.class, ids)).thenReturn(false);
 
@@ -273,9 +249,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void DELETE_to_remove_all_records_returns_true() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         doNothing().when(databaseService).removeAllRecordsFromTable(Student.class);
 
         controller.handleRemoveAllRecords(ctx);
@@ -284,12 +258,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_record_by_id_returns_json_with_entity() {
-        String entityClass = "Student";
         int id = 1;
         Student entity = new Student();
         entity.setId(id);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.getById(Student.class, id)).thenReturn(entity);
 
@@ -299,12 +272,11 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_record_by_id_returns_404_when_table_not_exist() {
-        String entityClass = "Student";
         int id = 1;
         Student entity = new Student();
         entity.setId(id);
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn(String.valueOf(id));
         when(databaseService.getById(Student.class, id)).thenThrow(NotFoundResponse.class);
 
@@ -313,9 +285,7 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_record_by_id_returns_400_when_invalid_id() {
-        String entityClass = "Student";
-
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.pathParam(ID_PARAMETER_NAME)).thenReturn("A");
 
         assertThrows(BadRequestException.class, () -> controller.handleGetById(ctx));
@@ -323,11 +293,10 @@ class DatabaseServiceRestControllerTest {
 
     @Test
     void GET_to_get_entities_by_filters_return_json_with_entities() {
-        String entityClass = "Student";
         var queryParameters = Map.of("fullNames", List.of("FirstStudent", "SecondStudent"));
         Iterable<BaseEntity> entities = List.of(new Student());
 
-        when(ctx.pathParam("entityClass")).thenReturn(entityClass);
+        when(ctx.pathParam(ENTITY_CLASS_PARAMETER_NAME)).thenReturn(ENTITY_CLASS_NAME);
         when(ctx.queryParamMap()).thenReturn(queryParameters);
         when(databaseService.getByFilters(Student.class, queryParameters)).thenReturn(entities);
 
