@@ -11,8 +11,33 @@ import io.javalin.Javalin;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
+/**
+ * The {@code Main} class serves as the entry point to the application.
+ *
+ * <p>This class initializes the application settings, configures the web server using Javalin,
+ * registers OpenAPI and Swagger plugins, and sets up routes for the {@code DatabaseServiceRestController}.
+ * It also manages the graceful shutdown of the application.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class Main {
 
+    /**
+     * The main method which serves as the entry point to the application.
+     *
+     * <p>This method performs the following tasks:
+     * <ul>
+     *   <li>Loads application settings from a properties file.</li>
+     *   <li>Initializes the database service (in this case, an SQL-based service).</li>
+     *   <li>Starts the Javalin web server on the configured port.</li>
+     *   <li>Registers OpenAPI and Swagger plugins for API documentation.</li>
+     *   <li>Configures REST API routes via {@code DatabaseServiceRestController}.</li>
+     *   <li>Handles server shutdown events, ensuring that the database service is properly shut down.</li>
+     *   <li>Registers a shutdown hook to stop the Javalin web server when the JVM terminates.</li>
+     * </ul>
+     *
+     * @param args the command-line arguments passed to the program
+     */
     public static void main(String[] args) {
         final Settings settings = new Settings("application.properties");
         final int port = settings.getPort();

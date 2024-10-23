@@ -39,6 +39,32 @@ import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
 import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
 import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
 
+/**
+ * JsonDatabaseService is an implementation of the {@link DatabaseService} interface,
+ * which provides operations to manage JSON-based databases for entities that extend
+ * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
+ * records in a file-based JSON database.
+ *
+ * <p>This service uses the Jackson library for JSON serialization and deserialization
+ * of entities. Each entity type is stored in a separate file, and the service provides
+ * methods for basic CRUD (Create, Read, Update, Delete) operations as well as filtering
+ * and bulk data operations.
+ *
+ * <p>The service supports assigning unique auto-incremented IDs to each new entity and
+ * ensures that no entity has its ID manually assigned. It also provides mechanisms for
+ * managing the underlying database files, including verifying the existence of database
+ * files and handling exceptions related to file access and serialization issues.
+ *
+ * <p>Logging is performed using SLF4J, and the class includes detailed logging for error
+ * scenarios such as file access issues, serialization errors, and invalid parameter values.
+ *
+ * <p>Key constants and exception messages are used throughout the class to ensure
+ * consistent error handling and message logging. A {@link Settings} object is used
+ * to configure service properties such as the maximum limit of records retrieved
+ * and the base path for storing database files.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class JsonDatabaseService implements DatabaseService {
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;

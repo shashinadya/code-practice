@@ -2,6 +2,17 @@ package database.entity;
 
 import java.util.Objects;
 
+/**
+ * The {@code Student} class represents a student entity that extends {@link BaseEntity} and includes
+ * additional fields such as {@code fullName} and {@code averageScore}. This class provides
+ * getter and setter methods to access and modify these fields, as well as methods for object comparison
+ * and hashing.
+ *
+ * <p>The {@code Builder} class follows the builder pattern, providing a flexible and controlled way to
+ * construct {@code Student} objects with method chaining.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class Student extends BaseEntity {
     private String fullName;
     private Double averageScore;

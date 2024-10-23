@@ -17,6 +17,16 @@ import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Unit tests for the {@code Validator} class.
+ * <p>This class ensures the proper functioning of the validation methods in {@code Validator}.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see Validator
+ * @see NullPropertyNameOrValueException
+ * @see EmptyValueException
+ * @see IncorrectPropertyNameException
+ */
 class ValidatorTest {
     private final Field fullNameField = Student.class.getDeclaredField("fullName");
     private final Field averageScoreField = Student.class.getDeclaredField("averageScore");

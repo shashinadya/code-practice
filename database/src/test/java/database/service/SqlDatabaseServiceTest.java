@@ -36,6 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * The {@code SqlDatabaseServiceTest} class contains unit tests for the {@code SqlDatabaseService} class.
+ *
+ * <p>This class tests the core functionality of the {@code SqlDatabaseService}, which is responsible for
+ * managing SQL database operations such as creating tables, deleting tables, and adding new records to tables.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see SqlDatabaseService
+ */
 public class SqlDatabaseServiceTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
     private final SqlDatabaseService sqlDatabaseService = new SqlDatabaseService(settings);

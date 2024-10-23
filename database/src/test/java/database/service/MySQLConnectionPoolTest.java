@@ -15,6 +15,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+/**
+ * The {@code MySQLConnectionPoolTest} class contains unit tests for the {@code MySQLConnectionPool} class.
+ *
+ * <p>This class tests various aspects of the {@code MySQLConnectionPool}, which manages a pool of MySQL database
+ * connections. The tests cover scenarios such as acquiring and releasing connections, handling exceptions, managing
+ * pool size limits, and closing the connection pool.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ * @see MySQLConnectionPool
+ */
 class MySQLConnectionPoolTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
     private MySQLConnectionPool connectionPool;

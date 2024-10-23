@@ -2,6 +2,17 @@ package database.entity;
 
 import java.util.Objects;
 
+/**
+ * The {@code OxfordStudent} class represents a student entity that extends {@link Student} and includes
+ * additional field {@code age}. This class provides
+ * getter and setter methods to access and modify these field, as well as methods for object comparison
+ * and hashing.
+ *
+ * <p>The {@code Builder} class follows the builder pattern, providing a flexible and controlled way to
+ * construct {@code OxfordStudent} objects with method chaining.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class OxfordStudent extends Student {
     private Integer age;
 

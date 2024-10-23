@@ -13,6 +13,14 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The {@code Settings} class manages application configuration properties, including database
+ * connection settings, resource paths, and other system parameters. It loads properties from a
+ * specified properties file and provides default values for settings if the file is not found or
+ * values are missing.
+ *
+ * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
+ */
 public class Settings {
     private final Path defaultJsonDatabasePath;
     private Properties properties;
@@ -39,59 +47,131 @@ public class Settings {
     static final int DEFAULT_MAX_POOL_SIZE_VALUE = 10;
     static final int DEFAULT_BATCH_SIZE_VALUE = 1000;
 
+    /**
+     * Creates a {@code Settings} object and loads properties from the specified file.
+     * If the file is not found, default values are set for all properties.
+     *
+     * @param propertyFileName the name of the properties file to load
+     * @throws CreationDatabaseException if an error occurs while creating required directories
+     */
     public Settings(String propertyFileName) throws CreationDatabaseException {
         defaultJsonDatabasePath = getFilePath(DEFAULT_DATABASE_STORAGE_PATH);
         this.propertyFileName = propertyFileName;
         loadProperties();
     }
 
+    /**
+     * Returns the name of the current properties file.
+     *
+     * @return the properties file name
+     */
     public String getPropertyFileName() {
         return propertyFileName;
     }
 
+    /**
+     * Sets a new properties file name and reloads properties from the specified file.
+     *
+     * @param propertyFileName the new properties file name to set
+     */
     public void setPropertyFileName(String propertyFileName) {
         this.propertyFileName = propertyFileName;
         loadProperties();
     }
 
+    /**
+     * Retrieves the value of the {@code limit} property, which defines the maximum number
+     * of records to fetch. If the property is not set, the default value is returned.
+     *
+     * @return the limit value
+     */
     public int getLimit() {
         return Integer.parseInt(properties.getProperty(LIMIT_PROPERTY_NAME, String.valueOf(DEFAULT_LIMIT_VALUE)));
     }
 
+    /**
+     * Returns the path where the JSON-based database should be stored. If the property is not found,
+     * the default storage path is used.
+     *
+     * @return the database storage path as a {@link Path} object
+     */
     public Path getDatabasePath() {
         return Path.of(properties.getProperty(DATABASE_STORAGE_PATH_PROPERTY_NAME, defaultJsonDatabasePath.toString()));
     }
 
+    /**
+     * Retrieves the port number for the application. If the property is not set, the default port
+     * is returned.
+     *
+     * @return the port number
+     */
     public int getPort() {
         return Integer.parseInt(properties.getProperty(PORT_PROPERTY_NAME, String.valueOf(DEFAULT_PORT_VALUE)));
     }
 
+    /**
+     * Retrieves the database username used for authentication. If not set, the default username is returned.
+     *
+     * @return the database username
+     */
     public String getDatabaseUsername() {
         return properties.getProperty(DB_USERNAME_PROPERTY_NAME, DEFAULT_DB_USERNAME_VALUE);
     }
 
+    /**
+     * Retrieves the database password used for authentication. If not set, the default password is returned.
+     *
+     * @return the database password
+     */
     public String getDatabasePassword() {
         return properties.getProperty(DB_PASSWORD_PROPERTY_NAME, DEFAULT_DB_PASSWORD_VALUE);
     }
 
+    /**
+     * Retrieves the base URL of the database, which includes the protocol and server address.
+     * If the property is not set, the default URL is returned.
+     *
+     * @return the database base URL
+     */
     public String getDatabaseBaseUrl() {
         return properties.getProperty(DB_BASE_URL_PROPERTY_NAME, DEFAULT_DB_BASE_URL_VALUE);
     }
 
+    /**
+     * Retrieves the name of the database. If not set, the default name is returned.
+     *
+     * @return the database name
+     */
     public String getDatabaseName() {
         return properties.getProperty(DB_NAME_PROPERTY_NAME, DEFAULT_DB_NAME_VALUE);
     }
 
+    /**
+     * Retrieves the initial size of the database connection pool. If the property is not set, the default size is returned.
+     *
+     * @return the initial connection pool size
+     */
     public int getInitialPoolSize() {
         return Integer.parseInt(properties.getProperty(INITIAL_POOL_SIZE_PROPERTY_NAME,
                 String.valueOf(DEFAULT_INITIAL_POOL_SIZE_VALUE)));
     }
 
+    /**
+     * Retrieves the maximum size of the database connection pool. If the property is not set, the default size is returned.
+     *
+     * @return the maximum connection pool size
+     */
     public int getMaxPoolSize() {
         return Integer.parseInt(properties.getProperty(MAX_POOL_SIZE_PROPERTY_NAME,
                 String.valueOf(DEFAULT_MAX_POOL_SIZE_VALUE)));
     }
 
+    /**
+     * Retrieves the batch size for database operations, such as inserts or updates.
+     * If the property is not set, the default batch size is returned.
+     *
+     * @return the batch size for database operations
+     */
     public int getBatchSize() {
         return Integer.parseInt(properties.getProperty(BATCH_SIZE_PROPERTY_NAME,
                 String.valueOf(DEFAULT_BATCH_SIZE_VALUE)));
