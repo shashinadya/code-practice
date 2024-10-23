@@ -75,7 +75,7 @@ public interface DatabaseService {
      * @param ids         a list of IDs of the records to be removed
      * @return {@code true} if the records were removed successfully, {@code false} otherwise
      */
-    boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids);
+    boolean removeSpecificRecordsFromTable(Class<? extends BaseEntity> entityClass, List<Integer> ids);
 
     /**
      * Removes all records from the table corresponding to the provided entity class.

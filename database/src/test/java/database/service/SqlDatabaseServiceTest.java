@@ -4,7 +4,7 @@ import database.entity.Course;
 import database.entity.OxfordStudent;
 import database.entity.Student;
 import database.exception.CreationDatabaseException;
-import database.exception.DatabaseDoesNotExistException;
+import database.exception.TableDoesNotExistException;
 import database.exception.EmptyValueException;
 import database.exception.IdDoesNotExistException;
 import database.exception.IdProvidedManuallyException;
@@ -107,8 +107,8 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordWhenDatabaseDoesNotExistTest() {
-        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+    void addNewRecordWhenTableDoesNotExistTest() {
+        TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
                 sqlDatabaseService.addNewRecordToTable(firstStudent));
 
         assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
@@ -143,10 +143,10 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void addNewRecordsWhenDatabaseDoesNotExistTest() {
+    void addNewRecordsWhenTableDoesNotExistTest() {
         List<Student> newStudents = List.of(firstStudent, secondStudent);
 
-        DatabaseDoesNotExistException exception = assertThrows(DatabaseDoesNotExistException.class, () ->
+        TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
                 sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
 
         assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
@@ -259,7 +259,7 @@ public class SqlDatabaseServiceTest {
         sqlDatabaseService.createTable(Student.class);
         sqlDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
 
-        assertTrue(sqlDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+        assertTrue(sqlDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
         assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
     }
 
@@ -268,7 +268,7 @@ public class SqlDatabaseServiceTest {
         List<Integer> idsForDeletion = List.of();
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                sqlDatabaseService.removeSpecificRecords(Student.class, idsForDeletion));
+                sqlDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
 
         assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
@@ -348,7 +348,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithValidLimitOffsetParametersTest() {
+    void getAllRecordsWithValidLimitOffsetParametersTest() {
         List<Student> resultStudents = List.of(secondStudent, thirdStudent);
 
         sqlDatabaseService.createTable(Student.class);
@@ -361,7 +361,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithNegativeLimitOffsetParametersTest() {
+    void getAllRecordsWithNegativeLimitOffsetParametersTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 sqlDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
 
@@ -370,7 +370,7 @@ public class SqlDatabaseServiceTest {
     }
 
     @Test
-    void getAllRecordsFromTableWithOverLimitParameterTest() {
+    void getAllRecordsWithOverLimitParameterTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
                 sqlDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
 

@@ -1,7 +1,7 @@
 package database.service;
 
 import database.exception.CreationDatabaseException;
-import database.exception.DatabaseDoesNotExistException;
+import database.exception.TableDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
@@ -193,7 +193,7 @@ public class JsonDatabaseService implements DatabaseService {
     }
 
     @Override
-    public boolean removeSpecificRecords(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
+    public boolean removeSpecificRecordsFromTable(Class<? extends BaseEntity> entityClass, List<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new NullOrEmptyListException(IDS_LIST_NULL_OR_EMPTY);
         }
@@ -382,7 +382,7 @@ public class JsonDatabaseService implements DatabaseService {
     private void verifyDatabaseExists(Path databasePath) {
         if (!Files.exists(databasePath)) {
             LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
-            throw new DatabaseDoesNotExistException(DB_FILE_NOT_EXIST);
+            throw new TableDoesNotExistException(DB_FILE_NOT_EXIST);
         }
     }
 
