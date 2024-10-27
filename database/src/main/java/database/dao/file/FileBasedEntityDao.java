@@ -1,6 +1,7 @@
 package database.dao.file;
 
 import database.dao.EntityDao;
+import database.dao.EntityDaoBase;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
 import database.exception.DeletionDatabaseException;
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import database.entity.BaseEntity;
 import database.exception.WriteFileException;
 import database.helper.Settings;
-import database.helper.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,17 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
-import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
-import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
-
 /**
- * FileBasedEntityDao is an implementation of the {@link EntityDao} interface,
- * which provides operations to manage JSON-based databases for entities that extend
- * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
- * records in a file-based JSON database.
+ * FileBasedEntityDao extends {@link EntityDaoBase} and implements the {@link EntityDao} interface, providing
+ * operations to manage JSON-based databases for entities that extend {@link BaseEntity}.
+ * This class handles the creation, deletion, and manipulation of records in a file-based JSON database.
  *
  * <p>This dao uses the Jackson library for JSON serialization and deserialization
  * of entities. Each entity type is stored in a separate file, and the dao provides
@@ -66,7 +59,7 @@ import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class FileBasedEntityDao implements EntityDao {
+public class FileBasedEntityDao extends EntityDaoBase {
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;
     private final int maxLimitValue;
@@ -269,7 +262,7 @@ public class FileBasedEntityDao implements EntityDao {
         verifyDatabaseExists(databasePath);
 
         List<Field> fields = getAllFields(entityClass);
-        Validator.validateDatabaseFilters(fields, filters);
+        validateDatabaseFilters(fields, filters);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 

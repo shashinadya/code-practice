@@ -1,4 +1,4 @@
-package database.helper;
+package database.dao;
 
 import database.exception.EmptyValueException;
 import database.exception.IncorrectPropertyNameException;
@@ -9,15 +9,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The {@code Validator} class provides a set of utility methods for performing various validation tasks.
- * <p>
- * This class is designed to validate input data, such as property names, values, and other entities.
- * It offers general-purpose validation methods that ensure inputs meet specific criteria, such as
- * non-null values, non-empty strings, or matching declared fields of a class.
+ * Provides a base implementation for data access operations on entities, offering common methods
+ * for database operations.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class Validator {
+public abstract class EntityDaoBase implements EntityDao {
+    public static final String ENTITY_IS_NOT_FOUND = "Entity with provided Id does not exist";
+    public static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
+    public static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
+            "Limit value should be in(0..{MAX_LIMIT_VALUE}), offset value should be >= 0";
+    public static final String ENTITIES_LIST_NULL_OR_EMPTY = "Entities list cannot be null or empty";
+    public static final String IDS_LIST_NULL_OR_EMPTY = "IDs list cannot be null or empty";
     public static final String FILTER_CANNOT_BE_NULL_MESSAGE = "Property name and value cannot be null";
     public static final String FILTER_CANNOT_BE_EMPTY_MESSAGE = "Value cannot be empty";
     public static final String INCORRECT_FILTER_NAME_MESSAGE = "Incorrect filter name";
@@ -36,7 +39,7 @@ public class Validator {
      * @throws EmptyValueException              if a filter's value is empty or blank
      * @throws IncorrectPropertyNameException   if a filter's property name does not match any declared field
      */
-    public static void validateDatabaseFilters(List<Field> declaredFields, Map<String, List<String>> filters)
+    public void validateDatabaseFilters(List<Field> declaredFields, Map<String, List<String>> filters)
             throws NullPropertyNameOrValueException, EmptyValueException, IncorrectPropertyNameException {
         for (Map.Entry<String, List<String>> filter : filters.entrySet()) {
             String propertyName = filter.getKey();

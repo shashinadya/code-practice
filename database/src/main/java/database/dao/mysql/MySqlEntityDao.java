@@ -1,6 +1,7 @@
 package database.dao.mysql;
 
 import database.dao.EntityDao;
+import database.dao.EntityDaoBase;
 import database.entity.BaseEntity;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
@@ -12,7 +13,6 @@ import database.exception.InvalidParameterValueException;
 import database.exception.NullOrEmptyListException;
 import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
-import database.helper.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,17 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
-import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
-import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
-
 /**
- * MySqlEntityDao is an implementation of the {@link EntityDao} interface,
- * which provides operations to manage SQL-based databases for entities that extend
- * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
- * records in an SQL database.
+ * MySqlEntityDao extends {@link EntityDaoBase} and implements the {@link EntityDao} interface, providing
+ * operations to manage SQL-based databases for entities that extend {@link BaseEntity}.
+ * This class handles the creation, deletion, and manipulation of records in an SQL database.
  *
  * <p>This dao interacts with an SQL database using JDBC and provides methods for
  * basic CRUD (Create, Read, Update, Delete) operations, as well as filtering, batch data
@@ -62,7 +55,7 @@ import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class MySqlEntityDao implements EntityDao {
+public class MySqlEntityDao extends EntityDaoBase {
     private static final Logger LOG = LoggerFactory.getLogger(MySqlEntityDao.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
@@ -391,7 +384,7 @@ public class MySqlEntityDao implements EntityDao {
     public <T extends BaseEntity> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                            Map<String, List<String>> filters) {
         List<Field> fields = getAllFields(entityClass);
-        Validator.validateDatabaseFilters(fields, filters);
+        validateDatabaseFilters(fields, filters);
 
         String tableName = entityClass.getSimpleName();
         String selectRecordsByFiltersSQL = "SELECT * FROM " + tableName + buildWhereClause(filters);
