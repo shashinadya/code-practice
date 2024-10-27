@@ -1,10 +1,15 @@
 package database.dao;
 
+import database.entity.BaseEntity;
 import database.exception.EmptyValueException;
+import database.exception.IdProvidedManuallyException;
 import database.exception.IncorrectPropertyNameException;
+import database.exception.NullOrEmptyListException;
 import database.exception.NullPropertyNameOrValueException;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +62,31 @@ public abstract class EntityDaoBase implements EntityDao {
                     .findAny()
                     .orElseThrow(() -> new IncorrectPropertyNameException(INCORRECT_FILTER_NAME_MESSAGE +
                             ": " + propertyName));
+        }
+    }
+
+    //todo: test new method and add javadocs
+    public <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
+        if (entity.getId() != null) {
+            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
+        }
+    }
+
+    public List<Field> getAllFields(Class<?> entityClass) {
+        List<Field> fields = new ArrayList<>();
+        while (entityClass != null && entityClass != Object.class) {
+            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
+            entityClass = entityClass.getSuperclass();
+        }
+        return fields;
+    }
+
+    public <T extends BaseEntity> void validateEntities(List<T> entities) {
+        if (entities == null || entities.isEmpty()) {
+            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
+        }
+        for (T entity : entities) {
+            validateIdNotProvidedManually(entity);
         }
     }
 }

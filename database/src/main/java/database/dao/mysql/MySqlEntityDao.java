@@ -8,7 +8,6 @@ import database.exception.TableDoesNotExistException;
 import database.exception.DatabaseOperationException;
 import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
-import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullOrEmptyListException;
 import database.exception.SetPreparedStatementValueException;
@@ -23,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -427,15 +425,6 @@ public class MySqlEntityDao extends EntityDaoBase {
         }
     }
 
-    private List<Field> getAllFields(Class<?> entityClass) {
-        List<Field> fields = new ArrayList<>();
-        while (entityClass != null && entityClass != Object.class) {
-            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
-            entityClass = entityClass.getSuperclass();
-        }
-        return fields;
-    }
-
     private String getSQLType(Class<?> fieldType) {
         if (fieldType == int.class || fieldType == Integer.class) {
             return "INT";
@@ -620,21 +609,6 @@ public class MySqlEntityDao extends EntityDaoBase {
             entities.add(createAndFillEntity(entityClass, resultSet));
         }
         return entities;
-    }
-
-    private <T extends BaseEntity> void validateEntities(List<T> entities) {
-        if (entities == null || entities.isEmpty()) {
-            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
-        }
-        for (T entity : entities) {
-            validateIdNotProvidedManually(entity);
-        }
-    }
-
-    private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
-        if (entity.getId() != null) {
-            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
-        }
     }
 
     private <T extends BaseEntity> void executeBatchInsert(PreparedStatement preparedStatement, List<T> entities,

@@ -7,7 +7,6 @@ import database.exception.TableDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
-import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullOrEmptyListException;
 import database.exception.ReadFileException;
@@ -27,8 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -133,9 +130,7 @@ public class FileBasedEntityDao extends EntityDaoBase {
     @Override
     public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
                                                                    List<T> entities) {
-        if (entities == null || entities.isEmpty()) {
-            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
-        }
+        validateEntities(entities);
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
         verifyDatabaseExists(databasePath);
@@ -327,15 +322,6 @@ public class FileBasedEntityDao extends EntityDaoBase {
         }
     }
 
-    private List<Field> getAllFields(Class<?> entityClass) {
-        List<Field> fields = new ArrayList<>();
-        while (entityClass != null && entityClass != Object.class) {
-            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
-            entityClass = entityClass.getSuperclass();
-        }
-        return fields;
-    }
-
     private <T extends BaseEntity> List<T> deserializeEntities(Class<? extends BaseEntity> entityClass,
                                                                String content) {
         var typeFactory = objectMapper.getTypeFactory();
@@ -377,12 +363,6 @@ public class FileBasedEntityDao extends EntityDaoBase {
         if (!Files.exists(databasePath)) {
             LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
             throw new TableDoesNotExistException(DB_FILE_NOT_EXIST);
-        }
-    }
-
-    private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
-        if (entity.getId() != null) {
-            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
         }
     }
 
