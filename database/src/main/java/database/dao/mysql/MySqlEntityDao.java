@@ -1,5 +1,6 @@
-package database.service;
+package database.dao.mysql;
 
+import database.dao.EntityDao;
 import database.entity.BaseEntity;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
@@ -28,19 +29,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
+import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
+import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
 
 /**
- * SqlDatabaseService is an implementation of the {@link DatabaseService} interface,
+ * MySqlEntityDao is an implementation of the {@link EntityDao} interface,
  * which provides operations to manage SQL-based databases for entities that extend
  * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
  * records in an SQL database.
  *
- * <p>This service interacts with an SQL database using JDBC and provides methods for
+ * <p>This dao interacts with an SQL database using JDBC and provides methods for
  * basic CRUD (Create, Read, Update, Delete) operations, as well as filtering, batch data
  * operations, and transaction management. Each entity type is represented as a separate
  * table in the database, with support for auto-incremented IDs.
@@ -55,14 +56,14 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  * Consistent error handling is achieved through the use of key constants and exception
  * messages for database-related issues.
  *
- * <p>A {@link Settings} object is used to configure service properties such as the
+ * <p>A {@link Settings} object is used to configure dao properties such as the
  * maximum limit of records retrieved, the batch size for bulk operations, and the
  * database connection pool settings.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class SqlDatabaseService implements DatabaseService {
-    private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
+public class MySqlEntityDao implements EntityDao {
+    private static final Logger LOG = LoggerFactory.getLogger(MySqlEntityDao.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
     private final int batchSize;
@@ -75,7 +76,7 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
     static final String ID_PARAMETER_NAME = "id";
 
-    public SqlDatabaseService(Settings settings) {
+    public MySqlEntityDao(Settings settings) {
         this.maxLimitValue = settings.getLimit();
         this.batchSize = settings.getBatchSize();
         this.databaseName = settings.getDatabaseName();

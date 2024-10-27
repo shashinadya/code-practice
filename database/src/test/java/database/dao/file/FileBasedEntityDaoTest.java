@@ -1,4 +1,4 @@
-package database.service;
+package database.dao.file;
 
 import database.entity.Course;
 import database.entity.OxfordStudent;
@@ -24,30 +24,30 @@ import java.util.Map;
 import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
 import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
-import static database.service.JsonDatabaseService.DB_FILE_NOT_EXIST;
-import static database.service.JsonDatabaseService.EMPTY_BRACKETS_TO_JSON;
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+import static database.dao.file.FileBasedEntityDao.DB_FILE_NOT_EXIST;
+import static database.dao.file.FileBasedEntityDao.EMPTY_BRACKETS_TO_JSON;
+import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
+import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
+import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The {@code JsonDatabaseServiceTest} class contains unit tests for the {@code JsonDatabaseService} class.
+ * The {@code FileBasedEntityDaoTest} class contains unit tests for the {@code FileBasedEntityDao} class.
  *
- * <p>This class tests the core functionality of the {@code JsonDatabaseService}, which is responsible for
+ * <p>This class tests the core functionality of the {@code EntityDao}, which is responsible for
  * managing database operations such as creating tables, deleting tables, and adding new records using JSON files.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
- * @see JsonDatabaseService
+ * @see FileBasedEntityDao
  */
-class JsonDatabaseServiceTest {
+class FileBasedEntityDaoTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
-    private final JsonDatabaseService jsonDatabaseService = new JsonDatabaseService(settings);
+    private final FileBasedEntityDao fileBasedEntityDao = new FileBasedEntityDao(settings);
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
@@ -76,7 +76,7 @@ class JsonDatabaseServiceTest {
     @AfterEach
     void tearDown() {
         try {
-            jsonDatabaseService.deleteTable(Student.class);
+            fileBasedEntityDao.deleteTable(Student.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -84,32 +84,32 @@ class JsonDatabaseServiceTest {
 
     @Test
     void createTableTest() {
-        assertTrue(jsonDatabaseService.createTable(Student.class));
+        assertTrue(fileBasedEntityDao.createTable(Student.class));
     }
 
     @Test
     void deleteTableWhenTableExistsTest() {
-        jsonDatabaseService.createTable(Student.class);
-        assertTrue(jsonDatabaseService.deleteTable(Student.class));
+        fileBasedEntityDao.createTable(Student.class);
+        assertTrue(fileBasedEntityDao.deleteTable(Student.class));
     }
 
     @Test
     void deleteTableWhenTableDoesNotExistTest() {
         TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
-                jsonDatabaseService.deleteTable(Student.class));
+                fileBasedEntityDao.deleteTable(Student.class));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
     void addNewRecordToTablePositiveTest() {
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
-        Student receivedFirstStudent = jsonDatabaseService.addNewRecordToTable(firstStudent);
+        Student receivedFirstStudent = fileBasedEntityDao.addNewRecordToTable(firstStudent);
         assertEquals(firstStudent, receivedFirstStudent);
         assertEquals(0, receivedFirstStudent.getId());
 
-        Student receivedSecondStudent = jsonDatabaseService.addNewRecordToTable(secondStudent);
+        Student receivedSecondStudent = fileBasedEntityDao.addNewRecordToTable(secondStudent);
         assertEquals(secondStudent, receivedSecondStudent);
         assertEquals(1, receivedSecondStudent.getId());
     }
@@ -117,14 +117,14 @@ class JsonDatabaseServiceTest {
     @Test
     void addNewRecordWhenTableDoesNotExistTest() {
         TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
-                jsonDatabaseService.addNewRecordToTable(firstStudent));
+                fileBasedEntityDao.addNewRecordToTable(firstStudent));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
     void addNewRecordIdProvidedManuallyTest() {
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
                 .withFullName("FirstName1 LastName1")
@@ -134,7 +134,7 @@ class JsonDatabaseServiceTest {
         studentWithManuallyProvidedId.setId(7);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
-                jsonDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
+                fileBasedEntityDao.addNewRecordToTable(studentWithManuallyProvidedId));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
     }
@@ -142,11 +142,11 @@ class JsonDatabaseServiceTest {
     @Test
     void addNewRecordsToTablePositiveTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
-        assertEquals(students, jsonDatabaseService.addNewRecordsToTable(Student.class, students));
-        assertEquals(firstStudent, jsonDatabaseService.getById(Student.class, 0));
-        assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
+        assertEquals(students, fileBasedEntityDao.addNewRecordsToTable(Student.class, students));
+        assertEquals(firstStudent, fileBasedEntityDao.getById(Student.class, 0));
+        assertEquals(secondStudent, fileBasedEntityDao.getById(Student.class, 1));
     }
 
     @Test
@@ -154,14 +154,14 @@ class JsonDatabaseServiceTest {
         List<Student> students = List.of(firstStudent, secondStudent);
 
         TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+                fileBasedEntityDao.addNewRecordsToTable(Student.class, students));
 
         assertEquals(DB_FILE_NOT_EXIST, exception.getMessage());
     }
 
     @Test
     void addNewRecordsIdProvidedManuallyTest() {
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
                 .withFullName("FirstName1 LastName1")
@@ -172,46 +172,46 @@ class JsonDatabaseServiceTest {
         List<Student> students = List.of(firstStudent, studentWithManuallyProvidedId);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, students));
+                fileBasedEntityDao.addNewRecordsToTable(Student.class, students));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
     }
 
     @Test
     void addNewRecordsEntitiesListIsEmptyTest() {
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, List.of()));
+                fileBasedEntityDao.addNewRecordsToTable(Student.class, List.of()));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void addNewRecordsEntitiesListIsNullTest() {
-        jsonDatabaseService.createTable(Student.class);
+        fileBasedEntityDao.createTable(Student.class);
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                jsonDatabaseService.addNewRecordsToTable(Student.class, null));
+                fileBasedEntityDao.addNewRecordsToTable(Student.class, null));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void updateRecordInTableWIthCorrectIdTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
 
         secondStudent.setId(5);
 
-        assertEquals(secondStudent, jsonDatabaseService.updateRecordInTable(secondStudent, 1));
-        assertEquals(secondStudent, jsonDatabaseService.getById(Student.class, 1));
+        assertEquals(secondStudent, fileBasedEntityDao.updateRecordInTable(secondStudent, 1));
+        assertEquals(secondStudent, fileBasedEntityDao.getById(Student.class, 1));
     }
 
     @Test
     void updateOxfordStudentTest() {
-        jsonDatabaseService.createTable(OxfordStudent.class);
+        fileBasedEntityDao.createTable(OxfordStudent.class);
 
         OxfordStudent os = new OxfordStudent.Builder()
                 .withFullName("N")
@@ -224,19 +224,19 @@ class JsonDatabaseServiceTest {
                 .withAge(21)
                 .build();
 
-        jsonDatabaseService.addNewRecordToTable(os);
-        assertEquals(os2, jsonDatabaseService.updateRecordInTable(os2, 0));
+        fileBasedEntityDao.addNewRecordToTable(os);
+        assertEquals(os2, fileBasedEntityDao.updateRecordInTable(os2, 0));
 
-        jsonDatabaseService.deleteTable(OxfordStudent.class);
+        fileBasedEntityDao.deleteTable(OxfordStudent.class);
     }
 
     @Test
     void updateRecordInTableWIthIncorrectIdTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
         IdDoesNotExistException exception = assertThrows(IdDoesNotExistException.class, () ->
-                jsonDatabaseService.updateRecordInTable(secondStudent, 12));
+                fileBasedEntityDao.updateRecordInTable(secondStudent, 12));
 
         assertEquals(ENTITY_IS_NOT_FOUND, exception.getMessage());
     }
@@ -246,13 +246,13 @@ class JsonDatabaseServiceTest {
         List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent);
         List<Student> studentsAfterDeletion = List.of(secondStudent);
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
 
-        assertEquals(studentsBeforeDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
-        assertTrue(jsonDatabaseService.removeRecordFromTable(Student.class, 0));
-        assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+        assertEquals(studentsBeforeDeletion, fileBasedEntityDao.getAllRecordsFromTable(Student.class));
+        assertTrue(fileBasedEntityDao.removeRecordFromTable(Student.class, 0));
+        assertEquals(studentsAfterDeletion, fileBasedEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
@@ -261,11 +261,11 @@ class JsonDatabaseServiceTest {
         List<Student> studentsAfterDeletion = List.of(firstStudent);
         List<Integer> idsForDeletion = List.of(1, 2);
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
 
-        assertTrue(jsonDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
-        assertEquals(studentsAfterDeletion, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+        assertTrue(fileBasedEntityDao.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
+        assertEquals(studentsAfterDeletion, fileBasedEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
@@ -273,58 +273,58 @@ class JsonDatabaseServiceTest {
         List<Integer> idsForDeletion = List.of();
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                jsonDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
+                fileBasedEntityDao.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
 
         assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void removeAllRecordsFromTableTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
 
-        jsonDatabaseService.removeAllRecordsFromTable(Student.class);
-        Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
-        assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
+        fileBasedEntityDao.removeAllRecordsFromTable(Student.class);
+        Path databasePath = Path.of(fileBasedEntityDao.getDatabasePath(Student.class));
+        assertEquals(EMPTY_BRACKETS_TO_JSON, fileBasedEntityDao.readDatabaseFile(databasePath));
     }
 
     @Test
     void removeAllRecordsIdCounterCheckTest() {
         try {
-            jsonDatabaseService.createTable(Student.class);
-            jsonDatabaseService.addNewRecordToTable(firstStudent);
-            jsonDatabaseService.addNewRecordToTable(secondStudent);
+            fileBasedEntityDao.createTable(Student.class);
+            fileBasedEntityDao.addNewRecordToTable(firstStudent);
+            fileBasedEntityDao.addNewRecordToTable(secondStudent);
 
-            jsonDatabaseService.createTable(Course.class);
-            jsonDatabaseService.addNewRecordToTable(new Course.Builder()
+            fileBasedEntityDao.createTable(Course.class);
+            fileBasedEntityDao.addNewRecordToTable(new Course.Builder()
                     .withName("Course1")
                     .build());
 
-            jsonDatabaseService.removeAllRecordsFromTable(Student.class);
-            Path databasePath = Path.of(jsonDatabaseService.getDatabasePath(Student.class));
-            assertEquals(EMPTY_BRACKETS_TO_JSON, jsonDatabaseService.readDatabaseFile(databasePath));
+            fileBasedEntityDao.removeAllRecordsFromTable(Student.class);
+            Path databasePath = Path.of(fileBasedEntityDao.getDatabasePath(Student.class));
+            assertEquals(EMPTY_BRACKETS_TO_JSON, fileBasedEntityDao.readDatabaseFile(databasePath));
 
-            jsonDatabaseService.addNewRecordToTable(thirdStudent);
-            assertEquals(thirdStudent, jsonDatabaseService.getById(Student.class, 2));
+            fileBasedEntityDao.addNewRecordToTable(thirdStudent);
+            assertEquals(thirdStudent, fileBasedEntityDao.getById(Student.class, 2));
 
-            jsonDatabaseService.addNewRecordToTable(new Course.Builder()
+            fileBasedEntityDao.addNewRecordToTable(new Course.Builder()
                     .withName("Course2")
                     .build());
 
-            assertEquals(1, jsonDatabaseService.getById(Course.class, 1).getId());
+            assertEquals(1, fileBasedEntityDao.getById(Course.class, 1).getId());
         } finally {
-            jsonDatabaseService.deleteTable(Course.class);
+            fileBasedEntityDao.deleteTable(Course.class);
         }
     }
 
     @Test
     void getByIdTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
 
-        Student receivedStudentById = jsonDatabaseService.getById(Student.class, 1);
+        Student receivedStudentById = fileBasedEntityDao.getById(Student.class, 1);
 
         assertEquals(secondStudent, receivedStudentById);
         assertEquals(1, receivedStudentById.getId());
@@ -332,40 +332,40 @@ class JsonDatabaseServiceTest {
 
     @Test
     void getByIdWhenIdDoesNotExistTest() {
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
-        assertNull(jsonDatabaseService.getById(Student.class, 13));
+        assertNull(fileBasedEntityDao.getById(Student.class, 13));
     }
 
     @Test
     void getAllRecordsFromTableTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
 
-        assertEquals(students, jsonDatabaseService.getAllRecordsFromTable(Student.class));
+        assertEquals(students, fileBasedEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
     void getAllRecordsWithValidLimitOffsetParametersTest() {
         List<Student> resultStudents = List.of(secondStudent, thirdStudent);
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(resultStudents, jsonDatabaseService.getAllRecordsFromTable(Student.class, 2, 1));
+        assertEquals(resultStudents, fileBasedEntityDao.getAllRecordsFromTable(Student.class, 2, 1));
     }
 
     @Test
     void getAllRecordsWithNegativeLimitOffsetParametersTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
-                jsonDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
+                fileBasedEntityDao.getAllRecordsFromTable(Student.class, -1, -1));
 
         assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
@@ -374,7 +374,7 @@ class JsonDatabaseServiceTest {
     @Test
     void getAllRecordsWithOverLimitParameterTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
-                jsonDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
+                fileBasedEntityDao.getAllRecordsFromTable(Student.class, 200, 1));
 
         assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
@@ -389,13 +389,13 @@ class JsonDatabaseServiceTest {
                 "averageScore", List.of("5.0")
         );
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, fileBasedEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -406,13 +406,13 @@ class JsonDatabaseServiceTest {
                 "fullName", List.of("FirstName1 LastName1", "FirstName2 LastName2")
         );
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, fileBasedEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -430,12 +430,12 @@ class JsonDatabaseServiceTest {
 
         List<OxfordStudent> students = List.of(os);
 
-        jsonDatabaseService.createTable(OxfordStudent.class);
-        jsonDatabaseService.addNewRecordToTable(os);
+        fileBasedEntityDao.createTable(OxfordStudent.class);
+        fileBasedEntityDao.addNewRecordToTable(os);
 
-        assertEquals(students, jsonDatabaseService.getByFilters(OxfordStudent.class, filters));
+        assertEquals(students, fileBasedEntityDao.getByFilters(OxfordStudent.class, filters));
 
-        jsonDatabaseService.deleteTable(OxfordStudent.class);
+        fileBasedEntityDao.deleteTable(OxfordStudent.class);
     }
 
     @Test
@@ -447,13 +447,13 @@ class JsonDatabaseServiceTest {
                 "averageScore", List.of("5.0")
         );
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
-        jsonDatabaseService.addNewRecordToTable(fourthStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, fileBasedEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -465,12 +465,12 @@ class JsonDatabaseServiceTest {
                 "averageScore", List.of("3.0")
         );
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
-        jsonDatabaseService.addNewRecordToTable(secondStudent);
-        jsonDatabaseService.addNewRecordToTable(thirdStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.addNewRecordToTable(secondStudent);
+        fileBasedEntityDao.addNewRecordToTable(thirdStudent);
 
-        assertEquals(students, jsonDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, fileBasedEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -479,11 +479,11 @@ class JsonDatabaseServiceTest {
             put(null, List.of("0"));
         }};
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
-                jsonDatabaseService.getByFilters(Student.class, filters));
+                fileBasedEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
@@ -493,11 +493,11 @@ class JsonDatabaseServiceTest {
             put("averageScore", null);
         }};
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
-                jsonDatabaseService.getByFilters(Student.class, filters));
+                fileBasedEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
@@ -505,11 +505,11 @@ class JsonDatabaseServiceTest {
     void getByFiltersValueIsEmptyTest() {
         Map<String, List<String>> filters = Map.of("fullName", List.of());
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
-                jsonDatabaseService.getByFilters(Student.class, filters));
+                fileBasedEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
     }
 
@@ -517,11 +517,11 @@ class JsonDatabaseServiceTest {
     void getByFiltersIncorrectPropertyNameTest() {
         Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1 LastName1"));
 
-        jsonDatabaseService.createTable(Student.class);
-        jsonDatabaseService.addNewRecordToTable(firstStudent);
+        fileBasedEntityDao.createTable(Student.class);
+        fileBasedEntityDao.addNewRecordToTable(firstStudent);
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
-                jsonDatabaseService.getByFilters(Student.class, filters));
+                fileBasedEntityDao.getByFilters(Student.class, filters));
         assertEquals(INCORRECT_FILTER_NAME_MESSAGE + ": firstName", exception.getMessage());
     }
 }

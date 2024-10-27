@@ -1,5 +1,6 @@
-package database.service;
+package database.dao.file;
 
+import database.dao.EntityDao;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
 import database.exception.DeletionDatabaseException;
@@ -33,24 +34,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
+import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
+import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
+import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
 
 /**
- * JsonDatabaseService is an implementation of the {@link DatabaseService} interface,
+ * FileBasedEntityDao is an implementation of the {@link EntityDao} interface,
  * which provides operations to manage JSON-based databases for entities that extend
  * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
  * records in a file-based JSON database.
  *
- * <p>This service uses the Jackson library for JSON serialization and deserialization
- * of entities. Each entity type is stored in a separate file, and the service provides
+ * <p>This dao uses the Jackson library for JSON serialization and deserialization
+ * of entities. Each entity type is stored in a separate file, and the dao provides
  * methods for basic CRUD (Create, Read, Update, Delete) operations as well as filtering
  * and bulk data operations.
  *
- * <p>The service supports assigning unique auto-incremented IDs to each new entity and
+ * <p>The dao supports assigning unique auto-incremented IDs to each new entity and
  * ensures that no entity has its ID manually assigned. It also provides mechanisms for
  * managing the underlying database files, including verifying the existence of database
  * files and handling exceptions related to file access and serialization issues.
@@ -60,17 +61,17 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  *
  * <p>Key constants and exception messages are used throughout the class to ensure
  * consistent error handling and message logging. A {@link Settings} object is used
- * to configure service properties such as the maximum limit of records retrieved
+ * to configure dao properties such as the maximum limit of records retrieved
  * and the base path for storing database files.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class JsonDatabaseService implements DatabaseService {
+public class FileBasedEntityDao implements EntityDao {
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;
     private final int maxLimitValue;
     private final Path databasePath;
-    private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedEntityDao.class);
     static final String EMPTY_BRACKETS_TO_JSON = "[]";
     static final String UNABLE_CREATE_DB_FILE = "Unable to create database file. Please check if file already exists.";
     static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file. Please check if file does not exist.";
@@ -80,7 +81,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
-    public JsonDatabaseService(Settings settings) throws CreationDatabaseException {
+    public FileBasedEntityDao(Settings settings) throws CreationDatabaseException {
         this.maxLimitValue = settings.getLimit();
         this.databasePath = settings.getDatabasePath();
         objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);

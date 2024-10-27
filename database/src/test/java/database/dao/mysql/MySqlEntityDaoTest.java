@@ -1,4 +1,4 @@
-package database.service;
+package database.dao.mysql;
 
 import database.entity.Course;
 import database.entity.OxfordStudent;
@@ -24,30 +24,30 @@ import java.util.Map;
 import static database.helper.Validator.FILTER_CANNOT_BE_EMPTY_MESSAGE;
 import static database.helper.Validator.FILTER_CANNOT_BE_NULL_MESSAGE;
 import static database.helper.Validator.INCORRECT_FILTER_NAME_MESSAGE;
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
-import static database.service.SqlDatabaseService.TABLE_NOT_EXIST;
-import static database.service.SqlDatabaseService.UNABLE_CREATE_TABLE;
+import static database.dao.EntityDaoConstants.ENTITIES_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ENTITY_IS_NOT_FOUND;
+import static database.dao.EntityDaoConstants.IDS_LIST_NULL_OR_EMPTY;
+import static database.dao.EntityDaoConstants.ID_PROVIDED_MANUALLY;
+import static database.dao.EntityDaoConstants.INVALID_PARAMETER_VALUE;
+import static database.dao.mysql.MySqlEntityDao.TABLE_NOT_EXIST;
+import static database.dao.mysql.MySqlEntityDao.UNABLE_CREATE_TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The {@code SqlDatabaseServiceTest} class contains unit tests for the {@code SqlDatabaseService} class.
+ * The {@code MySqlEntityDaoTest} class contains unit tests for the {@code MySqlEntityDao} class.
  *
- * <p>This class tests the core functionality of the {@code SqlDatabaseService}, which is responsible for
+ * <p>This class tests the core functionality of the {@code EntityDao}, which is responsible for
  * managing SQL database operations such as creating tables, deleting tables, and adding new records to tables.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
- * @see SqlDatabaseService
+ * @see MySqlEntityDao
  */
-public class SqlDatabaseServiceTest {
+public class MySqlEntityDaoTest {
     private final Settings settings = new Settings("Db_app_properties_files/application.properties");
-    private final SqlDatabaseService sqlDatabaseService = new SqlDatabaseService(settings);
+    private final MySqlEntityDao mySqlEntityDao = new MySqlEntityDao(settings);
     private Student firstStudent;
     private Student secondStudent;
     private Student thirdStudent;
@@ -76,7 +76,7 @@ public class SqlDatabaseServiceTest {
     @AfterEach
     void tearDown() {
         try {
-            sqlDatabaseService.deleteTable(Student.class);
+            mySqlEntityDao.deleteTable(Student.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -84,33 +84,33 @@ public class SqlDatabaseServiceTest {
 
     @Test
     void createTableTest() {
-        assertTrue(sqlDatabaseService.createTable(Student.class));
+        assertTrue(mySqlEntityDao.createTable(Student.class));
     }
 
     @Test
     void createTableFailedTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
         CreationDatabaseException exception = assertThrows(CreationDatabaseException.class, () ->
-                sqlDatabaseService.createTable(Student.class));
+                mySqlEntityDao.createTable(Student.class));
         assertTrue(exception.getMessage().startsWith(UNABLE_CREATE_TABLE));
     }
 
     @Test
     void deleteTableTest() {
-        sqlDatabaseService.createTable(Student.class);
-        assertTrue(sqlDatabaseService.deleteTable(Student.class));
+        mySqlEntityDao.createTable(Student.class);
+        assertTrue(mySqlEntityDao.deleteTable(Student.class));
     }
 
     @Test
     void addNewRecordToTablePositiveTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
-        Student receivedFirstStudent = sqlDatabaseService.addNewRecordToTable(firstStudent);
+        Student receivedFirstStudent = mySqlEntityDao.addNewRecordToTable(firstStudent);
         assertEquals(firstStudent, receivedFirstStudent);
         assertEquals(1, receivedFirstStudent.getId());
 
-        Student receivedSecondStudent = sqlDatabaseService.addNewRecordToTable(secondStudent);
+        Student receivedSecondStudent = mySqlEntityDao.addNewRecordToTable(secondStudent);
         assertEquals(secondStudent, receivedSecondStudent);
         assertEquals(2, receivedSecondStudent.getId());
     }
@@ -118,14 +118,14 @@ public class SqlDatabaseServiceTest {
     @Test
     void addNewRecordWhenTableDoesNotExistTest() {
         TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
-                sqlDatabaseService.addNewRecordToTable(firstStudent));
+                mySqlEntityDao.addNewRecordToTable(firstStudent));
 
         assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
     }
 
     @Test
     void addNewRecordIdProvidedManuallyTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
                 .withFullName("FirstName1 LastName1")
@@ -135,7 +135,7 @@ public class SqlDatabaseServiceTest {
         studentWithManuallyProvidedId.setId(7);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
-                sqlDatabaseService.addNewRecordToTable(studentWithManuallyProvidedId));
+                mySqlEntityDao.addNewRecordToTable(studentWithManuallyProvidedId));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
     }
@@ -144,11 +144,11 @@ public class SqlDatabaseServiceTest {
     void addNewRecordsToTablePositiveTest() {
         List<Student> newStudents = List.of(firstStudent, secondStudent);
 
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
-        assertEquals(newStudents, sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
-        assertEquals(firstStudent, sqlDatabaseService.getById(Student.class, 1));
-        assertEquals(secondStudent, sqlDatabaseService.getById(Student.class, 2));
+        assertEquals(newStudents, mySqlEntityDao.addNewRecordsToTable(Student.class, newStudents));
+        assertEquals(firstStudent, mySqlEntityDao.getById(Student.class, 1));
+        assertEquals(secondStudent, mySqlEntityDao.getById(Student.class, 2));
     }
 
     @Test
@@ -156,14 +156,14 @@ public class SqlDatabaseServiceTest {
         List<Student> newStudents = List.of(firstStudent, secondStudent);
 
         TableDoesNotExistException exception = assertThrows(TableDoesNotExistException.class, () ->
-                sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+                mySqlEntityDao.addNewRecordsToTable(Student.class, newStudents));
 
         assertTrue(exception.getMessage().startsWith(TABLE_NOT_EXIST));
     }
 
     @Test
     void addNewRecordsIdProvidedManuallyTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
         Student studentWithManuallyProvidedId = new Student.Builder()
                 .withFullName("FirstName1 LastName1")
@@ -174,47 +174,47 @@ public class SqlDatabaseServiceTest {
         List<Student> newStudents = List.of(firstStudent, studentWithManuallyProvidedId);
 
         IdProvidedManuallyException exception = assertThrows(IdProvidedManuallyException.class, () ->
-                sqlDatabaseService.addNewRecordsToTable(Student.class, newStudents));
+                mySqlEntityDao.addNewRecordsToTable(Student.class, newStudents));
 
         assertEquals(ID_PROVIDED_MANUALLY, exception.getMessage());
     }
 
     @Test
     void addNewRecordsEntitiesListIsEmptyTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                sqlDatabaseService.addNewRecordsToTable(Student.class, List.of()));
+                mySqlEntityDao.addNewRecordsToTable(Student.class, List.of()));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void addNewRecordsEntitiesListIsNullTest() {
-        sqlDatabaseService.createTable(Student.class);
+        mySqlEntityDao.createTable(Student.class);
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                sqlDatabaseService.addNewRecordsToTable(Student.class, null));
+                mySqlEntityDao.addNewRecordsToTable(Student.class, null));
 
         assertEquals(ENTITIES_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
 
     @Test
     void updateRecordInTableWIthCorrectIdTest() {
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
 
         secondStudent.setId(5);
 
-        assertEquals(secondStudent, sqlDatabaseService.updateRecordInTable(secondStudent, 1));
-        assertEquals(secondStudent, sqlDatabaseService.getById(Student.class, 1));
+        assertEquals(secondStudent, mySqlEntityDao.updateRecordInTable(secondStudent, 1));
+        assertEquals(secondStudent, mySqlEntityDao.getById(Student.class, 1));
     }
 
     @Test
     void updateOxfordStudentTest() {
         try {
-            sqlDatabaseService.createTable(OxfordStudent.class);
+            mySqlEntityDao.createTable(OxfordStudent.class);
 
             OxfordStudent os = new OxfordStudent.Builder()
                     .withFullName("N")
@@ -227,20 +227,20 @@ public class SqlDatabaseServiceTest {
                     .withAge(21)
                     .build();
 
-            sqlDatabaseService.addNewRecordToTable(os);
-            assertEquals(os2, sqlDatabaseService.updateRecordInTable(os2, 1));
+            mySqlEntityDao.addNewRecordToTable(os);
+            assertEquals(os2, mySqlEntityDao.updateRecordInTable(os2, 1));
         } finally {
-            sqlDatabaseService.deleteTable(OxfordStudent.class);
+            mySqlEntityDao.deleteTable(OxfordStudent.class);
         }
     }
 
     @Test
     void updateRecordInTableWIthIncorrectIdTest() {
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
         IdDoesNotExistException exception = assertThrows(IdDoesNotExistException.class, () ->
-                sqlDatabaseService.updateRecordInTable(secondStudent, 12));
+                mySqlEntityDao.updateRecordInTable(secondStudent, 12));
 
         assertEquals(ENTITY_IS_NOT_FOUND, exception.getMessage());
     }
@@ -250,13 +250,13 @@ public class SqlDatabaseServiceTest {
         List<Student> studentsBeforeDeletion = List.of(firstStudent, secondStudent);
         List<Student> studentsAfterDeletion = List.of(secondStudent);
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
 
-        assertEquals(studentsBeforeDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
-        assertTrue(sqlDatabaseService.removeRecordFromTable(Student.class, 1));
-        assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+        assertEquals(studentsBeforeDeletion, mySqlEntityDao.getAllRecordsFromTable(Student.class));
+        assertTrue(mySqlEntityDao.removeRecordFromTable(Student.class, 1));
+        assertEquals(studentsAfterDeletion, mySqlEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
@@ -265,11 +265,11 @@ public class SqlDatabaseServiceTest {
         List<Student> studentsAfterDeletion = List.of(firstStudent);
         List<Integer> idsForDeletion = List.of(2, 3);
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordsToTable(Student.class, studentsBeforeDeletion);
 
-        assertTrue(sqlDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
-        assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+        assertTrue(mySqlEntityDao.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
+        assertEquals(studentsAfterDeletion, mySqlEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
@@ -277,7 +277,7 @@ public class SqlDatabaseServiceTest {
         List<Integer> idsForDeletion = List.of();
 
         NullOrEmptyListException exception = assertThrows(NullOrEmptyListException.class, () ->
-                sqlDatabaseService.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
+                mySqlEntityDao.removeSpecificRecordsFromTable(Student.class, idsForDeletion));
 
         assertEquals(IDS_LIST_NULL_OR_EMPTY, exception.getMessage());
     }
@@ -286,13 +286,13 @@ public class SqlDatabaseServiceTest {
     void removeAllRecordsFromTableTest() {
         List<Student> studentsAfterDeletion = List.of();
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
 
-        sqlDatabaseService.removeAllRecordsFromTable(Student.class);
+        mySqlEntityDao.removeAllRecordsFromTable(Student.class);
 
-        assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+        assertEquals(studentsAfterDeletion, mySqlEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
@@ -300,38 +300,38 @@ public class SqlDatabaseServiceTest {
         try {
             List<Student> studentsAfterDeletion = List.of();
 
-            sqlDatabaseService.createTable(Student.class);
-            sqlDatabaseService.addNewRecordToTable(firstStudent);
-            sqlDatabaseService.addNewRecordToTable(secondStudent);
+            mySqlEntityDao.createTable(Student.class);
+            mySqlEntityDao.addNewRecordToTable(firstStudent);
+            mySqlEntityDao.addNewRecordToTable(secondStudent);
 
-            sqlDatabaseService.createTable(Course.class);
-            sqlDatabaseService.addNewRecordToTable(new Course.Builder()
+            mySqlEntityDao.createTable(Course.class);
+            mySqlEntityDao.addNewRecordToTable(new Course.Builder()
                     .withName("Course1")
                     .build());
 
-            sqlDatabaseService.removeAllRecordsFromTable(Student.class);
-            assertEquals(studentsAfterDeletion, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+            mySqlEntityDao.removeAllRecordsFromTable(Student.class);
+            assertEquals(studentsAfterDeletion, mySqlEntityDao.getAllRecordsFromTable(Student.class));
 
-            sqlDatabaseService.addNewRecordToTable(thirdStudent);
-            assertEquals(thirdStudent, sqlDatabaseService.getById(Student.class, 3));
+            mySqlEntityDao.addNewRecordToTable(thirdStudent);
+            assertEquals(thirdStudent, mySqlEntityDao.getById(Student.class, 3));
 
-            sqlDatabaseService.addNewRecordToTable(new Course.Builder()
+            mySqlEntityDao.addNewRecordToTable(new Course.Builder()
                     .withName("Course2")
                     .build());
 
-            assertEquals(2, sqlDatabaseService.getById(Course.class, 2).getId());
+            assertEquals(2, mySqlEntityDao.getById(Course.class, 2).getId());
         } finally {
-            sqlDatabaseService.deleteTable(Course.class);
+            mySqlEntityDao.deleteTable(Course.class);
         }
     }
 
     @Test
     void getByIdTest() {
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
 
-        Student receivedStudentById = sqlDatabaseService.getById(Student.class, 2);
+        Student receivedStudentById = mySqlEntityDao.getById(Student.class, 2);
 
         assertEquals(secondStudent, receivedStudentById);
         assertEquals(2, receivedStudentById.getId());
@@ -339,40 +339,40 @@ public class SqlDatabaseServiceTest {
 
     @Test
     void getByIdWhenIdDoesNotExistTest() {
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
-        assertNull(sqlDatabaseService.getById(Student.class, 13));
+        assertNull(mySqlEntityDao.getById(Student.class, 13));
     }
 
     @Test
     void getAllRecordsFromTableTest() {
         List<Student> students = List.of(firstStudent, secondStudent);
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
 
-        assertEquals(students, sqlDatabaseService.getAllRecordsFromTable(Student.class));
+        assertEquals(students, mySqlEntityDao.getAllRecordsFromTable(Student.class));
     }
 
     @Test
     void getAllRecordsWithValidLimitOffsetParametersTest() {
         List<Student> resultStudents = List.of(secondStudent, thirdStudent);
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
-        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(resultStudents, sqlDatabaseService.getAllRecordsFromTable(Student.class, 2, 1));
+        assertEquals(resultStudents, mySqlEntityDao.getAllRecordsFromTable(Student.class, 2, 1));
     }
 
     @Test
     void getAllRecordsWithNegativeLimitOffsetParametersTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
-                sqlDatabaseService.getAllRecordsFromTable(Student.class, -1, -1));
+                mySqlEntityDao.getAllRecordsFromTable(Student.class, -1, -1));
 
         assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
@@ -381,7 +381,7 @@ public class SqlDatabaseServiceTest {
     @Test
     void getAllRecordsWithOverLimitParameterTest() {
         var exception = assertThrows(InvalidParameterValueException.class, () ->
-                sqlDatabaseService.getAllRecordsFromTable(Student.class, 200, 1));
+                mySqlEntityDao.getAllRecordsFromTable(Student.class, 200, 1));
 
         assertEquals(INVALID_PARAMETER_VALUE.replace("{MAX_LIMIT_VALUE}", "100"),
                 exception.getMessage());
@@ -396,13 +396,13 @@ public class SqlDatabaseServiceTest {
                 "averageScore", List.of("5.0")
         );
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
-        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, mySqlEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -413,13 +413,13 @@ public class SqlDatabaseServiceTest {
                 "fullName", List.of("FirstName1 LastName1", "FirstName2 LastName2")
         );
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
-        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, mySqlEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -437,12 +437,12 @@ public class SqlDatabaseServiceTest {
 
         List<OxfordStudent> students = List.of(os);
 
-        sqlDatabaseService.createTable(OxfordStudent.class);
-        sqlDatabaseService.addNewRecordToTable(os);
+        mySqlEntityDao.createTable(OxfordStudent.class);
+        mySqlEntityDao.addNewRecordToTable(os);
 
-        assertEquals(students, sqlDatabaseService.getByFilters(OxfordStudent.class, filters));
+        assertEquals(students, mySqlEntityDao.getByFilters(OxfordStudent.class, filters));
 
-        sqlDatabaseService.deleteTable(OxfordStudent.class);
+        mySqlEntityDao.deleteTable(OxfordStudent.class);
     }
 
     @Test
@@ -454,13 +454,13 @@ public class SqlDatabaseServiceTest {
                 "averageScore", List.of("5.0")
         );
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
-        sqlDatabaseService.addNewRecordToTable(fourthStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.addNewRecordToTable(fourthStudent);
 
-        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, mySqlEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -472,12 +472,12 @@ public class SqlDatabaseServiceTest {
                 "averageScore", List.of("3.0")
         );
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
-        sqlDatabaseService.addNewRecordToTable(secondStudent);
-        sqlDatabaseService.addNewRecordToTable(thirdStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.addNewRecordToTable(secondStudent);
+        mySqlEntityDao.addNewRecordToTable(thirdStudent);
 
-        assertEquals(students, sqlDatabaseService.getByFilters(Student.class, filters));
+        assertEquals(students, mySqlEntityDao.getByFilters(Student.class, filters));
     }
 
     @Test
@@ -486,11 +486,11 @@ public class SqlDatabaseServiceTest {
             put(null, List.of("0"));
         }};
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
-                sqlDatabaseService.getByFilters(Student.class, filters));
+                mySqlEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
@@ -500,11 +500,11 @@ public class SqlDatabaseServiceTest {
             put("averageScore", null);
         }};
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
         NullPropertyNameOrValueException exception = assertThrows(NullPropertyNameOrValueException.class, () ->
-                sqlDatabaseService.getByFilters(Student.class, filters));
+                mySqlEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_NULL_MESSAGE, exception.getMessage());
     }
 
@@ -512,11 +512,11 @@ public class SqlDatabaseServiceTest {
     void getByFiltersValueIsEmptyTest() {
         Map<String, List<String>> filters = Map.of("fullName", List.of());
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
         EmptyValueException exception = assertThrows(EmptyValueException.class, () ->
-                sqlDatabaseService.getByFilters(Student.class, filters));
+                mySqlEntityDao.getByFilters(Student.class, filters));
         assertEquals(FILTER_CANNOT_BE_EMPTY_MESSAGE, exception.getMessage());
     }
 
@@ -524,11 +524,11 @@ public class SqlDatabaseServiceTest {
     void getByFiltersIncorrectPropertyNameTest() {
         Map<String, List<String>> filters = Map.of("firstName", List.of("FirstName1 LastName1"));
 
-        sqlDatabaseService.createTable(Student.class);
-        sqlDatabaseService.addNewRecordToTable(firstStudent);
+        mySqlEntityDao.createTable(Student.class);
+        mySqlEntityDao.addNewRecordToTable(firstStudent);
 
         IncorrectPropertyNameException exception = assertThrows(IncorrectPropertyNameException.class, () ->
-                sqlDatabaseService.getByFilters(Student.class, filters));
+                mySqlEntityDao.getByFilters(Student.class, filters));
         assertEquals(INCORRECT_FILTER_NAME_MESSAGE + ": firstName", exception.getMessage());
     }
 }

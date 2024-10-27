@@ -1,4 +1,4 @@
-package database.service;
+package database.dao;
 
 import database.entity.BaseEntity;
 
@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The {@code DatabaseService} interface defines the contract for a service
+ * The {@code EntityDao} interface defines the contract for a dao
  * that manages database operations such as creating tables, adding, updating,
  * retrieving, and removing records for entities extending {@link BaseEntity}.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public interface DatabaseService {
+public interface EntityDao {
 
     /**
      * Creates a new table in the database based on the provided entity class.
@@ -129,7 +129,7 @@ public interface DatabaseService {
                                                     Map<String, List<String>> filters);
 
     /**
-     * Shuts down the database service, releasing any resources or connections.
+     * Shuts down the database dao, releasing any resources or connections.
      */
     void shutdown();
 }

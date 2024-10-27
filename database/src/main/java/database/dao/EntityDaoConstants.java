@@ -1,10 +1,9 @@
-package database.service;
+package database.dao;
 
 /**
- * The {@code ServiceConstants} class contains constant values used throughout
- * the {@link DatabaseService} implementations. These constants represent standardized
- * error and validation messages that are used for exception handling and logging in
- * the services.
+ * The {@code EntityDaoConstants} class contains constant values used throughout
+ * the {@link EntityDao} implementations. These constants represent standardized
+ * error and validation messages that are used for exception handling and logging.
  *
  * <p>This class is designed to provide a centralized location for common messages to
  * ensure consistency and maintainability across the codebase. By using these constants,
@@ -17,7 +16,7 @@ package database.service;
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class ServiceConstants {
+public class EntityDaoConstants {
     public static final String ENTITY_IS_NOT_FOUND = "Entity with provided Id does not exist";
     public static final String ID_PROVIDED_MANUALLY = "User cannot provide id manually. Ids are filled automatically.";
     public static final String INVALID_PARAMETER_VALUE = "Invalid parameter value. " +
@@ -28,6 +27,6 @@ public class ServiceConstants {
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    private ServiceConstants() {
+    private EntityDaoConstants() {
     }
 }

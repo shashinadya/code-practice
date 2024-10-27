@@ -6,7 +6,7 @@ import database.exception.BadRequestException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdMismatchException;
 import database.exception.InvalidParameterValueException;
-import database.service.DatabaseService;
+import database.dao.EntityDao;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
@@ -32,7 +32,7 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 /**
  * The {@code DatabaseServiceRestController} class provides REST API endpoints for managing
  * database operations such as creating, updating, retrieving, and deleting records from
- * database tables. It interacts with a {@link DatabaseService} to perform CRUD operations on
+ * database tables. It interacts with a {@link EntityDao} to perform CRUD operations on
  * entities that extend {@link BaseEntity}. Each entity type is associated with a database
  * table that can be managed through the provided endpoints.
  *
@@ -52,7 +52,7 @@ import static io.javalin.apibuilder.ApiBuilder.put;
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
 public class DatabaseServiceRestController {
-    private final DatabaseService databaseService;
+    private final EntityDao entityDao;
     private final Set<Class<? extends BaseEntity>> entities;
     static final String ID_PARAMETER_NAME = "id";
     static final String INVALID_PARAM_VALUE = "Invalid value for limit or offset parameter. They must be integers.";
@@ -62,12 +62,12 @@ public class DatabaseServiceRestController {
      * Constructs a {@code DatabaseServiceRestController} with the provided {@code databaseService}
      * and {@code entities} that the controller will manage.
      *
-     * @param databaseService the service to perform database operations
+     * @param entityDao the dao to perform database operations
      * @param entities        the set of entity classes (subclasses of {@link BaseEntity}) that will be managed
-     *                        by the service
+     *                        by the dao
      */
-    public DatabaseServiceRestController(DatabaseService databaseService, Set<Class<? extends BaseEntity>> entities) {
-        this.databaseService = databaseService;
+    public DatabaseServiceRestController(EntityDao entityDao, Set<Class<? extends BaseEntity>> entities) {
+        this.entityDao = entityDao;
         this.entities = entities;
     }
 
@@ -117,7 +117,7 @@ public class DatabaseServiceRestController {
     )
     void handleCreateTable(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        ctx.json(databaseService.createTable(entityClass));
+        ctx.json(entityDao.createTable(entityClass));
     }
 
     @OpenApi(
@@ -137,7 +137,7 @@ public class DatabaseServiceRestController {
     )
     void handleDeleteTable(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        ctx.json(databaseService.deleteTable(entityClass));
+        ctx.json(entityDao.deleteTable(entityClass));
     }
 
     @OpenApi(
@@ -163,7 +163,7 @@ public class DatabaseServiceRestController {
     void handleAddNewRecord(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         var entity = ctx.bodyAsClass(entityClass);
-        ctx.json(databaseService.addNewRecordToTable(entity));
+        ctx.json(entityDao.addNewRecordToTable(entity));
     }
 
     @OpenApi(
@@ -197,7 +197,7 @@ public class DatabaseServiceRestController {
 
         try {
             List<? extends BaseEntity> entities = objectMapper.readValue(ctx.body(), listType);
-            Iterable<? extends BaseEntity> addedEntities = databaseService.addNewRecordsToTable(entityClass, entities);
+            Iterable<? extends BaseEntity> addedEntities = entityDao.addNewRecordsToTable(entityClass, entities);
             ctx.json(addedEntities);
         } catch (IOException e) {
             throw new DeserializeDatabaseException("Unable to deserialize request body into target entity list type.");
@@ -228,7 +228,7 @@ public class DatabaseServiceRestController {
     void handleGetByFilters(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         Map<String, List<String>> queryParameters = ctx.queryParamMap();
-        Iterable<? extends BaseEntity> result = databaseService.getByFilters(entityClass, queryParameters);
+        Iterable<? extends BaseEntity> result = entityDao.getByFilters(entityClass, queryParameters);
         ctx.json(result);
     }
 
@@ -262,12 +262,12 @@ public class DatabaseServiceRestController {
                 int limit = Integer.parseInt(limitParam);
                 int offset = Integer.parseInt(offsetParam);
 
-                ctx.json(databaseService.getAllRecordsFromTable(entityClass, limit, offset));
+                ctx.json(entityDao.getAllRecordsFromTable(entityClass, limit, offset));
             } catch (NumberFormatException e) {
                 throw new InvalidParameterValueException(INVALID_PARAM_VALUE);
             }
         } else {
-            ctx.json(databaseService.getAllRecordsFromTable(entityClass));
+            ctx.json(entityDao.getAllRecordsFromTable(entityClass));
         }
     }
 
@@ -307,7 +307,7 @@ public class DatabaseServiceRestController {
             throw new IdMismatchException("ID in the path and entity ID do not match or entity ID is missing.");
         }
 
-        ctx.json(databaseService.updateRecordInTable(entity, pathId));
+        ctx.json(entityDao.updateRecordInTable(entity, pathId));
     }
 
     @OpenApi(
@@ -329,7 +329,7 @@ public class DatabaseServiceRestController {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         try {
             int id = Integer.parseInt(ctx.pathParam(ID_PARAMETER_NAME));
-            ctx.json(databaseService.removeRecordFromTable(entityClass, id));
+            ctx.json(entityDao.removeRecordFromTable(entityClass, id));
         } catch (NumberFormatException e) {
             throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
@@ -358,7 +358,7 @@ public class DatabaseServiceRestController {
     void handleRemoveSpecificRecords(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
         List<Integer> ids = Arrays.asList(ctx.bodyAsClass(Integer[].class));
-        ctx.json(databaseService.removeSpecificRecordsFromTable(entityClass, ids));
+        ctx.json(entityDao.removeSpecificRecordsFromTable(entityClass, ids));
     }
 
     @OpenApi(
@@ -386,7 +386,7 @@ public class DatabaseServiceRestController {
         } catch (NumberFormatException e) {
             throw new InvalidParameterValueException(INVALID_ID_VALUE);
         }
-        var entity = databaseService.getById(entityClass, id);
+        var entity = entityDao.getById(entityClass, id);
         if (entity == null) {
             throw new NotFoundResponse("Entity with provided id not found: " + id);
         }
@@ -409,7 +409,7 @@ public class DatabaseServiceRestController {
     )
     void handleRemoveAllRecords(Context ctx) {
         Class<? extends BaseEntity> entityClass = getClassFromPath(ctx);
-        databaseService.removeAllRecordsFromTable(entityClass);
+        entityDao.removeAllRecordsFromTable(entityClass);
     }
 
     private Class<? extends BaseEntity> getClassFromPath(Context ctx) {
