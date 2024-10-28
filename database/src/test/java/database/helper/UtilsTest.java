@@ -2,10 +2,11 @@ package database.helper;
 
 import database.entity.BaseEntity;
 import database.entity.OxfordStudent;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * The {@code UtilsTest} class contains unit tests for the {@code Utils} class.
@@ -21,7 +22,7 @@ public class UtilsTest {
     @Test
     void getSubclassesOfBaseEntityTest() {
         Set<Class<? extends BaseEntity>> baseEntities = Utils.getSubclassesOfBaseEntity();
-        Assertions.assertEquals(1, baseEntities.size());
-        Assertions.assertEquals(OxfordStudent.class, baseEntities.iterator().next());
+        assertEquals(1, baseEntities.size());
+        assertEquals(OxfordStudent.class, baseEntities.iterator().next());
     }
 }

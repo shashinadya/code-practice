@@ -65,13 +65,28 @@ public abstract class EntityDaoBase implements EntityDao {
         }
     }
 
-    //todo: test new method and add javadocs
+    /**
+     * Validates that the ID field of the given entity has not been manually set.
+     *
+     * <p>If the ID is already populated (i.e., not null), an {@link IdProvidedManuallyException}
+     * is thrown to enforce automatic ID management.
+     *
+     * @param entity the entity to check
+     * @throws IdProvidedManuallyException if the entity's ID is manually provided (not null)
+     */
     public <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
         if (entity.getId() != null) {
             throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
         }
     }
 
+    /**
+     * Retrieves all declared fields of a given entity class, including fields declared in
+     * its superclass hierarchy.
+     *
+     * @param entityClass the class whose fields are to be retrieved
+     * @return a list of all declared fields in the class and its superclasses
+     */
     public List<Field> getAllFields(Class<?> entityClass) {
         List<Field> fields = new ArrayList<>();
         while (entityClass != null && entityClass != Object.class) {
@@ -81,6 +96,14 @@ public abstract class EntityDaoBase implements EntityDao {
         return fields;
     }
 
+    /**
+     * Validates a list of entities by ensuring the list is neither null nor empty, and by
+     * validating that none of the entities have a manually provided ID.
+     *
+     * @param entities the list of entities to validate
+     * @throws NullOrEmptyListException    if the entity list is null or empty
+     * @throws IdProvidedManuallyException if any entity in the list has a manually provided ID
+     */
     public <T extends BaseEntity> void validateEntities(List<T> entities) {
         if (entities == null || entities.isEmpty()) {
             throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
