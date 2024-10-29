@@ -1,17 +1,17 @@
-package database.service;
+package database.dao.mysql;
 
+import database.dao.EntityDao;
+import database.dao.EntityDaoBase;
 import database.entity.BaseEntity;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
 import database.exception.DatabaseOperationException;
 import database.exception.DeletionDatabaseException;
 import database.exception.IdDoesNotExistException;
-import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullOrEmptyListException;
 import database.exception.SetPreparedStatementValueException;
 import database.helper.Settings;
-import database.helper.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,25 +22,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
-
 /**
- * SqlDatabaseService is an implementation of the {@link DatabaseService} interface,
- * which provides operations to manage SQL-based databases for entities that extend
- * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
- * records in an SQL database.
+ * MySqlEntityDao extends {@link EntityDaoBase} and implements the {@link EntityDao} interface, providing
+ * operations to manage SQL-based databases for entities that extend {@link BaseEntity}.
+ * This class handles the creation, deletion, and manipulation of records in an SQL database.
  *
- * <p>This service interacts with an SQL database using JDBC and provides methods for
+ * <p>This dao interacts with an SQL database using JDBC and provides methods for
  * basic CRUD (Create, Read, Update, Delete) operations, as well as filtering, batch data
  * operations, and transaction management. Each entity type is represented as a separate
  * table in the database, with support for auto-incremented IDs.
@@ -55,14 +47,14 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  * Consistent error handling is achieved through the use of key constants and exception
  * messages for database-related issues.
  *
- * <p>A {@link Settings} object is used to configure service properties such as the
+ * <p>A {@link Settings} object is used to configure dao properties such as the
  * maximum limit of records retrieved, the batch size for bulk operations, and the
  * database connection pool settings.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class SqlDatabaseService implements DatabaseService {
-    private static final Logger LOG = LoggerFactory.getLogger(SqlDatabaseService.class);
+public class MySqlEntityDao extends EntityDaoBase {
+    private static final Logger LOG = LoggerFactory.getLogger(MySqlEntityDao.class);
     private final MySQLConnectionPool connectionPool;
     private final int maxLimitValue;
     private final int batchSize;
@@ -75,7 +67,7 @@ public class SqlDatabaseService implements DatabaseService {
     static final String UNABLE_DELETE_ALL_RECORDS = "Unable to delete all records from table";
     static final String ID_PARAMETER_NAME = "id";
 
-    public SqlDatabaseService(Settings settings) {
+    public MySqlEntityDao(Settings settings) {
         this.maxLimitValue = settings.getLimit();
         this.batchSize = settings.getBatchSize();
         this.databaseName = settings.getDatabaseName();
@@ -390,7 +382,7 @@ public class SqlDatabaseService implements DatabaseService {
     public <T extends BaseEntity> Iterable<T> getByFilters(Class<? extends BaseEntity> entityClass,
                                                            Map<String, List<String>> filters) {
         List<Field> fields = getAllFields(entityClass);
-        Validator.validateDatabaseFilters(fields, filters);
+        validateDatabaseFilters(fields, filters);
 
         String tableName = entityClass.getSimpleName();
         String selectRecordsByFiltersSQL = "SELECT * FROM " + tableName + buildWhereClause(filters);
@@ -416,7 +408,7 @@ public class SqlDatabaseService implements DatabaseService {
     @Override
     public void shutdown() {
         connectionPool.closePool();
-        LOG.info("Service is stopped");
+        LOG.info(SHUTDOWN_MESSAGE);
     }
 
     boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {
@@ -431,15 +423,6 @@ public class SqlDatabaseService implements DatabaseService {
                 return resultSet.next() && resultSet.getInt(1) == 1;
             }
         }
-    }
-
-    private List<Field> getAllFields(Class<?> entityClass) {
-        List<Field> fields = new ArrayList<>();
-        while (entityClass != null && entityClass != Object.class) {
-            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
-            entityClass = entityClass.getSuperclass();
-        }
-        return fields;
     }
 
     private String getSQLType(Class<?> fieldType) {
@@ -626,21 +609,6 @@ public class SqlDatabaseService implements DatabaseService {
             entities.add(createAndFillEntity(entityClass, resultSet));
         }
         return entities;
-    }
-
-    private <T extends BaseEntity> void validateEntities(List<T> entities) {
-        if (entities == null || entities.isEmpty()) {
-            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
-        }
-        for (T entity : entities) {
-            validateIdNotProvidedManually(entity);
-        }
-    }
-
-    private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
-        if (entity.getId() != null) {
-            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
-        }
     }
 
     private <T extends BaseEntity> void executeBatchInsert(PreparedStatement preparedStatement, List<T> entities,
