@@ -291,7 +291,7 @@ public class FileBasedEntityDao extends EntityDaoBase {
 
     @Override
     public void shutdown() {
-        LOG.info("Service is stopped");
+        LOG.info(SHUTDOWN_MESSAGE);
     }
 
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {

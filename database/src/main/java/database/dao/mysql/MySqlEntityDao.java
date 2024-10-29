@@ -408,7 +408,7 @@ public class MySqlEntityDao extends EntityDaoBase {
     @Override
     public void shutdown() {
         connectionPool.closePool();
-        LOG.info("Service is stopped");
+        LOG.info(SHUTDOWN_MESSAGE);
     }
 
     boolean checkTableExists(String databaseName, String tableName, Connection connection) throws SQLException {

@@ -29,6 +29,7 @@ public abstract class EntityDaoBase implements EntityDao {
     public static final String FILTER_CANNOT_BE_NULL_MESSAGE = "Property name and value cannot be null";
     public static final String FILTER_CANNOT_BE_EMPTY_MESSAGE = "Value cannot be empty";
     public static final String INCORRECT_FILTER_NAME_MESSAGE = "Incorrect filter name";
+    public static final String SHUTDOWN_MESSAGE = "Database work is stopped";
 
     /**
      * Validates the filters applied to database queries.

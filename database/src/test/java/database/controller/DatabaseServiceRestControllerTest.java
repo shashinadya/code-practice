@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
  * This test class verifies the behavior of the {@code DatabaseServiceRestController} methods
  * related to creating, deleting tables, and adding new records.
  * <p>
- * The tests use mocked instances of {@code DatabaseService} and {@code Context} to simulate
+ * The tests use mocked instances of {@code EntityDao} and {@code Context} to simulate
  * the behavior of the controller in various scenarios, ensuring that appropriate responses are
  * returned or exceptions are thrown based on the dao's outcome.
  * <p>
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
  * @see EntityDao
  * @see Context
  */
-class EntityDaoRestControllerTest {
+class DatabaseServiceRestControllerTest {
     private final EntityDao entityDao = mock(EntityDao.class);
     private final Context ctx = mock(Context.class);
     private final DatabaseServiceRestController controller = new DatabaseServiceRestController(entityDao,
