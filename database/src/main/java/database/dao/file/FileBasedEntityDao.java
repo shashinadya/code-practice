@@ -1,11 +1,12 @@
-package database.service;
+package database.dao.file;
 
+import database.dao.EntityDao;
+import database.dao.EntityDaoBase;
 import database.exception.CreationDatabaseException;
 import database.exception.TableDoesNotExistException;
 import database.exception.DeletionDatabaseException;
 import database.exception.DeserializeDatabaseException;
 import database.exception.IdDoesNotExistException;
-import database.exception.IdProvidedManuallyException;
 import database.exception.InvalidParameterValueException;
 import database.exception.NullOrEmptyListException;
 import database.exception.ReadFileException;
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import database.entity.BaseEntity;
 import database.exception.WriteFileException;
 import database.helper.Settings;
-import database.helper.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,31 +26,22 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static database.service.ServiceConstants.ENTITIES_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ENTITY_IS_NOT_FOUND;
-import static database.service.ServiceConstants.IDS_LIST_NULL_OR_EMPTY;
-import static database.service.ServiceConstants.ID_PROVIDED_MANUALLY;
-import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
-
 /**
- * JsonDatabaseService is an implementation of the {@link DatabaseService} interface,
- * which provides operations to manage JSON-based databases for entities that extend
- * {@link BaseEntity}. This class handles the creation, deletion, and manipulation of
- * records in a file-based JSON database.
+ * FileBasedEntityDao extends {@link EntityDaoBase} and implements the {@link EntityDao} interface, providing
+ * operations to manage JSON-based databases for entities that extend {@link BaseEntity}.
+ * This class handles the creation, deletion, and manipulation of records in a file-based JSON database.
  *
- * <p>This service uses the Jackson library for JSON serialization and deserialization
- * of entities. Each entity type is stored in a separate file, and the service provides
+ * <p>This dao uses the Jackson library for JSON serialization and deserialization
+ * of entities. Each entity type is stored in a separate file, and the dao provides
  * methods for basic CRUD (Create, Read, Update, Delete) operations as well as filtering
  * and bulk data operations.
  *
- * <p>The service supports assigning unique auto-incremented IDs to each new entity and
+ * <p>The dao supports assigning unique auto-incremented IDs to each new entity and
  * ensures that no entity has its ID manually assigned. It also provides mechanisms for
  * managing the underlying database files, including verifying the existence of database
  * files and handling exceptions related to file access and serialization issues.
@@ -60,17 +51,17 @@ import static database.service.ServiceConstants.INVALID_PARAMETER_VALUE;
  *
  * <p>Key constants and exception messages are used throughout the class to ensure
  * consistent error handling and message logging. A {@link Settings} object is used
- * to configure service properties such as the maximum limit of records retrieved
+ * to configure dao properties such as the maximum limit of records retrieved
  * and the base path for storing database files.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
-public class JsonDatabaseService implements DatabaseService {
+public class FileBasedEntityDao extends EntityDaoBase {
     private final ObjectMapper objectMapper;
     private final Map<String, Integer> entityIds;
     private final int maxLimitValue;
     private final Path databasePath;
-    private static final Logger LOG = LoggerFactory.getLogger(JsonDatabaseService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedEntityDao.class);
     static final String EMPTY_BRACKETS_TO_JSON = "[]";
     static final String UNABLE_CREATE_DB_FILE = "Unable to create database file. Please check if file already exists.";
     static final String UNABLE_DELETE_DB_FILE = "Unable to delete database file. Please check if file does not exist.";
@@ -80,7 +71,7 @@ public class JsonDatabaseService implements DatabaseService {
     static final String UNABLE_ACCESS_PROPERTY = "Unable to access property";
     static final int ID_COUNTER_INITIAL_VALUE = -1;
 
-    public JsonDatabaseService(Settings settings) throws CreationDatabaseException {
+    public FileBasedEntityDao(Settings settings) throws CreationDatabaseException {
         this.maxLimitValue = settings.getLimit();
         this.databasePath = settings.getDatabasePath();
         objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
@@ -139,9 +130,7 @@ public class JsonDatabaseService implements DatabaseService {
     @Override
     public <T extends BaseEntity> Iterable<T> addNewRecordsToTable(Class<? extends BaseEntity> entityClass,
                                                                    List<T> entities) {
-        if (entities == null || entities.isEmpty()) {
-            throw new NullOrEmptyListException(ENTITIES_LIST_NULL_OR_EMPTY);
-        }
+        validateEntities(entities);
 
         Path databasePath = Path.of(getDatabasePath(entityClass));
         verifyDatabaseExists(databasePath);
@@ -268,7 +257,7 @@ public class JsonDatabaseService implements DatabaseService {
         verifyDatabaseExists(databasePath);
 
         List<Field> fields = getAllFields(entityClass);
-        Validator.validateDatabaseFilters(fields, filters);
+        validateDatabaseFilters(fields, filters);
 
         List<T> entities = deserializeEntities(entityClass, readDatabaseFile(databasePath));
 
@@ -302,7 +291,7 @@ public class JsonDatabaseService implements DatabaseService {
 
     @Override
     public void shutdown() {
-        LOG.info("Service is stopped");
+        LOG.info(SHUTDOWN_MESSAGE);
     }
 
     String getDatabasePath(Class<? extends BaseEntity> entityClass) {
@@ -331,15 +320,6 @@ public class JsonDatabaseService implements DatabaseService {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    private List<Field> getAllFields(Class<?> entityClass) {
-        List<Field> fields = new ArrayList<>();
-        while (entityClass != null && entityClass != Object.class) {
-            fields.addAll(Arrays.asList(entityClass.getDeclaredFields()));
-            entityClass = entityClass.getSuperclass();
-        }
-        return fields;
     }
 
     private <T extends BaseEntity> List<T> deserializeEntities(Class<? extends BaseEntity> entityClass,
@@ -383,12 +363,6 @@ public class JsonDatabaseService implements DatabaseService {
         if (!Files.exists(databasePath)) {
             LOG.error(DB_FILE_NOT_EXIST + ": {}", databasePath.toAbsolutePath());
             throw new TableDoesNotExistException(DB_FILE_NOT_EXIST);
-        }
-    }
-
-    private <T extends BaseEntity> void validateIdNotProvidedManually(T entity) {
-        if (entity.getId() != null) {
-            throw new IdProvidedManuallyException(ID_PROVIDED_MANUALLY);
         }
     }
 

@@ -1,4 +1,4 @@
-package database.service;
+package database.dao.mysql;
 
 import database.exception.NoFreeDatabaseConnectionException;
 import database.helper.Settings;
@@ -8,8 +8,8 @@ import org.mockito.Mockito;
 
 import java.sql.Connection;
 
-import static database.service.MySQLConnectionPool.NO_FREE_DATABASE_CONNECTION;
-import static database.service.MySQLConnectionPool.UNABLE_CREATE_CONNECTION;
+import static database.dao.mysql.MySQLConnectionPool.NO_FREE_DATABASE_CONNECTION;
+import static database.dao.mysql.MySQLConnectionPool.UNABLE_CREATE_CONNECTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;

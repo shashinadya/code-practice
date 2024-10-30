@@ -5,8 +5,8 @@ import database.controller.DatabaseControllerExceptionHandler;
 import database.helper.Swagger;
 import database.helper.Utils;
 import database.helper.Settings;
-import database.service.DatabaseService;
-import database.service.SqlDatabaseService;
+import database.dao.EntityDao;
+import database.dao.mysql.MySqlEntityDao;
 import io.javalin.Javalin;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
@@ -28,11 +28,11 @@ public class Main {
      * <p>This method performs the following tasks:
      * <ul>
      *   <li>Loads application settings from a properties file.</li>
-     *   <li>Initializes the database service (in this case, an SQL-based service).</li>
+     *   <li>Initializes the database dao (by default, an SQL-based dao).</li>
      *   <li>Starts the Javalin web server on the configured port.</li>
      *   <li>Registers OpenAPI and Swagger plugins for API documentation.</li>
      *   <li>Configures REST API routes via {@code DatabaseServiceRestController}.</li>
-     *   <li>Handles server shutdown events, ensuring that the database service is properly shut down.</li>
+     *   <li>Handles server shutdown events, ensuring that the database dao is properly shut down.</li>
      *   <li>Registers a shutdown hook to stop the Javalin web server when the JVM terminates.</li>
      * </ul>
      *
@@ -43,7 +43,7 @@ public class Main {
         final int port = settings.getPort();
         final var entities = Utils.getSubclassesOfBaseEntity();
 
-        final DatabaseService databaseService = new SqlDatabaseService(settings);
+        final EntityDao entityDao = new MySqlEntityDao(settings);
         var app = Javalin.create(config -> {
             config.registerPlugin(new OpenApiPlugin(pluginConfig ->
                     pluginConfig.withDefinitionConfiguration((version, definition) ->
@@ -53,11 +53,11 @@ public class Main {
                             }))));
             config.registerPlugin(new SwaggerPlugin());
 
-            final var dbServiceRestController = new DatabaseServiceRestController(databaseService, entities);
+            final var dbServiceRestController = new DatabaseServiceRestController(entityDao, entities);
             dbServiceRestController.configureRouter(config);
         }).start(port);
 
-        app.events(event -> event.serverStopping(databaseService::shutdown));
+        app.events(event -> event.serverStopping(entityDao::shutdown));
 
         var databaseControllerExceptionHandler = new DatabaseControllerExceptionHandler();
         databaseControllerExceptionHandler.register(app);

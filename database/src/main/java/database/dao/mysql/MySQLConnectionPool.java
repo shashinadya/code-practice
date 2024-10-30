@@ -1,4 +1,4 @@
-package database.service;
+package database.dao.mysql;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 import database.exception.InvalidParameterValueException;
