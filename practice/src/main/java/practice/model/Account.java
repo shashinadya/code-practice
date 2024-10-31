@@ -32,12 +32,12 @@ public class Account {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return id == account.id && moneyAmount == account.moneyAmount;
+        return id == account.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, moneyAmount);
+        return Objects.hash(id);
     }
 
     @Override
