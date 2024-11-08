@@ -369,7 +369,6 @@ public class FileBasedEntityDao extends EntityDaoBase {
 
     private <T extends BaseEntity> void assignEntityId(T entity, String entityClassName) {
         entity.setId(entityIds.get(entityClassName).incrementAndGet());
-        //entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
     }
 
     public String readDatabaseFile(Path databasePath) {
