@@ -26,9 +26,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +59,7 @@ import java.util.stream.Collectors;
  */
 public class FileBasedEntityDao extends EntityDaoBase {
     private final ObjectMapper objectMapper;
-    private final Map<String, Integer> entityIds;
+    private final Map<String, AtomicInteger> entityIds;
     private final int maxLimitValue;
     private final Path databasePath;
     private static final Logger LOG = LoggerFactory.getLogger(FileBasedEntityDao.class);
@@ -75,7 +76,7 @@ public class FileBasedEntityDao extends EntityDaoBase {
         this.maxLimitValue = settings.getLimit();
         this.databasePath = settings.getDatabasePath();
         objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        entityIds = new HashMap<>();
+        entityIds = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -85,7 +86,7 @@ public class FileBasedEntityDao extends EntityDaoBase {
             if (!jsonDatabaseFile.createNewFile()) {
                 throw new CreationDatabaseException(UNABLE_CREATE_DB_FILE);
             }
-            entityIds.put(entityClass.getName(), ID_COUNTER_INITIAL_VALUE);
+            entityIds.put(entityClass.getName(), new AtomicInteger(ID_COUNTER_INITIAL_VALUE));
             return Files.writeString(jsonDatabaseFile.toPath(), EMPTY_BRACKETS_TO_JSON).toFile().exists();
         } catch (IOException e) {
             LOG.error(UNABLE_CREATE_DB_FILE + ": {}", jsonDatabaseFile.toPath());
@@ -367,7 +368,8 @@ public class FileBasedEntityDao extends EntityDaoBase {
     }
 
     private <T extends BaseEntity> void assignEntityId(T entity, String entityClassName) {
-        entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
+        entity.setId(entityIds.get(entityClassName).incrementAndGet());
+        //entity.setId(entityIds.merge(entityClassName, 1, Integer::sum));
     }
 
     public String readDatabaseFile(Path databasePath) {
