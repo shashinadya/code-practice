@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
- * The {@code MySQLConnectionPool} class manages a pool of reusable database connections
+ * The {@code MySQLConnectionPool} class manages a thread-safe pool of reusable database connections
  * to a MySQL database. It optimizes resource usage by reusing connections and limiting
- * the number of open connections according to the configured pool size.
+ * the number of open connections according to the configured pool size, while ensuring thread-safe
+ * access to shared resources.
  *
  * <p>The pool is initialized with a configurable number of connections and can grow
  * up to a maximum limit. If no free connections are available when a request is made,
@@ -27,8 +27,8 @@ import java.util.Deque;
  * be closed if the pool is already at maximum size. The class is also responsible for
  * cleaning up the pool by closing all connections when the pool is shut down.
  *
- * <p>Logging is performed using SLF4J, with warnings and errors logged in scenarios such
- * as when the maximum pool size is reached or connection creation/closure fails.
+ * <p>This class uses synchronized blocks to control concurrent access and logging with SLF4J to provide
+ * warnings and errors, such as when the maximum pool size is reached or connection creation/closure fails.
  *
  * @author <a href='mailto:shashinadya@gmail.com'>Nadya Shashina</a>
  */
@@ -37,7 +37,7 @@ public class MySQLConnectionPool {
     private static final String INIT_POOL_SIZE_MORE_THAN_MAX =
             "Initial pool size cannot be greater than maximum pool size.";
     private final MysqlDataSource dataSource;
-    private final Deque<Connection> connectionPool;
+    private final ConcurrentLinkedDeque<Connection> connectionPool;
     private final int initialPoolSize;
     private final int maxPoolSize;
     private int currentConnections;
@@ -64,25 +64,33 @@ public class MySQLConnectionPool {
             LOG.warn(INIT_POOL_SIZE_MORE_THAN_MAX);
             throw new InvalidParameterValueException(INIT_POOL_SIZE_MORE_THAN_MAX);
         }
-        connectionPool = new ArrayDeque<>();
+        connectionPool = new ConcurrentLinkedDeque<>();
         initializePool();
     }
 
     /**
-     * Retrieves a connection from the pool. If no connection is available, the pool will
+     * Retrieves a thread-safe connection from the pool. If no connection is available, the pool will
      * attempt to create a new one, unless the maximum pool size has been reached, in which case
      * a {@link NoFreeDatabaseConnectionException} is thrown.
+     *
+     * <p>This method is thread-safe, ensuring that concurrent access to the connection pool is properly synchronized.
      *
      * @return a {@link Connection} object from the pool
      * @throws NoFreeDatabaseConnectionException if all connections are in use and the maximum pool size is reached
      */
     public Connection getConnection() {
         if (connectionPool.isEmpty()) {
-            if (currentConnections < maxPoolSize) {
-                return createConnectionOrThrow();
-            } else {
-                LOG.warn(NO_FREE_DATABASE_CONNECTION);
-                throw new NoFreeDatabaseConnectionException(NO_FREE_DATABASE_CONNECTION);
+            synchronized (this) {
+                if (connectionPool.isEmpty()) {
+                    if (currentConnections < maxPoolSize) {
+                        return createConnectionOrThrow();
+                    } else {
+                        LOG.warn(NO_FREE_DATABASE_CONNECTION);
+                        throw new NoFreeDatabaseConnectionException(NO_FREE_DATABASE_CONNECTION);
+                    }
+                } else {
+                    return connectionPool.poll();
+                }
             }
         } else {
             return connectionPool.poll();
@@ -92,13 +100,20 @@ public class MySQLConnectionPool {
     /**
      * Releases a connection back into the pool. If the pool is full, the connection is closed.
      *
+     * <p>This method is thread-safe, ensuring that multiple threads can safely return
+     * connections to the pool without risking race conditions.
+     *
      * @param connection the {@link Connection} to be released
      */
     public void releaseConnection(Connection connection) {
-        if (connection != null && connectionPool.size() < maxPoolSize) {
-            connectionPool.add(connection);
-        } else if (connection != null) {
-            closeConnection(connection);
+        if (connection != null) {
+            synchronized (this) {
+                if (connectionPool.size() < maxPoolSize) {
+                    connectionPool.add(connection);
+                } else {
+                    closeConnection(connection);
+                }
+            }
         }
     }
 
@@ -106,20 +121,25 @@ public class MySQLConnectionPool {
      * Closes all connections in the pool and resets the current connection count.
      * This method should be called when the pool is no longer needed, for example
      * during application shutdown, to release resources.
+     *
+     * <p>This method is thread-safe, allowing safe invocation in concurrent environments.
      */
     public void closePool() {
-        while (!connectionPool.isEmpty()) {
-            try {
-                connectionPool.poll().close();
-            } catch (SQLException e) {
-                LOG.error(UNABLE_CLOSE_CONNECTION + ": {}", e.getMessage());
+        synchronized (this) {
+            while (!connectionPool.isEmpty()) {
+                try {
+                    connectionPool.poll().close();
+                } catch (SQLException e) {
+                    LOG.error(UNABLE_CLOSE_CONNECTION + ": {}", e.getMessage());
+                }
             }
         }
         currentConnections = 0;
     }
 
     /**
-     * Returns the number of available connections in the pool.
+     * Returns the number of available connections in the pool. This method is thread-safe,
+     * providing an accurate count even in concurrent environments.
      *
      * @return the number of free connections currently in the pool
      */
@@ -137,12 +157,14 @@ public class MySQLConnectionPool {
 
     private void initializePool() {
         for (int i = 0; i < initialPoolSize; i++) {
-            try {
-                connectionPool.add(createNewConnection());
-                currentConnections++;
-            } catch (SQLException e) {
-                LOG.error(UNABLE_CREATE_CONNECTION + ": {}", e.getMessage());
-                throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION + ": " + e.getMessage());
+            synchronized (this) {
+                try {
+                    connectionPool.add(createNewConnection());
+                    currentConnections++;
+                } catch (SQLException e) {
+                    LOG.error(UNABLE_CREATE_CONNECTION + ": {}", e.getMessage());
+                    throw new UnableCreateConnectionException(UNABLE_CREATE_CONNECTION + ": " + e.getMessage());
+                }
             }
         }
     }
