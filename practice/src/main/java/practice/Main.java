@@ -17,7 +17,11 @@ public class Main {
         System.out.println(task.elementsSum(new int[]{1, 2, 3, 4, 5, 6, 7}, 0));
         System.out.println(task.elementsSumParallel(new int[]{1, 2, 3, 4, 5, 6, 7}));
 
-        System.out.println(task.elementsSumWithThreadExecutor(new int[]{1, 2, 3, 4, 5, 6, 7}, 5));
+        try {
+            System.out.println(task.elementsSumWithThreadExecutor(new int[]{1, 2, 3, 4, 5, 6, 7}, 5));
+        } finally {
+            task.shutdownExecutor();
+        }
 
         AccountService accountService = new AccountService();
         Account acc1 = new Account(1, 1500);

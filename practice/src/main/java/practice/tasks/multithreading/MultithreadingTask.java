@@ -10,10 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class MultithreadingTask {
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public int elementsSumWithThreadExecutor(int[] numbers, int threads) throws ExecutionException, InterruptedException {
         int resultElementsSum = 0;
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
 
         List<int[]> subArrays = divideArray(numbers, threads);
         List<Future<Integer>> futures = new ArrayList<>();
@@ -33,8 +33,11 @@ public class MultithreadingTask {
             resultElementsSum += future.get();
         }
 
-        executor.shutdown();
         return resultElementsSum;
+    }
+
+    public void shutdownExecutor() {
+        executor.shutdown();
     }
 
     public int elementsSum(int[] numbers, int threads) throws InterruptedException {
