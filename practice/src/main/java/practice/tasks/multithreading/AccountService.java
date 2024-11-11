@@ -1,6 +1,4 @@
-package practice.tasks;
-
-import practice.model.Account;
+package practice.tasks.multithreading;
 
 public class AccountService {
 

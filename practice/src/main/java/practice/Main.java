@@ -1,19 +1,27 @@
 package practice;
 
-import practice.model.Account;
-import practice.tasks.AccountService;
-import practice.tasks.BankAccount;
-import practice.tasks.MultithreadingTask;
+import practice.tasks.multithreading.Account;
+import practice.tasks.multithreading.AccountService;
+import practice.tasks.multithreading.BankAccount;
+import practice.tasks.multithreading.MultithreadingTask;
+
+import java.util.concurrent.ExecutionException;
 
 public class Main {
     static Account account = new Account(1, 1000);
     static int amountToChange = 200;
     static BankAccount bankAccount = new BankAccount();
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         MultithreadingTask task = new MultithreadingTask();
         System.out.println(task.elementsSum(new int[]{1, 2, 3, 4, 5, 6, 7}, 0));
         System.out.println(task.elementsSumParallel(new int[]{1, 2, 3, 4, 5, 6, 7}));
+
+        try {
+            System.out.println(task.elementsSumWithThreadExecutor(new int[]{1, 2, 3, 4, 5, 6, 7}, 5));
+        } finally {
+            task.shutdownExecutor();
+        }
 
         AccountService accountService = new AccountService();
         Account acc1 = new Account(1, 1500);
