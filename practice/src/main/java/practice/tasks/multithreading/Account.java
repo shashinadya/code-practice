@@ -1,4 +1,4 @@
-package practice.model;
+package practice.tasks.multithreading;
 
 import java.util.Objects;
 

@@ -1,10 +1,41 @@
-package practice.tasks;
+package practice.tasks.multithreading;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MultithreadingTask {
+
+    public int elementsSumWithThreadExecutor(int[] numbers, int threads) throws ExecutionException, InterruptedException {
+        int resultElementsSum = 0;
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+
+        List<int[]> subArrays = divideArray(numbers, threads);
+        List<Future<Integer>> futures = new ArrayList<>();
+
+        for (int[] subArray : subArrays) {
+            Callable<Integer> taskToGetSumsOfSubArrays = () -> {
+                int eachArraySum = 0;
+                for (int number : subArray) {
+                    eachArraySum += number;
+                }
+                return eachArraySum;
+            };
+            futures.add(executor.submit(taskToGetSumsOfSubArrays));
+        }
+
+        for (Future<Integer> future : futures) {
+            resultElementsSum += future.get();
+        }
+
+        executor.shutdown();
+        return resultElementsSum;
+    }
 
     public int elementsSum(int[] numbers, int threads) throws InterruptedException {
         int resultElementsSum = 0;
